@@ -11,3 +11,10 @@ export interface ProductCardType {
     marketPrice: string
     currentBid: string
 }
+
+export interface CategoryType {
+    id: number
+    name: string | React.ReactNode
+    image: StaticImageData | string
+    description?: React.ReactNode
+}

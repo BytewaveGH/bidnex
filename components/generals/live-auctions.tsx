@@ -106,7 +106,7 @@ export default function LiveAuctions() {
         <div className="flex flex-col items-center justify-center w-full  ">
             <div className="flex w-full items-end justify-between mb-8">
                 <div className="flex flex-col items-start justify-center">
-                    <h2 className="text-3xl font-bold">Live Auctions<br />Ending Soon</h2>
+                    <h2 className="text-3xl font-bold mb-1.5">Live Auctions<br />Ending Soon</h2>
                     <div className="text-base font-normal text-[#657688]">Don't miss out on<br />these hot deals</div>
                 </div>
                 <div className="flex items-end justify-center gap-2">
