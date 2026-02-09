@@ -3,8 +3,10 @@ import React, { useState } from 'react'
 import ButtonTemplate from '../templates/button-template'
 import InputTemplate from '../templates/input-template'
 import Logo from '../templates/logo'
+import  { useRouter } from 'next/navigation'
 
 export default function TopNav() {
+  const router = useRouter()
     const [navItems, setNavItems] = useState<string[]>(['All Items', 'Categories', 'Buy Now', 'Popular'])
   return (
     <div className="sticky top-0 z-50 bg-white">
@@ -18,6 +20,7 @@ export default function TopNav() {
           <ButtonTemplate 
           className=" bg-white text-[#344054] border whitespace-nowrap hover:bg-white"
           title="Login"
+          onClick={() => router.push('/auth/login')}
           />
           <ButtonTemplate 
           title="Sign up"
