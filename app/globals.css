@@ -119,3 +119,8 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Toast Styles */
+.success-toast {
+  background: linear-gradient(to bottom, #0F973D, #0F973D, #A2DDB6, #FFFFFF) !important;
+}

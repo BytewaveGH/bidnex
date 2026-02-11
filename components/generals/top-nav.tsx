@@ -4,6 +4,7 @@ import ButtonTemplate from '../templates/button-template'
 import InputTemplate from '../templates/input-template'
 import Logo from '../templates/logo'
 import  { useRouter } from 'next/navigation'
+import { SearchIcon } from 'lucide-react'
 
 export default function TopNav() {
   const router = useRouter()
@@ -12,10 +13,13 @@ export default function TopNav() {
     <div className="sticky top-0 z-50 bg-white">
          <section className=" py-4 flex px-20 justify-between items-center h-full w-full gap-4 min-w-0">
         <Logo />
+        <div className="flex-1 min-w-0 max-w-[600px] h-[40px] shadow-none rounded-[100px]">
         <InputTemplate 
+        icon={<SearchIcon />}
         placeholder="Search for anything"
-        className="flex-1 min-w-0 max-w-[533px] h-[40px] shadow-none rounded-[100px]"
+         className="flex-1 min-w-0 max-w-[600px] h-[40px] shadow-none rounded-[100px]"
         />
+        </div>
         <div className="flex gap-2 shrink-0">
           <ButtonTemplate 
           className=" bg-white text-[#344054] border whitespace-nowrap hover:bg-white"
