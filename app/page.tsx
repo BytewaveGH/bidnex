@@ -19,7 +19,12 @@ export default function Home() {
       <TopNav />
       <section className="h-[82dvh] relative  w-full" >
         <Image src={banner} alt="banner" className="w-full h-full object-cover" />
-        <div className="absolute top-0 left-0 w-full h-full bg-linear-to-b from-transparent to-black/90 p-20">
+        <div 
+          className="absolute top-0 left-0 w-full h-full p-20"
+          style={{
+            background: 'linear-gradient(to bottom, #66666600, #2C2C2C91, #000000)',
+          }}
+        >
           <div className="flex flex-col items-start justify-end h-full">
             <p className="text-white text-4xl font-bold mb-4">Discover Amazing Deals & Bid<br />Smart, Win Big, & Shop With<br />Confidence.</p>
             <ButtonTemplate title="Start Bidding" className="bg-white text-black hover:bg-white w-40" />

@@ -9,7 +9,8 @@ export interface ProductCardType {
     bidders: number
     productName: string
     marketPrice: string
-    currentBid: string
+    currentBid:     number  
+    increment: number
 }
 
 export interface CategoryType {

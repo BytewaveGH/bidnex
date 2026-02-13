@@ -3,16 +3,17 @@ import React from 'react'
 import ButtonTemplate from '../templates/button-template'
 import Image from 'next/image'
 import type { ProductCardType } from '@/lib/interfaces'
+import InputTemplate from '../templates/input-template'
 
-export default function ProductCard({ product }: { product: ProductCardType }) {
+export default function ProductCard({ product, isLoggedIn }: { product: ProductCardType, isLoggedIn?: boolean }) {
     return (
-        <div className="h-max border w-[400px] shrink-0 rounded-[16px] border-[#F0F2F5] flex flex-col ">
+        <div className="h-max border w-full rounded-[16px] border-[#F0F2F5] flex flex-col min-w-[400px] ">
             <div className="bg-[#F9FAFB] h-100 relative overflow-hidden rounded-t-[16px]">
                 <div className="absolute inset-0 flex items-center justify-center">
                     <Image src={product.image} alt="iphone" className="w-full h-full object-cover rounded-t-[16px]" />
                 </div>
                 <div className="absolute top-4 right-0 z-10">
-                    <div className={`w-fit px-2 py-2.5 rounded-l-[8px] text-white text-xs font-semibold ${product.condition === 'New/Like New' ? 'bg-[#099137]' : 
+                    <div className={`w-fit px-2 py-2.5 rounded-l-[8px] text-white text-xs font-semibold ${product.condition === 'New/Like New' ? 'bg-[#099137]' :
                         product.condition === 'Good Condition' ? 'bg-[#003C71]' : 'bg-[#D42620]'}`}>
                         {product.condition}
                     </div>
@@ -50,9 +51,22 @@ export default function ProductCard({ product }: { product: ProductCardType }) {
                     <p className="text-base font-light text-[#657688] mt-2 ">MKT PR: {product.marketPrice}</p>
                 </div>
                 <div className="">
-                    <p className="text-lg font-medium ">CURRENT BID: {product.currentBid}</p>
-                </div>      
-                <ButtonTemplate title="Login To Bid" className="bg-black text-white hover:bg-black w-full h-[48px] mt-4" />
+                    <p className="text-lg font-medium ">CURRENT BID: GHS {product.currentBid.toFixed(2)}</p>
+                </div>
+                {!isLoggedIn && <ButtonTemplate title="Login To Bid" className="bg-black text-white hover:bg-black w-full h-[48px] mt-4" />}
+                {isLoggedIn &&
+                    <div>
+                        <ButtonTemplate title={`Bid GHS ${(product.currentBid + product.increment).toFixed(2)}  `} className="bg-black text-white hover:bg-black w-full h-[48px] mt-4" />
+                        <div className='flex items-center my-2 gap-4 '>
+                            <div className='flex-1 min-w-0'>
+                                <InputTemplate placeholder={'GHS0.00'} className='h-11 shadow-none w-full' />
+                            </div>
+                            <div className='flex-1 min-w-0'>
+                                <ButtonTemplate title="Bid" className="bg-[#FFCC00] text-black hover:bg-[#FFCC00] h-11 w-full" />
+                            </div>
+                        </div>
+                    </div>
+                }
             </section>
 
         </div>

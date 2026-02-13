@@ -18,7 +18,8 @@ const mockProducts: ProductCardType[] = [
         bidders: 12,
         productName: 'Apple Iphone 16 Pro Max',
         marketPrice: 'GHS 267.00',
-        currentBid: 'GHS 100.00'
+      currentBid:100, 
+        increment: 50
     },
     {
         id: 2,
@@ -29,7 +30,8 @@ const mockProducts: ProductCardType[] = [
         bidders: 12,
         productName: 'Apple Iphone 16 Pro Max',
         marketPrice: 'GHS 267.00',
-        currentBid: 'GHS 100.00'
+      currentBid:100, 
+        increment: 50
     },
     {
         id: 3,
@@ -40,7 +42,8 @@ const mockProducts: ProductCardType[] = [
         bidders: 12,
         productName: 'Apple Iphone 16 Pro Max',
         marketPrice: 'GHS 267.00',
-        currentBid: 'GHS 100.00'
+      currentBid:100, 
+        increment: 50
     },
     {
         id: 4,
@@ -51,7 +54,8 @@ const mockProducts: ProductCardType[] = [
         bidders: 12,
         productName: 'Apple Iphone 16 Pro Max',
         marketPrice: 'GHS 267.00',
-        currentBid: 'GHS 100.00'
+      currentBid:100, 
+        increment: 50
     },
     {
         id: 5,
@@ -62,7 +66,8 @@ const mockProducts: ProductCardType[] = [
         bidders: 12,
         productName: 'Apple Iphone 16 Pro Max',
         marketPrice: 'GHS 267.00',
-        currentBid: 'GHS 100.00'
+      currentBid:100, 
+        increment: 50
     },
     {
         id: 6,
@@ -73,7 +78,8 @@ const mockProducts: ProductCardType[] = [
         bidders: 12,
         productName: 'Apple Iphone 16 Pro Max',
         marketPrice: 'GHS 267.00',
-        currentBid: 'GHS 100.00'
+      currentBid:100, 
+        increment: 50
     },
     {
         id: 7,
@@ -84,7 +90,8 @@ const mockProducts: ProductCardType[] = [
         bidders: 12,
         productName: 'Apple Iphone 16 Pro Max',
         marketPrice: 'GHS 267.00',
-        currentBid: 'GHS 100.00'
+      currentBid:100, 
+        increment: 50
     },
     {
         id: 8,
@@ -95,7 +102,8 @@ const mockProducts: ProductCardType[] = [
         bidders: 12,
         productName: 'Apple Iphone 16 Pro Max',
         marketPrice: 'GHS 267.00',
-        currentBid: 'GHS 100.00'
+      currentBid:100, 
+        increment: 50
     },
 ]
 

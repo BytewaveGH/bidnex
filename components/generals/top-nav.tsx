@@ -8,7 +8,7 @@ import { SearchIcon } from 'lucide-react'
 
 export default function TopNav() {
   const router = useRouter()
-    const [navItems, setNavItems] = useState<string[]>(['All Items', 'Categories', 'Buy Now', 'Popular'])
+    const [navItems, setNavItems] = useState<{name: string, path: string}[]>([{name: 'All Items', path: '/'}, {name: 'Categories', path: '/categories'}, {name: 'Buy Now', path: '/buy-now'}, {name: 'Popular', path: '/popular'}])
   return (
     <div className="sticky top-0 z-50 bg-white">
          <section className=" py-4 flex px-20 justify-between items-center h-full w-full gap-4 min-w-0">
@@ -33,7 +33,7 @@ export default function TopNav() {
       </section>
       <section className="flex items-center justify-center bg-black gap-10 text-white text-sm font-semibold h-[50px]">
         {navItems.map((item, index) => (
-            <span key={index} className='cursor-pointer  hover:underline'>{item}</span>
+            <span key={index} className='cursor-pointer  hover:underline' onClick={() => router.push(item.path)}>{item.name}</span>
         ))}
       </section>
     </div>

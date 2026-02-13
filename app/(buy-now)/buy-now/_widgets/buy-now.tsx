@@ -1,12 +1,11 @@
 'use client'
 import { ArrowLeft, ArrowRight, Clock, Users, Heart, HeartIcon, AlarmClock, UsersRound } from 'lucide-react'
 import React, { useRef, useState, useEffect } from 'react'
-import ButtonTemplate from '../templates/button-template'
 import iphone from '@/assets/images/phone.png'
 import monitor from '@/assets/images/monitor.png'
 import headset from '@/assets/images/headset.png'
-import ProductCard from './product-card'
 import { ProductCardType } from '@/lib/interfaces'
+import ProductCard from '@/components/generals/product-card'
 
 const mockProducts: ProductCardType[] = [
     {
@@ -18,7 +17,7 @@ const mockProducts: ProductCardType[] = [
         bidders: 12,
         productName: 'Apple Iphone 16 Pro Max',
         marketPrice: 'GHS 267.00',
-       currentBid:100, 
+        currentBid:100, 
         increment: 50
     },
     {
@@ -108,27 +107,16 @@ const mockProducts: ProductCardType[] = [
 ]
 
 export default function LiveAuctions() {
-
-
-    return (
-        <div className="flex flex-col items-center justify-center w-full  ">
-            <div className="flex w-full items-end justify-between mb-8">
-                <div className="flex flex-col items-start justify-center">
-                    <h2 className="text-3xl font-bold mb-1.5">Live Auctions<br />Ending Soon</h2>
-                    <div className="text-base font-normal text-[#657688]">Don't miss out on<br />these hot deals</div>
-                </div>
-                <div className="flex items-end justify-center gap-2">
-                    <div className="flex items-end justify-center gap-2 underline text-sm font-normal hover:cursor-pointer ">See All</div>
-                </div>
-            </div>
-            <div
-
-                className="flex gap-7 w-full overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-            >
+    return (<div className="w-full flex justify-center items-center">
+        <div className="w-full px-4 flex justify-center items-center">
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(400px,1fr))] gap-2 justify-items-start w-full">
                 {mockProducts.map((product) => (
-                    <ProductCard key={product.id} product={product} />
+                    <div key={product.id} className="w-full">
+                        <ProductCard    isLoggedIn={true} product={product} />
+                    </div>
                 ))}
             </div>
+        </div>
         </div>
     )
 }
