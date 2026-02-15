@@ -15,41 +15,41 @@ const mockProducts: CategoryType[] = [
     {
         id: 1,
         image: electronics,
-        description: <p>Explore our diverse<br />categories to find the<br />perfect items for your<br />next bid!</p>,
+        description: <p>Bid on TVs, gadgets, and<br />everyday electronics at<br />competitive prices.</p>,
         name: 'Electronics',
         },
     {
         id: 2,
         image: clothing,
-        description:  <p>Explore our diverse<br />categories to find the<br />perfect items for your<br />next bid!</p>,
+        description:  <p>Find quality clothing<br />and fashion items you<br />can bid on and save<br />more</p>,
         name: 'Clothing',
         
     },
     {
         id: 3,
         image: utensils,
-        description:  <p>Explore our diverse<br />categories to find the<br />perfect items for your<br />next bid!</p>,
+        description:  <p>Discover household<br/>and kitchen items that<br/>make everyday living<br/>easier.</p>,
         name: 'Home / Kitchen',
         
     },
     {
         id: 4,
         image: office,
-        description:  <p>Explore our diverse<br />categories to find the<br />perfect items for your<br />next bid!</p>,
+        description:  <p>Bid on office supplies and<br/>equipment for work or<br/>business use.</p>,
         name: 'Office Products',
         
     },
     {
         id: 5,
         image: phoneAccessories,
-        description:  <p>Explore our diverse<br />categories to find the<br />perfect items for your<br />next bid!</p>,
+        description:  <p>Get smartphones, chargers,<br/>and accessories through<br/>fair bidding.</p>,
         name: <p>Phones &<br />Accessories</p>,
         
     },
     {
         id: 6,
         image: car,
-        description:  <p>Explore our diverse<br />categories to find the<br />perfect items for your<br />next bid!</p>,
+        description:  <p>Find vehicle parts and<br/>accessories to keep<br/>your car in good<br/>shape.</p>,
         name: 'Car Parts',
         
     },

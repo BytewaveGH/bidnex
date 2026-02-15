@@ -4,10 +4,16 @@ import ButtonTemplate from '../templates/button-template'
 import Image from 'next/image'
 import type { ProductCardType } from '@/lib/interfaces'
 import InputTemplate from '../templates/input-template'
+import { useRouter } from 'next/navigation'
+import AlertDialogTemplate from '../templates/alert-dialog-template'
 
 export default function ProductCard({ product, isLoggedIn }: { product: ProductCardType, isLoggedIn?: boolean }) {
+    const router = useRouter()
     return (
-        <div className="h-max border w-full rounded-[16px] border-[#F0F2F5] flex flex-col min-w-[400px] ">
+        <div className="h-max border w-full rounded-[16px] border-[#F0F2F5] flex flex-col min-w-[400px] hover:cursor-pointer "
+        
+        onClick={() => router.push(`/product/${product.id}`)}
+        >
             <div className="bg-[#F9FAFB] h-100 relative overflow-hidden rounded-t-[16px]">
                 <div className="absolute inset-0 flex items-center justify-center">
                     <Image src={product.image} alt="iphone" className="w-full h-full object-cover rounded-t-[16px]" />
@@ -25,7 +31,7 @@ export default function ProductCard({ product, isLoggedIn }: { product: ProductC
                     </div>
                 </div>
 
-                <div className="absolute bottom-4 right-4 z-10">
+                <div className="absolute bottom-4 right-4 z-10" onClick={(e) => e.stopPropagation()}>
                     <ButtonTemplate
                         title={<HeartIcon className="w-5 h-5 text-[#2A3239]" />}
                         className="bg-white text-black hover:bg-white h-10 w-10 border border-[#F0F2F5] rounded-full p-0"
@@ -53,16 +59,20 @@ export default function ProductCard({ product, isLoggedIn }: { product: ProductC
                 <div className="">
                     <p className="text-lg font-medium ">CURRENT BID: GHS {product.currentBid.toFixed(2)}</p>
                 </div>
-                {!isLoggedIn && <ButtonTemplate title="Login To Bid" className="bg-black text-white hover:bg-black w-full h-[48px] mt-4" />}
+                {!isLoggedIn && (
+                    <div onClick={(e) => e.stopPropagation()}>
+                        <ButtonTemplate title="Login To Bid" className="bg-black text-white hover:bg-black w-full h-[48px] mt-4" />
+                    </div>
+                )}
                 {isLoggedIn &&
-                    <div>
+                    <div onClick={(e) => e.stopPropagation()}>
                         <ButtonTemplate title={`Bid GHS ${(product.currentBid + product.increment).toFixed(2)}  `} className="bg-black text-white hover:bg-black w-full h-[48px] mt-4" />
                         <div className='flex items-center my-2 gap-4 '>
                             <div className='flex-1 min-w-0'>
                                 <InputTemplate placeholder={'GHS0.00'} className='h-11 shadow-none w-full' />
                             </div>
                             <div className='flex-1 min-w-0'>
-                                <ButtonTemplate title="Bid" className="bg-[#FFCC00] text-black hover:bg-[#FFCC00] h-11 w-full" />
+                                <AlertDialogTemplate trigger={<ButtonTemplate title="Bid" className="bg-[#FFCC00] text-black hover:bg-[#FFCC00] h-11 w-full" />} />
                             </div>
                         </div>
                     </div>

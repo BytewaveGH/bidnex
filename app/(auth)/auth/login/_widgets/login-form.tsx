@@ -53,7 +53,10 @@ export default function LoginForm() {
                         Forgot Password?
                     </div>
                 </div>
-                <ButtonTemplate title='Sign In' className='w-full h-11' />
+                <ButtonTemplate title='Sign In' className='w-full h-11' onClick={() => {
+                    localStorage.setItem('isSignedIn', 'true')
+                    router.push('/')
+                }} />
             </div>
         </div>
     )

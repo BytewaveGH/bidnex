@@ -1,5 +1,5 @@
 'use client'
-import React, { useMemo } from 'react'
+import React, { useMemo, useRef, useEffect, useState } from 'react'
 import { Input } from '../ui/input'
 import { cn } from '@/lib/utils'
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field"
@@ -87,7 +87,7 @@ function PasswordStrengthIndicator({ password }: { password: string }) {
 }
 
 export default function InputTemplate(
-    { className, placeholder, label, icon, align, description, value, onChange, type, showPasswordStrength, onIconClick }: { className?: string, placeholder: string, label?: string, icon?: React.ReactNode, align?: 'inline-start' | 'inline-end' | 'block-start' | 'block-end', description?: string, value?: string, onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void, type?: string, showPasswordStrength?: boolean, onIconClick?: () => void }
+    { className, placeholder, label, icon, align, description, value, onChange, type, showPasswordStrength, onIconClick, otpLength }: { className?: string, placeholder: string, label?: string, icon?: React.ReactNode, align?: 'inline-start' | 'inline-end' | 'block-start' | 'block-end', description?: string, value?: string, onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void, type?: string, showPasswordStrength?: boolean, onIconClick?: () => void, otpLength?: number }
 ) {
   const hasValue = value && value.length > 0
   const showStrength = showPasswordStrength && hasValue
@@ -95,6 +95,113 @@ export default function InputTemplate(
   
   // Determine if input should be controlled (both value and onChange provided)
   const isControlled = value !== undefined && onChange !== undefined
+  
+  // OTP mode
+  const isOtpMode = otpLength !== undefined && otpLength > 0
+  const otpLengthValue = otpLength || 6
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([])
+  
+  // Initialize OTP array from value or empty array
+  const [otpValues, setOtpValues] = useState<string[]>(() => {
+    if (isOtpMode && value) {
+      const otpArray = value.split('').slice(0, otpLengthValue)
+      return [...otpArray, ...Array(otpLengthValue - otpArray.length).fill('')]
+    }
+    return Array(otpLengthValue).fill('')
+  })
+
+  // Sync OTP values with external value prop
+  useEffect(() => {
+    if (isOtpMode && value !== undefined) {
+      const otpArray = value.split('').slice(0, otpLengthValue)
+      const newOtp = [...otpArray, ...Array(otpLengthValue - otpArray.length).fill('')]
+      setOtpValues(newOtp)
+    }
+  }, [value, isOtpMode, otpLengthValue])
+
+  const handleOtpChange = (index: number, inputValue: string) => {
+    if (inputValue.length > 1) return
+    
+    const newOtp = [...otpValues]
+    newOtp[index] = inputValue
+    setOtpValues(newOtp)
+
+    // Create synthetic event for onChange callback
+    if (onChange) {
+      const otpString = newOtp.join('')
+      const syntheticEvent = {
+        target: { value: otpString }
+      } as React.ChangeEvent<HTMLInputElement>
+      onChange(syntheticEvent)
+    }
+
+    // Auto-focus next input
+    if (inputValue && index < otpLengthValue - 1) {
+      inputRefs.current[index + 1]?.focus()
+    }
+  }
+
+  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace' && !otpValues[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus()
+    }
+  }
+
+  const handleOtpPaste = (e: React.ClipboardEvent) => {
+    e.preventDefault()
+    const pastedData = e.clipboardData.getData('text').slice(0, otpLengthValue).split('')
+    const newOtp = [...otpValues]
+    pastedData.forEach((char, index) => {
+      if (index < otpLengthValue && /^\d$/.test(char)) {
+        newOtp[index] = char
+      }
+    })
+    setOtpValues(newOtp)
+    
+    if (onChange) {
+      const otpString = newOtp.join('')
+      const syntheticEvent = {
+        target: { value: otpString }
+      } as React.ChangeEvent<HTMLInputElement>
+      onChange(syntheticEvent)
+    }
+    
+    const nextEmptyIndex = newOtp.findIndex(val => val === '')
+    if (nextEmptyIndex !== -1) {
+      inputRefs.current[nextEmptyIndex]?.focus()
+    } else {
+      inputRefs.current[otpLengthValue - 1]?.focus()
+    }
+  }
+
+  if (isOtpMode) {
+    return (
+      <div>
+        <Field className="">
+          {label && <FieldLabel htmlFor="otp-input">{label}</FieldLabel>}
+          <div className={cn("flex gap-3", className)}>
+            {otpValues.map((otpValue, index) => (
+              <Input
+                key={index}
+                ref={(el) => (inputRefs.current[index] = el)}
+                id={index === 0 ? "otp-input" : undefined}
+                type="text"
+                inputMode="numeric"
+                maxLength={1}
+                value={otpValue}
+                onChange={(e) => handleOtpChange(index, e.target.value)}
+                onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                onPaste={handleOtpPaste}
+                className="w-14 h-14 text-center text-xl font-semibold border border-gray-300 rounded-lg focus:border-gray-900 focus:ring-0"
+                placeholder={placeholder || "-"}
+              />
+            ))}
+          </div>
+          {showDescription && <FieldDescription>{description}</FieldDescription>}
+        </Field>
+      </div>
+    )
+  }
   
   return (
     <div>
