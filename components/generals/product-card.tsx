@@ -69,10 +69,10 @@ export default function ProductCard({ product, isLoggedIn }: { product: ProductC
                         <ButtonTemplate title={`Bid GHS ${(product.currentBid + product.increment).toFixed(2)}  `} className="bg-black text-white hover:bg-black w-full h-[48px] mt-4" />
                         <div className='flex items-center my-2 gap-4 '>
                             <div className='flex-1 min-w-0'>
-                                <InputTemplate placeholder={'GHS0.00'} className='h-11 shadow-none w-full' />
+                                <InputTemplate placeholder={'GHS0.00'} className='h-11 shadow-none w-full' inputAlign="center" />
                             </div>
                             <div className='flex-1 min-w-0'>
-                                <AlertDialogTemplate trigger={<ButtonTemplate title="Bid" className="bg-[#FFCC00] text-black hover:bg-[#FFCC00] h-11 w-full" />} />
+                                <AlertDialogTemplate trigger={<ButtonTemplate title="Set Max Bid" className="bg-[#FFCC00] text-black hover:bg-[#FFCC00] h-11 w-full" />} />
                             </div>
                         </div>
                     </div>

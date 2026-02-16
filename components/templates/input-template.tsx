@@ -87,7 +87,7 @@ function PasswordStrengthIndicator({ password }: { password: string }) {
 }
 
 export default function InputTemplate(
-    { className, placeholder, label, icon, align, description, value, onChange, type, showPasswordStrength, onIconClick, otpLength }: { className?: string, placeholder: string, label?: string, icon?: React.ReactNode, align?: 'inline-start' | 'inline-end' | 'block-start' | 'block-end', description?: string, value?: string, onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void, type?: string, showPasswordStrength?: boolean, onIconClick?: () => void, otpLength?: number }
+    { className, placeholder, label, icon, align, description, value, onChange, type, showPasswordStrength, onIconClick, otpLength, inputAlign }: { className?: string, placeholder: string, label?: string, icon?: React.ReactNode, align?: 'inline-start' | 'inline-end' | 'block-start' | 'block-end', description?: string, value?: string, onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void, type?: string, showPasswordStrength?: boolean, onIconClick?: () => void, otpLength?: number, inputAlign?: 'left' | 'center' | 'right' }
 ) {
   const hasValue = value && value.length > 0
   const showStrength = showPasswordStrength && hasValue
@@ -183,7 +183,11 @@ export default function InputTemplate(
             {otpValues.map((otpValue, index) => (
               <Input
                 key={index}
-                ref={(el) => (inputRefs.current[index] = el)}
+                ref={(el: HTMLInputElement | null) => {
+                  if (el) {
+                    inputRefs.current[index] = el
+                  }
+                }}
                 id={index === 0 ? "otp-input" : undefined}
                 type="text"
                 inputMode="numeric"
@@ -212,7 +216,8 @@ export default function InputTemplate(
           id="inline-start-input" 
           placeholder={placeholder} 
           {...(isControlled ? { value: value ?? '', onChange } : {})}
-          type={type} 
+          type={type}
+          className={inputAlign === 'center' ? 'text-center' : inputAlign === 'right' ? 'text-right' : undefined}
         />
         <InputGroupAddon align={align}>
          {icon && (
