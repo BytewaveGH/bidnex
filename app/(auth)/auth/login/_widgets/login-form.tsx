@@ -21,7 +21,7 @@ export default function LoginForm() {
                 </h1>
                 <p className="text-base text-[#657688] font-normal">
                     Don't have an account?{' '}
-                    <Link href="/auth/signup" className="text-base text-[#13161A] font-normal">
+                    <Link href="/auth/sign-up" className="text-base text-[#13161A] font-normal">
                         Sign Up
                     </Link>
                 </p>

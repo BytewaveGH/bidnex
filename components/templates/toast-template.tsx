@@ -35,7 +35,7 @@ function Toast(props: ToastProps) {
   const isSuccess = type === 'success';
 
   return (
-    <div 
+    <div
       className="flex rounded-2xl border w-[385px] items-center p-4 gap-4 relative overflow-hidden bg-white"
     >
       {/* Gradient overlay - only covers 1/3 of the width with slight slant */}
@@ -48,12 +48,21 @@ function Toast(props: ToastProps) {
         />
       )}
 
+      {!isSuccess && (
+        <div
+          className="absolute left-0 top-0 bottom-0 w-1/3 rounded-l-2xl"
+          style={{
+            background: 'linear-gradient(115deg, #F3C1BF, #F3C1BF, #F3C1BF, #F3C1BF,#F3C1BF,#FFFFFF,  #FFFFFF,  #FFFFFF,   #FFFFFF)',
+          }}
+        />
+      )}
+
       {/* Content - positioned above gradient */}
       <div className="relative z-10 flex items-center gap-4 w-full min-h-[40px]">
         {/* Success Icon */}
         {isSuccess && (
           <div className="shrink-0 relative">
-            <div 
+            <div
               className="w-10 h-10 rounded-full flex items-center justify-center bg-green-50 "
               style={{
                 // backgroundColor: '#0F973D',
@@ -61,6 +70,19 @@ function Toast(props: ToastProps) {
               }}
             >
               <Check className="w-5 h-5 text-white bg-[#099137] rounded-full p-1 " />
+            </div>
+          </div>
+        )}
+        {!isSuccess && (
+          <div className="shrink-0 relative">
+            <div
+              className="w-10 h-10 rounded-full flex items-center justify-center bg-red-100 "
+              style={{
+                // backgroundColor: '#0F973D',
+                boxShadow: '0 0 0 2px rgba(242, 188, 186, 1)',
+              }}
+            >
+              <X className="w-5 h-5 text-white bg-[#D42620] rounded-full p-1 " />
             </div>
           </div>
         )}
