@@ -5,6 +5,7 @@ import { authConfig, roleRedirects } from "./auth.config"
 const { auth } = NextAuth(authConfig)
 
 const PUBLIC_ROUTE_PATTERNS = [
+  /\/auth\/login/,
   /\/auth\/forgot-password/,
   /\/auth\/reset-password/,
   /\/surveys/,
@@ -25,9 +26,7 @@ export default auth((req) => {
   if (isPublicRoute(pathname)) return NextResponse.next()
 
   if (!isLoggedIn) {
-    const signInUrl = new URL("/auth/login", request.url)
-    signInUrl.searchParams.set("callbackUrl", encodeURIComponent(pathname))
-    return NextResponse.redirect(signInUrl)
+    return NextResponse.redirect(new URL("/auth/login", request.url))
   }
 
   const isAtSignIn = pathname === "/auth/login" || pathname === "/"
