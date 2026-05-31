@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { showToast } from '@/components/templates/toast-template'
 import { useUnauthenticatedAxios } from '@/hooks/use-axios'
 
@@ -9,6 +9,7 @@ export function useOtp(phone: string, onSuccess: () => void) {
     const [timeLeft, setTimeLeft] = useState(59)
     const [isVerifying, setIsVerifying] = useState(false)
     const [isSending, setIsSending] = useState(false)
+    const hasSentRef = useRef(false)
 
     const sendOtp = useCallback(async () => {
         setIsSending(true)
@@ -16,13 +17,13 @@ export function useOtp(phone: string, onSuccess: () => void) {
              const response: any = await callApi({
                 method: 'POST',
                 url: '/auth/send-otp',
-                
                 data: { phone },
             })
             if (response.status >= 400) {
                 showToast('failure', response.data?.message || 'Failed to send OTP.')
                 return
             }
+            showToast('success', response.data?.message || 'OTP sent successfully.')
             setTimeLeft(59)
         } catch (error: unknown) {
             const message = (error as { response?: { data?: { message?: string } } })?.response?.data?.message
@@ -33,6 +34,8 @@ export function useOtp(phone: string, onSuccess: () => void) {
     }, [phone])
 
     useEffect(() => {
+        if (hasSentRef.current) return
+        hasSentRef.current = true
         sendOtp()
     }, [])
 
@@ -53,7 +56,7 @@ export function useOtp(phone: string, onSuccess: () => void) {
                 method: 'POST',
                 url: '/auth/verify-otp',
                 headers: { 'X-Tenant-Domain': 'bidder' },
-                data: { phone, otp },
+                data: { otp },
             })
             if (response.status >= 400) {
                 showToast('failure', response.data?.message || 'Invalid OTP. Please try again.')
