@@ -1,44 +1,34 @@
 'use client'
-import React, { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import ButtonTemplate from '@/components/templates/button-template'
 import InputTemplate from '@/components/templates/input-template'
-import Link from 'next/link'
+import { useOtp } from '../_logics/useOtp'
 
-export default function OtpForm({onChangePage}: {onChangePage: () => void}) {
-    const router = useRouter()
-    const [otp, setOtp] = useState('')
-    const [timeLeft, setTimeLeft] = useState(59)
-
-    useEffect(() => {
-        if (timeLeft > 0) {
-            const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000)
-            return () => clearTimeout(timer)
-        }
-    }, [timeLeft])
-
-    const formatTime = (seconds: number) => {
-        const mins = Math.floor(seconds / 60)
-        const secs = seconds % 60
-        return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
-    }
+export default function OtpForm({ onChangePage, phone }: { onChangePage: () => void; phone: string }) {
+    const {
+        otp,
+        setOtp,
+        formattedTime,
+        canResend,
+        isVerifying,
+        isSending,
+        sendOtp,
+        verifyOtp,
+    } = useOtp(phone, onChangePage)
 
     return (
         <div className=" px-6 py-12">
-            {/* Welcome Section */}
             <div className="mb-4">
                 <h1 className="text-3xl font-semibold text-gray-900 mb-2">
-                 Enter Verification Code
+                    Enter Verification Code
                 </h1>
                 <p className="text-base text-[#657688] font-normal">
-                    We've sent a code to {' '}
-                    <Link href="/auth/login" className="text-base text-[#13161A] font-normal underline">
-                    0555888111
-                    </Link>
+                    We've sent a code to{' '}
+                    <span className="text-base text-[#13161A] font-normal underline">
+                        {phone}
+                    </span>
                 </p>
             </div>
 
-            {/* OTP Input Fields */}
             <div className='w-[550px]'>
                 <div className='mb-4'>
                     <InputTemplate
@@ -50,17 +40,31 @@ export default function OtpForm({onChangePage}: {onChangePage: () => void}) {
                     />
                 </div>
 
-                {/* Resend Timer */}
                 <div className='mb-8'>
-                    <p className="text-sm text-[#657688] font-normal">
-                        Resend code in {' '}
-                        <span className="text-sm text-[#13161A] font-semibold underline">
-                            {formatTime(timeLeft)}
-                        </span>
-                    </p>
+                    {canResend ? (
+                        <button
+                            onClick={sendOtp}
+                            disabled={isSending}
+                            className="text-sm text-[#13161A] font-semibold underline disabled:opacity-50"
+                        >
+                            {isSending ? 'Sending...' : 'Resend code'}
+                        </button>
+                    ) : (
+                        <p className="text-sm text-[#657688] font-normal">
+                            Resend code in{' '}
+                            <span className="text-sm text-[#13161A] font-semibold underline">
+                                {formattedTime}
+                            </span>
+                        </p>
+                    )}
                 </div>
-            
-                <ButtonTemplate title='Verify Account' className='w-full h-11' onClick={onChangePage} />
+
+                <ButtonTemplate
+                    title={isVerifying ? 'Verifying...' : 'Verify Account'}
+                    className='w-full h-11'
+                    onClick={verifyOtp}
+                    disabled={isVerifying || otp.length < 6}
+                />
             </div>
         </div>
     )

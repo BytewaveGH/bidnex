@@ -1,25 +1,27 @@
 'use client'
-import React, { useState } from 'react'
 import { Eye, EyeOff } from 'lucide-react'
-import { useRouter } from 'next/navigation'
 import InputTemplate from '@/components/templates/input-template'
 import ButtonTemplate from '@/components/templates/button-template'
 import Link from 'next/link'
-import { CheckboxTemplate } from '@/components/templates/checkbox-template'
+import { useSignup } from '../_logics/useSignup'
 
-export default function SignupForm({onChangePage}: {onChangePage: () => void}) {
-    const router = useRouter()
-   
-    const [newPassword, setNewPassword] = useState('')
-   const [showNewPassword, setShowNewPassword] = useState(false)
-    
+export default function SignupForm({ onChangePage }: { onChangePage: (phone: string) => void }) {
+    const {
+        formData,
+        updateField,
+        showPassword,
+        setShowPassword,
+        showConfirmPassword,
+        setShowConfirmPassword,
+        isLoading,
+        handleSubmit,
+    } = useSignup(onChangePage)
 
     return (
-        <div className=" px-6 py-12">
-            {/* Welcome Section */}
+        <div className="px-6 py-12">
             <div className="mb-8">
                 <h1 className="text-3xl font-semibold text-gray-900 mb-2">
-                  Let's Get You Started!
+                    Let's Get You Started!
                 </h1>
                 <p className="text-base text-[#657688] font-normal">
                     Already have an account?{' '}
@@ -29,36 +31,63 @@ export default function SignupForm({onChangePage}: {onChangePage: () => void}) {
                 </p>
             </div>
 
-            {/* Form */}
             <div className='w-[550px]'>
-                <div className=' flex flex-col gap-6 mb-8'>
+                <div className='flex flex-col gap-6 mb-8'>
+                    <InputTemplate
+                        label='Username'
+                        placeholder='Enter your username'
+                        className='h-11'
+                        value={formData.username}
+                        onChange={updateField('username')}
+                    />
                     <InputTemplate
                         label='Email Address'
-                        placeholder={'Enter your email address'} className='h-11'
-
+                        placeholder='Enter your email address'
+                        className='h-11'
+                        value={formData.email}
+                        onChange={updateField('email')}
+                        type='email'
                     />
                     <InputTemplate
                         label='Phone Number'
-                        placeholder={'Enter your phone number'} className='h-11'
-
+                        placeholder='Enter your phone number'
+                        className='h-11'
+                        value={formData.phone}
+                        onChange={updateField('phone')}
+                        type='tel'
                     />
-                   <InputTemplate 
-                    label='Password'
-                    placeholder='Enter your new password'
-                    className='h-11'
-                    icon={showNewPassword ? <Eye className='w-4 h-4 text-[#667185] mr-2' /> : <EyeOff className='w-4 h-4 text-[#667185] mr-2' />}
-                    align='inline-end'
-                    description='Must be at least 8 characters.'
-                    type={showNewPassword ? 'text' : 'password'}
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    showPasswordStrength={true}
-                    onIconClick={() => setShowNewPassword(!showNewPassword)}
-                />
-
+                    <InputTemplate
+                        label='Password'
+                        placeholder='Enter your password'
+                        className='h-11'
+                        icon={showPassword ? <Eye className='w-4 h-4 text-[#667185] mr-2' /> : <EyeOff className='w-4 h-4 text-[#667185] mr-2' />}
+                        align='inline-end'
+                        description='Must be at least 8 characters.'
+                        type={showPassword ? 'text' : 'password'}
+                        value={formData.password}
+                        onChange={updateField('password')}
+                        showPasswordStrength={true}
+                        onIconClick={() => setShowPassword(!showPassword)}
+                    />
+                    <InputTemplate
+                        label='Confirm Password'
+                        placeholder='Re-enter your password'
+                        className='h-11'
+                        icon={showConfirmPassword ? <Eye className='w-4 h-4 text-[#667185] mr-2' /> : <EyeOff className='w-4 h-4 text-[#667185] mr-2' />}
+                        align='inline-end'
+                        type={showConfirmPassword ? 'text' : 'password'}
+                        value={formData.confirmPassword}
+                        onChange={updateField('confirmPassword')}
+                        onIconClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    />
                 </div>
-            
-                <ButtonTemplate title='Sign Up' className='w-full h-11' onClick={onChangePage} />
+
+                <ButtonTemplate
+                    title={isLoading ? 'Creating Account...' : 'Sign Up'}
+                    className='w-full h-11'
+                    onClick={handleSubmit}
+                    disabled={isLoading}
+                />
             </div>
         </div>
     )

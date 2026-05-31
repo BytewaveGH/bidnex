@@ -13,7 +13,14 @@ import { useRouter } from 'next/navigation'
 
 export default function Signup() {
     const [page, setPage] = useState<'signup' | 'otp'>('signup')
+    const [registeredPhone, setRegisteredPhone] = useState('')
     const router = useRouter();
+
+    const handleSignupSuccess = (phone: string) => {
+        setRegisteredPhone(phone)
+        setPage('otp')
+    }
+
     return (
         <main className="min-h-screen">
             <section id="signup-wrapper" className="flex min-h-screen gap-40">
@@ -27,7 +34,7 @@ export default function Signup() {
                                 <div className="flex flex-col items-start justify-between h-full">
                                     <Logo className='text-white text-5xl font-semibold' />
                                     <div className="flex items-center justify-center w-full">
-                                        <div className="bg-[#2C292A]  w-2/5 rounded-xl p-4 flex flex-col items-center justify-center gap-6">
+                                        <div className="bg-[#2C292A]  w-3/5 rounded-xl p-4 flex flex-col items-center justify-center gap-6">
                                             <div className='bg-white rounded-full flex items-center justify-center w-10 h-10'>
                                                 <MessageSquareText className='w-4 h-4 text-black' />
                                             </div>
@@ -50,8 +57,9 @@ export default function Signup() {
 
                 <div className="w-full md:w-1/2 flex items-center justify-start min-h-screen">
                     {page === 'signup' ? <SignupForm
-                        onChangePage={() => setPage('otp')}
+                        onChangePage={handleSignupSuccess}
                     /> : <OtpForm
+                        phone={registeredPhone}
                         onChangePage={() => router.push("/auth/login")}
                     />}
                 </div>
