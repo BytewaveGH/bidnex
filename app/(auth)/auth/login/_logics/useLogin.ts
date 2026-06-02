@@ -26,9 +26,11 @@ export function useLogin() {
     setIsLoading(true);
 
     try {
+      console.log("API URL =", process.env.NEXT_PUBLIC_API_URL);
+      console.log("LOGIN URL =", "/auth/login");
       const response: any = await callApi({
         method: "POST",
-        url: "/api/auth/login",
+        url: "/auth/login",
         data: {
           username,
           password,
