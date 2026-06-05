@@ -13,7 +13,6 @@ export const authConfig: NextAuthConfig = {
   providers: [
     Credentials({
       async authorize(credentials, request) {
-        console.log("AUTHORIZE CALLED FROM ROOT AUTH CONFIG");
         const host = request.headers.get("host") ?? "";
         const tenant = tenantFromHost(host);
 
@@ -42,18 +41,13 @@ export const authConfig: NextAuthConfig = {
             },
           );
 
-          console.log("AUTH STATUS:", response.status);
-
           const result = await response.json();
-          console.log("AUTH RESPONSE:", JSON.stringify(result, null, 2));
 
           if (!response.ok) {
-            console.log("AUTH FAILED");
             return null;
           }
 
           const data = result.data;
-          console.log("AUTH DATA:", data);
 
           return {
             id: String(data.user.id),
@@ -72,7 +66,6 @@ export const authConfig: NextAuthConfig = {
             organizationId: "",
           };
         } catch (error) {
-          console.error("AUTHORIZE ERROR:", error);
           return null;
         } finally {
           clearTimeout(timeout);
