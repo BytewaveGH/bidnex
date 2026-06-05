@@ -2,11 +2,8 @@
 
 import { useState } from "react";
 import { showToast } from "@/components/templates/toast-template";
-import { useUnauthenticatedAxios } from "@/hooks/use-axios";
-
+import { signIn } from "next-auth/react";
 export function useLogin() {
-  const callApi = useUnauthenticatedAxios();
-
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -28,23 +25,22 @@ export function useLogin() {
     try {
       console.log("API URL =", process.env.NEXT_PUBLIC_API_URL);
       console.log("LOGIN URL =", "/auth/login");
-      const response: any = await callApi({
-        method: "POST",
-        url: "/auth/login",
-        data: {
-          username,
-          password,
-        },
+      const result = await signIn("credentials", {
+        username,
+        password,
+        redirect: false,
       });
 
-      console.log("LOGIN RESPONSE:", response);
+      console.log("SIGNIN RESULT:", result);
 
-      if (response.status >= 400) {
-        showToast("failure", response.data?.error || "Login failed");
+      if (!result || result.error) {
+        showToast("failure", result?.error || "Login failed");
         return;
       }
 
       showToast("success", "Login successful");
+
+      window.location.href = "/";
     } catch (error: unknown) {
       const message = (
         error as {

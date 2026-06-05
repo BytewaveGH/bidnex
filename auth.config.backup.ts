@@ -13,7 +13,6 @@ export const authConfig: NextAuthConfig = {
   providers: [
     Credentials({
       async authorize(credentials, request) {
-        console.log("AUTHORIZE CALLED FROM ROOT AUTH CONFIG");
         const host = request.headers.get("host") ?? "";
         const tenant = tenantFromHost(host);
 
@@ -21,11 +20,6 @@ export const authConfig: NextAuthConfig = {
         const timeout = setTimeout(() => controller.abort(), 10000);
 
         try {
-          const { username, password } = credentials as {
-            username: string;
-            password: string;
-          };
-
           const response = await fetch(
             `${process.env.NEXT_PUBLIC_API_URL}/auth/login`,
             {
@@ -34,26 +28,15 @@ export const authConfig: NextAuthConfig = {
                 "Content-Type": "application/json",
                 "X-Tenant-Domain": tenant,
               },
-              body: JSON.stringify({
-                username,
-                password,
-              }),
+              body: JSON.stringify(credentials),
               signal: controller.signal,
             },
           );
 
-          console.log("AUTH STATUS:", response.status);
+          if (!response.ok) return null;
 
           const result = await response.json();
-          console.log("AUTH RESPONSE:", JSON.stringify(result, null, 2));
-
-          if (!response.ok) {
-            console.log("AUTH FAILED");
-            return null;
-          }
-
           const data = result.data;
-          console.log("AUTH DATA:", data);
 
           return {
             id: String(data.user.id),
@@ -71,8 +54,7 @@ export const authConfig: NextAuthConfig = {
             onboarding: false,
             organizationId: "",
           };
-        } catch (error) {
-          console.error("AUTHORIZE ERROR:", error);
+        } catch {
           return null;
         } finally {
           clearTimeout(timeout);
