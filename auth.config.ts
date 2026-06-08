@@ -14,44 +14,71 @@ export const authConfig: NextAuthConfig = {
     Credentials({
       async authorize(credentials, request) {
         const host = request.headers.get("host") ?? ""
-        const tenant = tenantFromHost(host)
+        const tenant = (credentials?.tenant as string) || tenantFromHost(host)
 
         const controller = new AbortController()
         const timeout = setTimeout(() => controller.abort(), 10000)
 
         try {
-          const response = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/auth/login`,
-            {
+          const isVendor = tenant === "vendor"
+          const url = isVendor
+            ? `${process.env.NEXT_PUBLIC_API_URL}/auth/customer-login/vendor`
+            : `${process.env.NEXT_PUBLIC_API_URL}/auth/login`
+
+          const response = await fetch(url, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
                 "X-Tenant-Domain": tenant,
               },
-              body: JSON.stringify(credentials),
+              body: JSON.stringify({
+                username: credentials?.username,
+                password: credentials?.password,
+              }),
               signal: controller.signal,
             }
           )
 
           if (!response.ok) return null
 
-          const data = await response.json()
+          const json = await response.json()
+
+          if (isVendor) {
+            const d = json.data
+            return {
+              id: String(d.user.id),
+              userId: String(d.user.id),
+              name: d.user.username,
+              email: d.user.email,
+              username: d.user.username,
+              avatar: d.user.avatar,
+              userType: d.user.accountType,
+              permission: [],
+              tenant,
+              accessToken: d.accessToken,
+              refreshToken: d.refreshToken,
+              accessTokenExpiry: d.accessTokenExpiry * 1000,
+              refreshTokenExpiry: d.refreshTokenExpiry * 1000,
+              onboarding: false,
+              organizationId: "",
+            }
+          }
 
           return {
-            id: data.userId,
-            userId: data.userId,
-            name: data.name,
-            username: data.username,
-            avatar: data.avatar,
-            userType: data.userType,
-            permission: data.permission ?? [],
+            id: json.userId,
+            userId: json.userId,
+            name: json.name,
+            username: json.username,
+            avatar: json.avatar,
+            userType: json.userType,
+            permission: json.permission ?? [],
             tenant,
-            accessToken: data.accessToken,
-            refreshToken: data.refreshToken,
-            accessTokenExpiry: data.accessTokenExpiry,
-            refreshTokenExpiry: data.refreshTokenExpiry,
-            onboarding: data.onboarding,
-            organizationId: data.organizationId,
+            accessToken: json.accessToken,
+            refreshToken: json.refreshToken,
+            accessTokenExpiry: json.accessTokenExpiry,
+            refreshTokenExpiry: json.refreshTokenExpiry,
+            onboarding: json.onboarding,
+            organizationId: json.organizationId,
           }
         } catch {
           return null
@@ -61,7 +88,7 @@ export const authConfig: NextAuthConfig = {
       },
     }),
   ],
-  session: { strategy: "jwt" },
+  session: { strategy: "jwt", maxAge: 30 * 24 * 60 * 60 },
   pages: {
     signIn: "/auth/login",
     error: "/auth/login",
@@ -109,11 +136,12 @@ export const authConfig: NextAuthConfig = {
           clearTimeout(timeout)
 
           if (response.ok) {
-            const refreshed = await response.json()
+            const json = await response.json()
+            const refreshed = json.data ?? json
             token.accessToken = refreshed.accessToken
             token.refreshToken = refreshed.refreshToken
-            token.accessTokenExpiry = refreshed.accessTokenExpiry
-            token.refreshTokenExpiry = refreshed.refreshTokenExpiry
+            token.accessTokenExpiry = refreshed.accessTokenExpiry * 1000
+            token.refreshTokenExpiry = refreshed.refreshTokenExpiry * 1000
           }
         } catch {
           // Fall back gracefully — keep existing token

@@ -12,6 +12,7 @@ const PUBLIC_ROUTE_PATTERNS = [
   /\/kyc/,
   /\/public-applications/,
   /\/auth\/sign-up/,
+  /\/vendor\/auth\//,
 ]
 
 function isPublicRoute(pathname: string) {
@@ -22,6 +23,16 @@ export default auth((req) => {
   const request = req as NextRequest & { auth: typeof req.auth }
   const { pathname } = request.nextUrl
   const isLoggedIn = !!request.auth
+  const tenant = request.auth?.user?.tenant
+
+  if (process.env.NEXT_PUBLIC_MOCK === 'true' && pathname.startsWith('/vendor')) {
+    return NextResponse.next()
+  }
+
+  // Redirect already-logged-in vendors away from vendor auth pages
+  if (isLoggedIn && tenant === 'vendor' && /\/vendor\/auth\//.test(pathname)) {
+    return NextResponse.redirect(new URL('/vendor/dashboard/home', request.url))
+  }
 
   if (isPublicRoute(pathname)) return NextResponse.next()
 
@@ -31,6 +42,9 @@ export default auth((req) => {
 
   const isAtSignIn = pathname === "/auth/login" || pathname === "/"
   if (isAtSignIn) {
+    if (tenant === 'vendor') {
+      return NextResponse.redirect(new URL('/vendor/dashboard/home', request.url))
+    }
     const userType = request.auth?.user?.userType as string | undefined
     const destination = userType ? roleRedirects[userType] : undefined
     if (destination) {
