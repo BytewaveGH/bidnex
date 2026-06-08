@@ -22,6 +22,19 @@ export default auth((req) => {
   const request = req as NextRequest & { auth: typeof req.auth }
   const { pathname } = request.nextUrl
   const isLoggedIn = !!request.auth
+  const userType = request.auth?.user?.userType as string | undefined
+
+  if (process.env.NEXT_PUBLIC_MOCK === 'true' && pathname.startsWith('/vendor')) {
+    return NextResponse.next()
+  }
+
+  // Redirect logged-in users away from any auth pages
+  if (isLoggedIn && isPublicRoute(pathname)) {
+    const destination = userType ? roleRedirects[userType] : undefined
+    if (destination) {
+      return NextResponse.redirect(new URL(destination, request.url))
+    }
+  }
 
   if (isPublicRoute(pathname)) return NextResponse.next()
 
@@ -29,9 +42,8 @@ export default auth((req) => {
     return NextResponse.redirect(new URL("/auth/login", request.url))
   }
 
-  const isAtSignIn = pathname === "/auth/login" || pathname === "/"
-  if (isAtSignIn) {
-    const userType = request.auth?.user?.userType as string | undefined
+  // Redirect from root to the correct dashboard
+  if (pathname === "/") {
     const destination = userType ? roleRedirects[userType] : undefined
     if (destination) {
       return NextResponse.redirect(new URL(destination, request.url))

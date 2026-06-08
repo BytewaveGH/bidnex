@@ -5,7 +5,17 @@ import ButtonTemplate from '@/components/templates/button-template'
 import Link from 'next/link'
 import { useSignup } from '../_logics/useSignup'
 
-export default function SignupForm({ onChangePage }: { onChangePage: (phone: string) => void }) {
+type AccountType = 'bidder' | 'vendor'
+
+export default function SignupForm({
+    onChangePage,
+    accountType,
+    onAccountTypeChange,
+}: {
+    onChangePage: (phone: string) => void
+    accountType: AccountType
+    onAccountTypeChange: (type: AccountType) => void
+}) {
     const {
         formData,
         updateField,
@@ -15,13 +25,13 @@ export default function SignupForm({ onChangePage }: { onChangePage: (phone: str
         setShowConfirmPassword,
         isLoading,
         handleSubmit,
-    } = useSignup(onChangePage)
+    } = useSignup(onChangePage, accountType)
 
     return (
         <div className="px-6 py-12">
             <div className="mb-8">
                 <h1 className="text-3xl font-semibold text-gray-900 mb-2">
-                    Let's Get You Started!
+                    Let&apos;s Get You Started!
                 </h1>
                 <p className="text-base text-[#657688] font-normal">
                     Already have an account?{' '}
@@ -32,6 +42,25 @@ export default function SignupForm({ onChangePage }: { onChangePage: (phone: str
             </div>
 
             <div className='w-[550px]'>
+                {/* Account type toggle */}
+                <div className="flex rounded-lg border border-gray-200 overflow-hidden mb-6">
+                    {(['bidder', 'vendor'] as AccountType[]).map((type) => (
+                        <button
+                            key={type}
+                            type="button"
+                            disabled={isLoading}
+                            className={`flex-1 h-11 text-sm font-medium transition-colors capitalize ${
+                                accountType === type
+                                    ? 'bg-[#13161A] text-white'
+                                    : 'text-[#657688] hover:text-[#13161A] hover:bg-gray-50'
+                            }`}
+                            onClick={() => onAccountTypeChange(type)}
+                        >
+                            {type === 'bidder' ? 'Bidder' : 'Vendor'}
+                        </button>
+                    ))}
+                </div>
+
                 <div className='flex flex-col gap-6 mb-8'>
                     <InputTemplate
                         label='Username'
@@ -83,7 +112,7 @@ export default function SignupForm({ onChangePage }: { onChangePage: (phone: str
                 </div>
 
                 <ButtonTemplate
-                    title={isLoading ? 'Creating Account...' : 'Sign Up'}
+                    title={isLoading ? 'Creating Account...' : `Sign Up as ${accountType === 'bidder' ? 'Bidder' : 'Vendor'}`}
                     className='w-full h-11'
                     onClick={handleSubmit}
                     disabled={isLoading}
