@@ -810,7 +810,7 @@ export const PriceFilter = React.forwardRef<MultiSelectRef, MultiSelectProps>(
 								getAllOptions().length
 							} options selected. ${placeholder}`}
 							className={cn(
-								"flex p-1 rounded-md border min-h-10 h-auto items-center justify-between bg-inherit hover:bg-inherit [&_svg]:pointer-events-auto",
+								"flex p-1 rounded-md border border-input min-h-10 h-auto items-center justify-between bg-inherit hover:bg-inherit [&_svg]:pointer-events-auto",
 								autoSize ? "w-auto" : "w-full",
 								responsiveSettings.compactMode && "min-h-8 text-sm",
 								screenSize === "mobile" && "min-h-12 text-base",
@@ -1007,7 +1007,7 @@ export const PriceFilter = React.forwardRef<MultiSelectRef, MultiSelectProps>(
 						aria-multiselectable="true"
 						aria-label="Available options"
 						className={cn(
-							"w-auto p-0",
+							"w-auto p-0 bg-white",
 							getPopoverAnimationClass(),
 							screenSize === "mobile" && "w-[85vw] max-w-[280px]",
 							screenSize === "tablet" && "w-[70vw] max-w-md",

@@ -109,7 +109,7 @@ const mockProducts: ProductCardType[] = [
 export default function AllItems() {
     return (<div className="w-full flex justify-center items-center">
         <div className="w-full px-4 flex justify-center items-center">
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(400px,1fr))] gap-2 justify-items-start w-full">
+            <div className="grid grid-cols-4 gap-4 w-full">
                 {mockProducts.map((product) => (
                     <div key={product.id} className="w-full">
                         <ProductCard    isLoggedIn={true} product={product} />

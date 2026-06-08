@@ -1,15 +1,14 @@
 'use client'
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import ButtonTemplate from '../templates/button-template'
 import InputTemplate from '../templates/input-template'
 import Logo from '../templates/logo'
 import { useRouter } from 'next/navigation'
-import { Armchair, Car, CarFront, CookingPot, Monitor, MonitorSmartphone, SearchIcon, Shirt, Smartphone, UtensilsCrossed } from 'lucide-react'
+import { Armchair, CarFront, CookingPot, MonitorSmartphone, SearchIcon, Shirt, Smartphone } from 'lucide-react'
 import legalHammer from '@/assets/svgs/legal-hammer.svg'
 import champion from '@/assets/svgs/champion.svg'
 import favoriteIcon from '@/assets/svgs/eye.svg'
 import profileIcon from '@/assets/svgs/profile.jpg'
-import headset from '@/assets/images/headset.png'
 import Image from 'next/image'
 import HoverCardTemplate from '@/components/templates/hover-card-template'
 import electronics from '@/assets/images/electronics.png'
@@ -18,6 +17,7 @@ import car from '@/assets/images/car.png'
 import office from '@/assets/images/office.png'
 import phoneAccessories from '@/assets/images/phone-accessories.png'
 import utensils from '@/assets/images/utensils.png'
+import { useSession } from 'next-auth/react'
 
 
 const categoriesHoverItems = [
@@ -32,16 +32,11 @@ const categoriesHoverItems = [
 
 export default function TopNav() {
   const router = useRouter()
-  const [navItems, setNavItems] = useState<{ name: string, path: string }[]>([{ name: 'All Items', path: '/all-items' }, { name: 'Categories', path: '/categories' }, { name: 'Buy Now', path: '/buy-now' }, { name: 'Popular', path: '/popular' }])
-  const [isSignedIn, setIsSignedIn] = useState(false)
+  const { data: session } = useSession()
+  const isSignedIn = !!session?.user
+  const [navItems] = useState<{ name: string, path: string }[]>([{ name: 'All Items', path: '/bidder/all-items' }, { name: 'Categories', path: '/bidder/categories' }, { name: 'Buy Now', path: '/bidder/buy-now' }, { name: 'Popular', path: '/bidder/popular' }])
   const [hoveredCategoryIndex, setHoveredCategoryIndex] = useState(0)
   const svgsIcons = [legalHammer, favoriteIcon, champion]
-  useEffect(() => {
-    const signedIn = localStorage.getItem('isSignedIn')
-    if (signedIn) {
-      setIsSignedIn(true)
-    }
-  }, [])
   return (
     <div className="sticky top-0 z-50 bg-white">
       <section className=" py-4 flex px-20 justify-between items-center h-full w-full gap-4 min-w-0">
