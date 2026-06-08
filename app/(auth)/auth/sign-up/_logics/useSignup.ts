@@ -11,7 +11,7 @@ interface SignupFormData {
     confirmPassword: string
 }
 
-export function useSignup(onSuccess: (phone: string) => void) {
+export function useSignup(onSuccess: (phone: string) => void, accountType: 'bidder' | 'vendor') {
     const callApi = useUnauthenticatedAxios()
 
     const [formData, setFormData] = useState<SignupFormData>({
@@ -57,11 +57,11 @@ export function useSignup(onSuccess: (phone: string) => void) {
 
         setIsLoading(true)
         try {
-            const response:any = await callApi({
+            const response: any = await callApi({
                 method: 'POST',
                 url: '/auth/register',
-                params: { type: 'bidder' },
-                headers: { 'X-Tenant-Domain': 'bidder' },
+                params: { type: accountType },
+                headers: { 'X-Tenant-Domain': accountType },
                 data: {
                     username: formData.username,
                     email: formData.email,
@@ -70,8 +70,6 @@ export function useSignup(onSuccess: (phone: string) => void) {
                     confirmPassword: formData.confirmPassword,
                 },
             })
-
-            console.log(response)
 
             if (response.status >= 400) {
                 showToast('failure', response.data?.error || 'Registration failed. Please try again.')

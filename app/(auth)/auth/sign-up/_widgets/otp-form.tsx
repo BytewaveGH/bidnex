@@ -3,7 +3,15 @@ import ButtonTemplate from '@/components/templates/button-template'
 import InputTemplate from '@/components/templates/input-template'
 import { useOtp } from '../_logics/useOtp'
 
-export default function OtpForm({ onChangePage, phone }: { onChangePage: () => void; phone: string }) {
+export default function OtpForm({
+    onChangePage,
+    phone,
+    accountType,
+}: {
+    onChangePage: () => void
+    phone: string
+    accountType: 'bidder' | 'vendor'
+}) {
     const {
         otp,
         setOtp,
@@ -13,16 +21,16 @@ export default function OtpForm({ onChangePage, phone }: { onChangePage: () => v
         isSending,
         sendOtp,
         verifyOtp,
-    } = useOtp(phone, onChangePage)
+    } = useOtp(phone, onChangePage, accountType)
 
     return (
-        <div className=" px-6 py-12">
+        <div className="px-6 py-12">
             <div className="mb-4">
                 <h1 className="text-3xl font-semibold text-gray-900 mb-2">
                     Enter Verification Code
                 </h1>
                 <p className="text-base text-[#657688] font-normal">
-                    We've sent a code to{' '}
+                    We&apos;ve sent a code to{' '}
                     <span className="text-base text-[#13161A] font-normal underline">
                         {phone}
                     </span>
