@@ -1,6 +1,6 @@
-# BidNex 🎯
+# BIDCHALE 🎯
 
-A modern, real-time bidding platform built with Next.js and React. BidNex provides a seamless experience for users to participate in auctions, place bids, and track their bidding history.
+A modern, real-time bidding platform built with Next.js and React. BidChale provides a seamless experience for users to participate in auctions, place bids, and track their bidding history.
 
 ## ✨ Features
 
@@ -131,5 +131,5 @@ If you have any questions or need help, please:
 
 ---
 
-Made with ❤️ by the BidNex team
+Made with ❤️ by the BidChale team
 
