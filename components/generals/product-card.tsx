@@ -10,7 +10,7 @@ import AlertDialogTemplate from '../templates/alert-dialog-template'
 export default function ProductCard({ product, isLoggedIn }: { product: ProductCardType, isLoggedIn?: boolean }) {
     const router = useRouter()
     return (
-        <div className="h-max border w-full rounded-[16px] border-[#F0F2F5] flex flex-col min-w-[400px] hover:cursor-pointer "
+        <div className="h-max border w-full rounded-[16px] border-[#F0F2F5] flex flex-col hover:cursor-pointer "
         
         onClick={() => router.push(`/product/${product.id}`)}
         >
