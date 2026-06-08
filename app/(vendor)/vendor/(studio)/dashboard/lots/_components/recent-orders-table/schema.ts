@@ -1,4 +1,5 @@
-import type { LotCondition } from "../_components/lot-form-schema";
+import { LotCondition } from "../lot-form-schema";
+
 
 export const lotFilters = ["all", "draft", "submitted", "approved", "rejected"] as const;
 

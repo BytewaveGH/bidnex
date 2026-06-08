@@ -1,56 +1,56 @@
 import type { NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import { tenantFromHost } from "@/lib/tenant-from-host";
 
 const roleRedirects: Record<string, string> = {
   admin: "/admin/programs",
   manager: "/manager/programs",
   eso: "/eso/programs",
   participant: "/coach/onboarding",
-  vendor: "/vendor/dashboard/home",
-  bidder: "/bidder/all-items",
 };
 
 export const authConfig: NextAuthConfig = {
   providers: [
     Credentials({
-      async authorize(credentials) {
+      async authorize(credentials, request) {
+        const host = request.headers.get("host") ?? "";
+        const tenant = tenantFromHost(host);
+
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 10000);
 
         try {
           const response = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/auth/customer-login/vendor`,
+            `${process.env.NEXT_PUBLIC_API_URL}/auth/login`,
             {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                username: credentials?.username,
-                password: credentials?.password,
-              }),
+              headers: {
+                "Content-Type": "application/json",
+                "X-Tenant-Domain": tenant,
+              },
+              body: JSON.stringify(credentials),
               signal: controller.signal,
             },
           );
 
-          const json = await response.json();
-          if (!json.status || !json.data) return null;
+          if (!response.ok) return null;
 
-          const d = json.data;
-          const accountType = d.user.accountType as "vendor" | "bidder";
+          const result = await response.json();
+          const data = result.data;
 
           return {
-            id: String(d.user.id),
-            userId: String(d.user.id),
-            name: d.user.username,
-            email: d.user.email,
-            username: d.user.username,
-            avatar: d.user.avatar,
-            userType: accountType,
+            id: String(data.user.id),
+            userId: data.user.id,
+            name: data.user.username,
+            username: data.user.username,
+            avatar: data.user.avatar ?? "",
+            userType: data.user.accountType,
             permission: [],
-            tenant: accountType,
-            accessToken: d.accessToken,
-            refreshToken: d.refreshToken,
-            accessTokenExpiry: d.accessTokenExpiry * 1000,
-            refreshTokenExpiry: d.refreshTokenExpiry * 1000,
+            tenant,
+            accessToken: data.accessToken,
+            refreshToken: data.refreshToken,
+            accessTokenExpiry: data.accessTokenExpiry,
+            refreshTokenExpiry: data.refreshTokenExpiry,
             onboarding: false,
             organizationId: "",
           };
@@ -62,7 +62,7 @@ export const authConfig: NextAuthConfig = {
       },
     }),
   ],
-  session: { strategy: "jwt", maxAge: 30 * 24 * 60 * 60 },
+  session: { strategy: "jwt" },
   pages: {
     signIn: "/auth/login",
     error: "/auth/login",
@@ -110,12 +110,11 @@ export const authConfig: NextAuthConfig = {
           clearTimeout(timeout);
 
           if (response.ok) {
-            const json = await response.json();
-            const refreshed = json.data ?? json;
+            const refreshed = await response.json();
             token.accessToken = refreshed.accessToken;
             token.refreshToken = refreshed.refreshToken;
-            token.accessTokenExpiry = refreshed.accessTokenExpiry * 1000;
-            token.refreshTokenExpiry = refreshed.refreshTokenExpiry * 1000;
+            token.accessTokenExpiry = refreshed.accessTokenExpiry;
+            token.refreshTokenExpiry = refreshed.refreshTokenExpiry;
           }
         } catch {
           // Fall back gracefully — keep existing token
@@ -133,9 +132,7 @@ export const authConfig: NextAuthConfig = {
         | "admin"
         | "manager"
         | "eso"
-        | "participant"
-        | "vendor"
-        | "bidder";
+        | "participant";
       session.user.permission = token.permission as string[];
       session.user.tenant = token.tenant as string;
       session.user.accessToken = token.accessToken as string;
@@ -153,7 +150,9 @@ export const authConfig: NextAuthConfig = {
       return baseUrl;
     },
   },
+  // role-based redirect is handled in middleware after sign-in
   events: {},
+  // expose roleRedirects for middleware use
 } satisfies NextAuthConfig;
 
 export { roleRedirects };

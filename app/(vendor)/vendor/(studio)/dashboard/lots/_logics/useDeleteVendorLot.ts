@@ -19,7 +19,7 @@ export function useDeleteVendorLot() {
     setDeletingLotId(lotId);
 
     try {
-      const response = await callApi({
+      const response:any = await callApi({
         method: "DELETE",
         url: `/vendor/lots/${lotId}`,
       });

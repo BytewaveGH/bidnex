@@ -14,7 +14,7 @@ export function useCreateVendorLot() {
     setIsLoading(true);
 
     try {
-      const response = await callApi({
+      const response:any = await callApi({
         method: "POST",
         url: "/vendor/lots",
         data: payload,

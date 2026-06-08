@@ -25,7 +25,7 @@ export function useVendorLots(params: VendorLotsQueryParams, refreshToken = 0) {
       setError(null);
 
       try {
-        const response = await callApi({
+        const response:any = await callApi({
           method: "GET",
           url: "/vendor/lots",
           params: buildVendorLotsParams(params),

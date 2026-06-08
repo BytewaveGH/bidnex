@@ -19,7 +19,7 @@ export function useSubmitVendorLot() {
     setSubmittingLotId(lotId);
 
     try {
-      const response = await callApi({
+      const response:any = await callApi({
         method: "POST",
         url: `/vendor/lots/${lotId}/submit`,
       });

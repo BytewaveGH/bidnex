@@ -34,7 +34,7 @@ export function usePublicCategories(enabled = true) {
       setError(null);
 
       try {
-        const response = await callApi({
+        const response:any = await callApi({
           method: "GET",
           url: "/public/categories",
         });

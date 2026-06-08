@@ -6,7 +6,7 @@ declare module "next-auth" {
       userId: string
       username: string
       avatar: string
-      userType: "admin" | "manager" | "eso" | "participant" | "vendor"
+      userType: "admin" | "manager" | "eso" | "participant" | "vendor" | "bidder"
       permission: string[]
       tenant: string
       accessToken: string
@@ -22,7 +22,7 @@ declare module "next-auth" {
     userId: string
     username: string
     avatar: string
-    userType: "admin" | "manager" | "eso" | "participant" | "vendor"
+    userType: "admin" | "manager" | "eso" | "participant" | "vendor" | "bidder"
     permission: string[]
     tenant: string
     accessToken: string
@@ -39,7 +39,7 @@ declare module "next-auth/jwt" {
     userId: string
     username: string
     avatar: string
-    userType: "admin" | "manager" | "eso" | "participant" | "vendor"
+    userType: "admin" | "manager" | "eso" | "participant" | "vendor" | "bidder"
     permission: string[]
     tenant: string
     accessToken: string

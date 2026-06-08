@@ -26,7 +26,7 @@ export function useUploadVendorLotImages() {
         formData.append("images", file);
       }
 
-      const response = await callApi({
+      const response:any = await callApi({
         method: "POST",
         url: `/vendor/lots/${lotId}/images`,
         data: formData,

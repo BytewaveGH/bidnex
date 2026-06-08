@@ -21,7 +21,7 @@ export function useUpdateVendorLot() {
     setIsLoading(true);
 
     try {
-      const response = await callApi({
+      const response:any = await callApi({
         method: "PUT",
         url: `/vendor/lots/${lotId}`,
         data: payload,
