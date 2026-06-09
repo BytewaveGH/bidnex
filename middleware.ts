@@ -5,6 +5,7 @@ import { authConfig, roleRedirects } from "./auth.config"
 const { auth } = NextAuth(authConfig)
 
 const PUBLIC_ROUTE_PATTERNS = [
+  /^\/$/,
   /\/auth\/login/,
   /\/auth\/forgot-password/,
   /\/auth\/reset-password/,
@@ -12,6 +13,7 @@ const PUBLIC_ROUTE_PATTERNS = [
   /\/kyc/,
   /\/public-applications/,
   /\/auth\/sign-up/,
+  /^\/bidder/,
 ]
 
 function isPublicRoute(pathname: string) {
@@ -28,8 +30,9 @@ export default auth((req) => {
     return NextResponse.next()
   }
 
-  // Redirect logged-in users away from any auth pages
-  if (isLoggedIn && isPublicRoute(pathname)) {
+  // Redirect logged-in users away from auth pages (not from public browsing pages)
+  const isAuthRoute = /\/auth\//.test(pathname)
+  if (isLoggedIn && isAuthRoute) {
     const destination = userType ? roleRedirects[userType] : undefined
     if (destination) {
       return NextResponse.redirect(new URL(destination, request.url))

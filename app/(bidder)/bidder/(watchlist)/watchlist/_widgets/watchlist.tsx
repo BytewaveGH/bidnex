@@ -2,20 +2,14 @@
 
 import { useMemo } from 'react'
 import ProductCard from '@/components/generals/product-card'
-import { usePublicLots } from '../../_logics/usePublicLots'
-import { useWatchlistIds } from '../../_logics/useWatchlistIds'
-import { resolveLotMediaUrl, formatLotCondition, computeTimeRemaining, type AuctionLot } from '../../_logics/auctions'
+import { useWatchlist } from '../../_logics/useWatchlist'
+import { useWatchlistIds } from '@/app/(bidder)/bidder/(all-items)/_logics/useWatchlistIds'
+import { resolveLotMediaUrl, formatLotCondition, computeTimeRemaining } from '@/app/(bidder)/bidder/(all-items)/_logics/auctions'
 import type { ProductCardType } from '@/lib/interfaces'
+import type { WatchlistItem } from '../../_logics/useWatchlist'
 
-type AllItemsProps = {
-    condition?: string
-    minPrice?: number
-    maxPrice?: number
-    categoryId?: number
-    search?: string
-}
-
-function mapLotToProductCard(lot: AuctionLot): ProductCardType {
+function mapWatchlistItemToProductCard(item: WatchlistItem): ProductCardType {
+    const lot = item.lot
     return {
         id: lot.id,
         image: resolveLotMediaUrl(lot.primaryImage) ?? '',
@@ -31,21 +25,13 @@ function mapLotToProductCard(lot: AuctionLot): ProductCardType {
     }
 }
 
-export default function AllItems({ condition, minPrice, maxPrice, categoryId, search }: AllItemsProps) {
+export default function Watchlist() {
+    const { data, isLoading, error } = useWatchlist({ page: 1, limit: 20 })
     const { watchlistIds, pendingIds, toggleWatchlist } = useWatchlistIds()
-    const { data, isLoading, error } = usePublicLots({
-        page: 1,
-        limit: 20,
-        condition,
-        minPrice,
-        maxPrice,
-        categoryId,
-        search,
-    })
 
-    const lots = useMemo(() => {
+    const items = useMemo(() => {
         if (!data) return []
-        return data.data.map(mapLotToProductCard)
+        return data.data.map(mapWatchlistItemToProductCard)
     }, [data])
 
     if (isLoading) {
@@ -68,10 +54,10 @@ export default function AllItems({ condition, minPrice, maxPrice, categoryId, se
         )
     }
 
-    if (lots.length === 0) {
+    if (items.length === 0) {
         return (
             <div className="w-full flex justify-center items-center py-20">
-                <p className="text-[#657688] text-sm">No items available right now.</p>
+                <p className="text-[#657688] text-sm">Your watchlist is empty.</p>
             </div>
         )
     }
@@ -80,15 +66,9 @@ export default function AllItems({ condition, minPrice, maxPrice, categoryId, se
         <div className="w-full flex justify-center items-center mb-20">
             <div className="w-full px-4 flex justify-center items-center">
                 <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-4 w-full">
-                    {lots.map((lot) => (
-                        <div key={lot.id} className="w-full">
-                            <ProductCard
-                                isLoggedIn={true}
-                                product={lot}
-                                isInWatchlist={watchlistIds.has(lot.id)}
-                                onWatchlistToggle={() => toggleWatchlist(lot.id)}
-                                isWatchlistLoading={pendingIds.has(lot.id)}
-                            />
+                    {items.map((item) => (
+                        <div key={item.id} className="w-full">
+                            <ProductCard isLoggedIn={true} product={item} isInWatchlist={watchlistIds.has(item.id)} onWatchlistToggle={() => toggleWatchlist(item.id)} isWatchlistLoading={pendingIds.has(item.id)} />
                         </div>
                     ))}
                 </div>

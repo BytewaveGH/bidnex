@@ -87,7 +87,7 @@ function PasswordStrengthIndicator({ password }: { password: string }) {
 }
 
 export default function InputTemplate(
-    { className, placeholder, label, icon, align, description, value, onChange, type, showPasswordStrength, onIconClick, otpLength, inputAlign }: { className?: string, placeholder: string, label?: string, icon?: React.ReactNode, align?: 'inline-start' | 'inline-end' | 'block-start' | 'block-end', description?: string, value?: string, onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void, type?: string, showPasswordStrength?: boolean, onIconClick?: () => void, otpLength?: number, inputAlign?: 'left' | 'center' | 'right' }
+    { className, placeholder, label, icon, align, description, value, onChange, onKeyDown, type, showPasswordStrength, onIconClick, otpLength, inputAlign }: { className?: string, placeholder: string, label?: string, icon?: React.ReactNode, align?: 'inline-start' | 'inline-end' | 'block-start' | 'block-end', description?: string, value?: string, onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void, onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void, type?: string, showPasswordStrength?: boolean, onIconClick?: () => void, otpLength?: number, inputAlign?: 'left' | 'center' | 'right' }
 ) {
   const hasValue = value && value.length > 0
   const showStrength = showPasswordStrength && hasValue
@@ -212,10 +212,11 @@ export default function InputTemplate(
     <Field className="">
      {label && <FieldLabel htmlFor="inline-start-input">{label}</FieldLabel>}
       <InputGroup className={cn("w-full text-[#667185] text-sm  placeholder:text-[#667185] ", className)}>
-        <InputGroupInput 
-          id="inline-start-input" 
-          placeholder={placeholder} 
+        <InputGroupInput
+          id="inline-start-input"
+          placeholder={placeholder}
           {...(isControlled ? { value: value ?? '', onChange } : {})}
+          onKeyDown={onKeyDown}
           type={type}
           className={inputAlign === 'center' ? 'text-center' : inputAlign === 'right' ? 'text-right' : undefined}
         />
