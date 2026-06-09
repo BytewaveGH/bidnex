@@ -130,6 +130,14 @@
   }
 }
 
+@layer components {
+  .page-container {
+    width: 100%;
+    padding-left: max(24px, calc((100vw - 1510px) / 2));
+    padding-right: max(24px, calc((100vw - 1510px) / 2));
+  }
+}
+
 @layer utilities {
   [data-theme-preset]:not([data-theme-preset="default"]) .shadow-xs {
     box-shadow: var(--shadow-xs);

@@ -2,7 +2,16 @@
 
 import { useState } from "react";
 import { showToast } from "@/components/templates/toast-template";
-import { signIn } from "next-auth/react";
+import { signIn, getSession } from "next-auth/react";
+
+const roleRedirects: Record<string, string> = {
+  vendor: "/vendor/dashboard/home",
+  bidder: "/bidder/all-items",
+  admin: "/admin/programs",
+  manager: "/manager/programs",
+  eso: "/eso/programs",
+  participant: "/coach/onboarding",
+};
 export function useLogin() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -40,7 +49,10 @@ export function useLogin() {
 
       showToast("success", "Login successful");
 
-      window.location.href = "/";
+      const session = await getSession();
+      const userType = session?.user?.userType as string | undefined;
+      const destination = userType ? (roleRedirects[userType] ?? "/") : "/";
+      window.location.href = destination;
     } catch (error: unknown) {
       const message = (
         error as {

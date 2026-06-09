@@ -41,7 +41,7 @@ export default function SignupForm({
                 </p>
             </div>
 
-            <div className='w-[550px]'>
+            <form className='w-[550px]' onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
                 {/* Account type toggle */}
                 <div className="flex rounded-lg border border-gray-200 overflow-hidden mb-6">
                     {(['bidder', 'vendor'] as AccountType[]).map((type) => (
@@ -114,10 +114,10 @@ export default function SignupForm({
                 <ButtonTemplate
                     title={isLoading ? 'Creating Account...' : `Sign Up as ${accountType === 'bidder' ? 'Bidder' : 'Vendor'}`}
                     className='w-full h-11'
-                    onClick={handleSubmit}
+                    type="submit"
                     disabled={isLoading}
                 />
-            </div>
+            </form>
         </div>
     )
 }
