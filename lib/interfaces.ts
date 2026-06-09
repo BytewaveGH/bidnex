@@ -6,10 +6,11 @@ export interface ProductCardType {
     condition: 'new' | 'good' | string
     quantity: number
     timeRemaining: string
+    bidEndTime?: string
     bidders: number
     productName: string
     marketPrice: string
-    currentBid:     number  
+    currentBid: number
     increment: number
 }
 

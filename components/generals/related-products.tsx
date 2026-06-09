@@ -202,7 +202,9 @@ export default function RelatedProducts() {
         className="flex gap-7 w-full overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
       >
         {mockProducts.map((product) => (
-          <ProductCard key={product.id} product={product} isLoggedIn={true} />
+          <div key={product.id} className="w-[340px] shrink-0">
+            <ProductCard product={product} isLoggedIn={true} />
+          </div>
         ))}
       </div>
     </div>
