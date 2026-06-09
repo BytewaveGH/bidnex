@@ -3,10 +3,11 @@ import { Button } from '../ui/button'
 import { cn } from '@/lib/utils'
 
 export default function ButtonTemplate(
-    { className, title, onClick, disabled = false }: { className?: string, title: React.ReactNode, onClick?: () => void, disabled?: boolean }
+    { className, title, onClick, disabled = false, type = "button" }: { className?: string, title: React.ReactNode, onClick?: () => void, disabled?: boolean, type?: "button" | "submit" | "reset" }
 ) {
   return (
     <Button 
+        type={type}
         disabled={disabled}
         onClick={onClick}
         className={
