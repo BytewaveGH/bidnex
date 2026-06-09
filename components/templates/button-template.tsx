@@ -10,7 +10,7 @@ export default function ButtonTemplate(
         disabled={disabled}
         onClick={onClick}
         className={
-            cn("bg-black text-white rounded-[6px] text-sm font-semibold hover:bg-foreground hover:cursor-pointer"
+            cn("bg-black text-white rounded-[6px] border-[#E4E7EC] text-sm font-semibold hover:bg-foreground hover:cursor-pointer"
             , className, disabled && "cursor-not-allowed bg-[#a1a9b5] ")
         }
     >

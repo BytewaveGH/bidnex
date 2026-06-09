@@ -17,39 +17,43 @@ export default function Home() {
   return (
     <main className="min-h-screen w-full">
       <TopNav />
-      <section className="h-[82dvh] relative  w-full" >
+      <section className="h-[82dvh] relative w-full">
         <Image src={banner} alt="banner" className="w-full h-full object-cover" />
-        <div 
-          className="absolute top-0 left-0 w-full h-full p-20"
+        <div
+          className="absolute top-0 left-0 w-full h-full page-container"
           style={{
             background: 'linear-gradient(to bottom, #66666600, #2C2C2C91, #000000)',
           }}
         >
-          <div className="flex flex-col items-start justify-end h-full">
+          <div className="flex flex-col items-start justify-end h-full pb-20">
             <p className="text-white text-4xl font-bold mb-4">Discover Amazing Deals & Bid<br />Smart, Win Big, & Shop With<br />Confidence.</p>
             <ButtonTemplate title="Start Bidding" className="bg-white text-black hover:bg-white w-40" />
           </div>
         </div>
       </section>
-      <section className="p-20">
+      <section className="page-container py-20">
         <FeaturedItems />
       </section>
-      <section className="p-20 bg-black">
-        <HowItWorks />
+      <section className="bg-black">
+        <div className="page-container py-20">
+          <HowItWorks />
+        </div>
       </section>
-      <section className="p-20 ">
+      <section className="page-container py-20">
         <LiveAuctions />
       </section>
-      <section className="p-20">
+      <section className="page-container py-20">
         <InfoCard />
       </section>
-      <section className="p-20 ">
+      <section className="page-container py-20">
         <Categories />
       </section>
-      <section className="p-20 bg-[#F6F6F6] ">
-        <FAQs />
+      <section className="bg-[#F6F6F6]">
+        <div className="page-container py-20">
+          <FAQs />
+        </div>
       </section>
-      <section className="px-20 pt-20 ">
+      <section className="page-container pt-20">
         <Footer />
       </section>
     </main>

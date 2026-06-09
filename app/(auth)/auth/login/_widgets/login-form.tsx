@@ -43,7 +43,7 @@ export default function LoginForm() {
       </div>
 
       {/* Form */}
-      <div className="w-[550px]">
+      <form className="w-[550px]" onSubmit={(e) => { e.preventDefault(); handleLogin(); }}>
         <div className=" flex flex-col gap-6 mb-2">
           <InputTemplate
             label="Email Address / Phone Number"
@@ -76,10 +76,10 @@ export default function LoginForm() {
         <ButtonTemplate
           title={isLoading ? "Signing In..." : "Sign In"}
           className="w-full h-11"
-          onClick={handleLogin}
+          type="submit"
           disabled={isLoading}
         />
-      </div>
+      </form>
     </div>
   );
 }

@@ -17,7 +17,13 @@ import car from '@/assets/images/car.png'
 import office from '@/assets/images/office.png'
 import phoneAccessories from '@/assets/images/phone-accessories.png'
 import utensils from '@/assets/images/utensils.png'
-import { useSession } from 'next-auth/react'
+import { useSession, signOut } from 'next-auth/react'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { BadgeCheck, Bell, Check, CreditCard, LogOut } from 'lucide-react'
+import { cn, getInitials } from '@/lib/utils'
+import { useWatchlistIds } from '@/app/(bidder)/bidder/(all-items)/_logics/useWatchlistIds'
 
 
 const categoriesHoverItems = [
@@ -30,38 +36,108 @@ const categoriesHoverItems = [
 ] as const
 
 
-export default function TopNav() {
+export default function TopNav({ onSearch, initialSearchValue }: { onSearch?: (query: string) => void; initialSearchValue?: string } = {}) {
   const router = useRouter()
   const { data: session } = useSession()
   const isSignedIn = !!session?.user
   const [navItems] = useState<{ name: string, path: string }[]>([{ name: 'All Items', path: '/bidder/all-items' }, { name: 'Categories', path: '/bidder/categories' }, { name: 'Buy Now', path: '/bidder/buy-now' }, { name: 'Popular', path: '/bidder/popular' }])
   const [hoveredCategoryIndex, setHoveredCategoryIndex] = useState(0)
-  const svgsIcons = [legalHammer, favoriteIcon, champion]
+  const [searchQuery, setSearchQuery] = useState(initialSearchValue ?? '')
+  const { count: watchlistCount } = useWatchlistIds()
+  const navIcons = [
+    { src: legalHammer, label: 'My Bids', href: undefined, count: 0 },
+    { src: favoriteIcon, label: 'Watchlist', href: '/bidder/watchlist', count: watchlistCount },
+    { src: champion, label: 'Won Items', href: undefined, count: 0 },
+  ]
   return (
     <div className="sticky top-0 z-50 bg-white">
-      <section className=" py-4 flex px-20 justify-between items-center h-full w-full gap-4 min-w-0">
+      <section className="py-4">
+        <div className="page-container flex justify-between items-center gap-4 min-w-0">
         <Logo />
         <div className="flex-1 min-w-0 max-w-[600px] h-[40px] shadow-none rounded-[100px]">
           <InputTemplate
             icon={<SearchIcon />}
             placeholder="Search for anything"
             className="flex-1 min-w-0 max-w-[600px] h-[40px] shadow-none rounded-[100px]"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') onSearch?.(searchQuery)
+            }}
           />
         </div>
         {isSignedIn ?
           <div className='flex gap-5 shrink-0 items-center'>
-            {svgsIcons.map((svg, index) => (
-              <div key={index} className='relative flex items-center justify-center border rounded-full p-2'>
-                <Image src={svg} alt="svg" className='size-5' />
-                <span className='absolute -top-3 -right-2 flex size-5.5 items-center justify-center rounded-full bg-[#344054] text-[10px] font-medium text-white'>
-                  0
-                </span>
-              </div>
-            ))}
-            <div className='relative flex items-center justify-center border rounded-full '>
-              <Image src={profileIcon} alt="profile" width={40} height={40} className='size-9 rounded-full' />
-
-            </div>
+            <TooltipProvider>
+              {navIcons.map((icon, index) => (
+                <Tooltip key={index}>
+                  <TooltipTrigger asChild>
+                    <div
+                      className='relative flex items-center justify-center border rounded-full p-2 cursor-pointer'
+                      onClick={() => icon.href && router.push(icon.href)}
+                    >
+                      <Image src={icon.src} alt={icon.label} className='size-5' />
+                      <span className='absolute -top-3 -right-2 flex size-5.5 items-center justify-center rounded-full bg-[#344054] text-[10px] font-medium text-white'>
+                        {icon.count}
+                      </span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">{icon.label}</TooltipContent>
+                </Tooltip>
+              ))}
+            </TooltipProvider>
+            <TooltipProvider>
+              <Tooltip>
+                <DropdownMenu>
+                  <TooltipTrigger asChild>
+                    <DropdownMenuTrigger asChild>
+                      <Avatar className="size-8 rounded-lg cursor-pointer">
+                        <AvatarImage src={profileIcon.src} alt={session?.user?.name ?? ''} />
+                        <AvatarFallback>{getInitials(session?.user?.name ?? '')}</AvatarFallback>
+                      </Avatar>
+                    </DropdownMenuTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">Profile</TooltipContent>
+                  <DropdownMenuContent className="min-w-56 space-y-1 rounded-lg" side="bottom" align="end" sideOffset={4}>
+                    <DropdownMenuItem className={cn("p-0", "bg-accent/50")}>
+                      <div className="flex w-full items-center gap-2 px-1 py-1.5">
+                        <Avatar className="size-9 rounded-lg">
+                          <AvatarImage src={profileIcon.src} alt={session?.user?.name ?? ''} />
+                          <AvatarFallback>{getInitials(session?.user?.name ?? '')}</AvatarFallback>
+                        </Avatar>
+                        <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
+                          <span className="truncate font-semibold">{session?.user?.name}</span>
+                          <span className="truncate text-xs ">{session?.user?.email}</span>
+                        </div>
+                        <span className="mr-1 flex size-5 items-center justify-center rounded-full text-primary opacity-100">
+                          <Check aria-hidden="true" />
+                        </span>
+                      </div>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuGroup>
+                      <DropdownMenuItem>
+                        <BadgeCheck />
+                        Account
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <CreditCard />
+                        Billing
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <Bell />
+                        Notifications
+                      </DropdownMenuItem>
+                    </DropdownMenuGroup>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => signOut({ callbackUrl: '/auth/login' })}>
+                      <LogOut />
+                      Log out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </Tooltip>
+            </TooltipProvider>
           </div>
           :
           <div className="flex gap-2 shrink-0">
@@ -75,6 +151,7 @@ export default function TopNav() {
               onClick={() => router.push('/auth/sign-up')}
               className=" whitespace-nowrap" />
           </div>}
+        </div>
       </section>
       <section className="flex items-center justify-center bg-black gap-10 text-white text-sm font-semibold h-[50px]">
         {navItems.map((item, index) =>
