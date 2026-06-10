@@ -1,5 +1,6 @@
 'use client'
 
+import { Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import OtpForm from '../sign-up/_widgets/otp-form'
 
@@ -8,7 +9,7 @@ const roleRedirects: Record<string, string> = {
   bidder: '/bidder/all-items',
 }
 
-export default function VerifyPage() {
+function VerifyContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
 
@@ -23,5 +24,13 @@ export default function VerifyPage() {
     <main className="min-h-screen flex items-center justify-center">
       <OtpForm phone={phone} accountType={accountType} onChangePage={handleSuccess} />
     </main>
+  )
+}
+
+export default function VerifyPage() {
+  return (
+    <Suspense>
+      <VerifyContent />
+    </Suspense>
   )
 }
