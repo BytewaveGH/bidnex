@@ -4,6 +4,8 @@ import { useMemo } from 'react'
 import ProductCard from '@/components/generals/product-card'
 import { usePublicLots } from '../../_logics/usePublicLots'
 import { useWatchlistIds } from '../../_logics/useWatchlistIds'
+import { useLotRealtime } from '../../_logics/useLotRealtime'
+import { useBidding } from '../../_logics/useBidding'
 import { resolveLotMediaUrl, formatLotCondition, computeTimeRemaining, type AuctionLot } from '../../_logics/auctions'
 import type { ProductCardType } from '@/lib/interfaces'
 
@@ -33,20 +35,10 @@ function mapLotToProductCard(lot: AuctionLot): ProductCardType {
 
 export default function AllItems({ condition, minPrice, maxPrice, categoryId, search }: AllItemsProps) {
     const { watchlistIds, pendingIds, toggleWatchlist } = useWatchlistIds()
-    const { data, isLoading, error } = usePublicLots({
-        page: 1,
-        limit: 20,
-        condition,
-        minPrice,
-        maxPrice,
-        categoryId,
-        search,
-    })
-
-    const lots = useMemo(() => {
-        if (!data) return []
-        return data.data.map(mapLotToProductCard)
-    }, [data])
+    const { data, isLoading, error } = usePublicLots({ page: 1, limit: 20, condition, minPrice, maxPrice, categoryId, search })
+    const baseLots = useMemo(() => data?.data ?? [], [data])
+    const realtimeLots = useLotRealtime(baseLots)
+    const { placeBid, getState, clearError } = useBidding()
 
     if (isLoading) {
         return (
@@ -68,7 +60,7 @@ export default function AllItems({ condition, minPrice, maxPrice, categoryId, se
         )
     }
 
-    if (lots.length === 0) {
+    if (realtimeLots.length === 0) {
         return (
             <div className="w-full flex justify-center items-center py-20">
                 <p className="text-[#657688] text-sm">No items available right now.</p>
@@ -80,17 +72,29 @@ export default function AllItems({ condition, minPrice, maxPrice, categoryId, se
         <div className="w-full flex justify-center items-center mb-20">
             <div className="w-full px-4 flex justify-center items-center">
                 <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-4 w-full">
-                    {lots.map((lot) => (
-                        <div key={lot.id} className="w-full">
-                            <ProductCard
-                                isLoggedIn={true}
-                                product={lot}
-                                isInWatchlist={watchlistIds.has(lot.id)}
-                                onWatchlistToggle={() => toggleWatchlist(lot.id)}
-                                isWatchlistLoading={pendingIds.has(lot.id)}
-                            />
-                        </div>
-                    ))}
+                    {realtimeLots.map((lot) => {
+                        const bidState = getState(lot.id)
+                        return (
+                            <div key={lot.id} className="w-full">
+                                <ProductCard
+                                    isLoggedIn={true}
+                                    product={mapLotToProductCard(lot)}
+                                    isInWatchlist={watchlistIds.has(lot.id)}
+                                    onWatchlistToggle={() => toggleWatchlist(lot.id)}
+                                    isWatchlistLoading={pendingIds.has(lot.id)}
+                                    isWinning={lot.isWinning}
+                                    isOutbid={lot.isOutbid}
+                                    isClosed={lot.isClosed}
+                                    antiSniped={lot.antiSniped}
+                                    suggestedBid={lot.suggestedBid}
+                                    isBidding={bidState.loading}
+                                    bidError={bidState.error}
+                                    onBid={(amount) => placeBid(lot.id, amount)}
+                                    onClearBidError={() => clearError(lot.id)}
+                                />
+                            </div>
+                        )
+                    })}
                 </div>
             </div>
         </div>

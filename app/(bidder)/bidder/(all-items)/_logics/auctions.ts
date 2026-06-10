@@ -22,6 +22,7 @@ export type AuctionLotImage = {
 export type AuctionLot = {
   id: number;
   vendorId: number;
+  auctionId?: number | null;
   title: string;
   description: string;
   condition: string;
@@ -29,6 +30,8 @@ export type AuctionLot = {
   currentBid: number;
   bidIncrement: number;
   bidCount: number;
+  winnerId?: number | null;
+  bidderIds: number[];
   reservePrice: number;
   buyNowPrice: number;
   status: LotStatus;

@@ -5,11 +5,12 @@ import { useEffect } from "react"
 import { setSession } from "@/lib/session-store"
 
 export function SessionBridge() {
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
 
   useEffect(() => {
+    if (status === 'loading') return
     setSession(session ?? null)
-  }, [session])
+  }, [session, status])
 
   return null
 }
