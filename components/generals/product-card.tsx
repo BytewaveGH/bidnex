@@ -29,31 +29,71 @@ function CardCountdown({ endTime, fallback }: { endTime: string; fallback: strin
     return <span className="tabular-nums whitespace-nowrap">{label}</span>
 }
 
-export default function ProductCard({ product, isLoggedIn, isInWatchlist, onWatchlistToggle, isWatchlistLoading }: { product: ProductCardType, isLoggedIn?: boolean, isInWatchlist?: boolean, onWatchlistToggle?: () => void, isWatchlistLoading?: boolean }) {
+type ProductCardProps = {
+    product: ProductCardType
+    isLoggedIn?: boolean
+    isInWatchlist?: boolean
+    onWatchlistToggle?: () => void
+    isWatchlistLoading?: boolean
+    // real-time bid props
+    isWinning?: boolean
+    isOutbid?: boolean
+    isClosed?: boolean
+    isBidding?: boolean
+    bidError?: string | null
+    suggestedBid?: number
+    antiSniped?: boolean
+    onBid?: (amount: number) => Promise<boolean>
+    onClearBidError?: () => void
+}
+
+export default function ProductCard({
+    product,
+    isLoggedIn,
+    isInWatchlist,
+    onWatchlistToggle,
+    isWatchlistLoading,
+    isWinning,
+    isOutbid,
+    isClosed,
+    isBidding,
+    bidError,
+    suggestedBid,
+    antiSniped,
+    onBid,
+    onClearBidError,
+}: ProductCardProps) {
     const router = useRouter()
     const [imgError, setImgError] = useState(false)
+    const effectiveSuggestedBid = suggestedBid ?? (product.currentBid + product.increment)
+
+    async function handleBid() {
+        if (!onBid) return
+        await onBid(effectiveSuggestedBid)
+    }
+
     return (
-        <div className="h-max border w-full rounded-[16px] border-[#F0F2F5] flex flex-col hover:cursor-pointer "
-        
-        onClick={() => router.push(`/bidder/product/${product.id}`)}
+        <div className={`h-max border w-full rounded-[16px] flex flex-col ${isClosed ? 'opacity-60' : ''} ${isWinning ? 'border-2 border-[#099137]' : isOutbid ? 'border-2 border-[#F3A218]' : isClosed ? 'border-2 border-[#D96B6B]' : 'border border-[#F0F2F5]'}`}
         >
-            <div className="bg-[#F9FAFB] h-100 relative overflow-hidden rounded-t-[16px]">
+            <div className="bg-[#F9FAFB] h-72 relative overflow-hidden rounded-t-[16px] hover:cursor-pointer"
+                onClick={() => router.push(`/bidder/product/${product.id}`)}
+            >
                 <div className="absolute inset-0 flex items-center justify-center">
                     {product.image && !imgError ? (
-                        <Image src={product.image} alt={product.productName} fill className="object-cover rounded-t-[16px]" onError={() => setImgError(true)} />
+                        <Image src={product.image} alt={product.productName} fill className="object-fill rounded-t-[16px]" onError={() => setImgError(true)} />
                     ) : (
                         <div className="w-full h-full bg-[#f1f1f1] flex items-center justify-center">
                             <span className="text-[#98A2B3] text-sm">No image</span>
                         </div>
                     )}
                 </div>
-                <hr/>
+                <hr />
                 <div className="absolute top-4 right-0 z-10 ">
                     <div className={`w-fit px-2 py-2.5 rounded-l-[8px] text-white text-xs font-semibold ${product.condition === 'New/Like New' ? 'bg-[#099137]' :
                         product.condition === 'Good Condition' ? 'bg-[#003C71]' :
-                        product.condition === 'New' || product.condition === "Like New" ? 
-                        'bg-[#099137]' :
-                        'bg-[#8E8E93]'}`}>
+                            product.condition === 'New' || product.condition === "Like New" ?
+                                'bg-[#099137]' :
+                                'bg-[#8E8E93]'}`}>
                         {product.condition}
                     </div>
                 </div>
@@ -81,51 +121,100 @@ export default function ProductCard({ product, isLoggedIn, isInWatchlist, onWatc
                         disabled={isWatchlistLoading}
                     />
                 </div>
-            </div>
-            <section className="p-4 border-t border-gray-100">
-                <div className=" flex gap-4 mb-4 ">
-                    <div className="text-xs font-medium flex items-center justify-center gap-2 bg-[#D42620] text-white rounded-[48px] px-4 py-2.5 border border-[#D42620]">
-                        <AlarmClock className="w-4 h-4 " />
-                        {product.bidEndTime
-                            ? <CardCountdown endTime={product.bidEndTime} fallback={product.timeRemaining} />
-                            : <span>{product.timeRemaining}</span>
-                        }
-                    </div>
-                    <div className="text-xs font-medium flex items-center justify-center gap-2 text-black border border-[#D0D5DD] rounded-[48px] px-4 py-2.5">
-                        <UsersRound className="w-4 h-4 " />
-                        <span className="">{product.bidders} BIDDERS</span>
-                    </div>
 
-                </div>
-                <div className="">
-                    <h3 className="text-xl font-bold line-clamp-1">{product.productName}</h3>
-                </div>
-                <div className="">
-                    <p className="text-base font-light text-[#657688] mt-2 ">MKT PR: {product.marketPrice}</p>
-                </div>
-                <div className="">
-                    <p className="text-lg font-medium ">CURRENT BID: GHS {product.currentBid.toFixed(2)}</p>
-                </div>
-                {!isLoggedIn && (
-                    <div onClick={(e) => e.stopPropagation()}>
-                        <ButtonTemplate title="Login To Bid" className="bg-black text-white hover:bg-black w-full h-[48px] mt-4" />
+                {/* Anti-snipe flash */}
+                {antiSniped && (
+                    <div className="absolute top-4 left-4 z-10 bg-[#FFCC00] text-black text-[10px] font-bold px-2 py-1 rounded-full animate-pulse">
+                        +10s
                     </div>
                 )}
-                {isLoggedIn &&
+
+                {/* Winning ribbon */}
+                {isWinning && (
+                    <div className="absolute top-0 -left-4 overflow-hidden w-32 h-32 z-10 pointer-events-none">
+                        <div className="absolute bg-[#099137] text-white text-[12px] font-bold py-1.5 w-44 text-center -rotate-45 top-7 -left-7 tracking-wide whitespace-nowrap">
+                            WINNING • WINNING • WINNING •
+                        </div>
+                    </div>
+                )}
+
+                {/* Outbid ribbon */}
+                {isOutbid && (
+                    <div className="absolute top-0 -left-4 overflow-hidden w-32 h-32 z-10 pointer-events-none">
+                        <div className="absolute bg-[#F3A218] text-white text-[12px] font-bold py-1.5 w-44 text-center -rotate-45 top-7 -left-7 tracking-wide whitespace-nowrap">
+                            OUTBID • OUTBID • OUTBID •
+                        </div>
+                    </div>
+                )}
+
+                {/* Sold ribbon + grey overlay */}
+                {isClosed && (
+                    <div className="absolute top-0 -left-4 overflow-hidden w-32 h-32 z-10 pointer-events-none">
+                        <div className="absolute bg-[#D96B6B] text-white text-[12px] font-bold py-1.5 w-44 text-center -rotate-45 top-7 -left-7 tracking-wide whitespace-nowrap">
+                            SOLD • SOLD • SOLD • SOLD •
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            <section className="p-3 border-t border-gray-100">
+                <div className="flex gap-3 mb-3 min-w-0">
+                    <div className="text-xs font-medium flex items-center gap-2 bg-[#D42620] text-white rounded-[48px] px-3 py-1.5 border border-[#D42620] shrink-0">
+                        <AlarmClock className="w-3.5 h-3.5 shrink-0" />
+                        {product.bidEndTime
+                            ? <CardCountdown endTime={product.bidEndTime} fallback={product.timeRemaining} />
+                            : <span className="whitespace-nowrap">{product.timeRemaining}</span>
+                        }
+                    </div>
+                    <div className="text-xs font-medium flex items-center gap-2 text-black border border-[#D0D5DD] rounded-[48px] px-3 py-1.5 min-w-0 overflow-hidden">
+                        <UsersRound className="w-3.5 h-3.5 shrink-0" />
+                        <span className="truncate whitespace-nowrap">{product.bidders} BIDDERS</span>
+                    </div>
+                </div>
+
+                <h3 className="text-base font-bold line-clamp-1">{product.productName}</h3>
+                <p className="text-xs font-light text-[#657688] mt-1">MKT PR: {product.marketPrice}</p>
+                <p className="text-sm font-medium mt-1">CURRENT BID: GHS {product.currentBid.toFixed(2)}</p>
+
+                {!isLoggedIn && (
                     <div onClick={(e) => e.stopPropagation()}>
-                        <ButtonTemplate title={`Bid GHS ${(product.currentBid + product.increment).toFixed(2)}  `} className="bg-black text-white hover:bg-black w-full h-[48px] mt-4" />
-                        <div className='flex items-center my-2 gap-4 '>
+                        <ButtonTemplate title="Login To Bid" className="bg-black text-white hover:bg-black w-full h-10 mt-3" />
+                    </div>
+                )}
+
+                {isLoggedIn && (
+                    <div onClick={(e) => e.stopPropagation()}>
+                        <ButtonTemplate
+                            title={
+                                isBidding
+                                    ? <Loader2 className="w-4 h-4 animate-spin" />
+                                    : `Bid GHS ${effectiveSuggestedBid.toFixed(2)}`
+                            }
+                            className={`w-full h-10 mt-3 ${isWinning ? 'bg-[#099137] hover:bg-[#099137]' : 'bg-black hover:bg-black'} text-white`}
+                            disabled={isBidding || isClosed || isWinning}
+                            onClick={handleBid}
+                        />
+
+                        {bidError && (
+                            <p
+                                className="text-[#D42620] text-xs mt-1 cursor-pointer capitalize"
+                                onClick={(e) => { e.stopPropagation(); onClearBidError?.() }}
+                            >
+                                {bidError}
+                            </p>
+                        )}
+
+                        <div className='flex items-center mt-2 gap-3'>
                             <div className='flex-1 min-w-0'>
-                                <InputTemplate placeholder={'GHS0.00'} className='h-11 shadow-none w-full' inputAlign="center" />
+                                <InputTemplate placeholder={'GHS0.00'} className='h-9 shadow-none w-full' inputAlign="center" />
                             </div>
                             <div className='flex-1 min-w-0'>
-                                <AlertDialogTemplate trigger={<ButtonTemplate title="Set Max Bid" className="bg-[#FFCC00] text-black hover:bg-[#FFCC00] h-11 w-full" />} />
+                                <AlertDialogTemplate trigger={<ButtonTemplate title="Set Max Bid" className="bg-[#FFCC00] text-black hover:bg-[#FFCC00] h-9 w-full" />} />
                             </div>
                         </div>
                     </div>
-                }
+                )}
             </section>
-
         </div>
     )
 }

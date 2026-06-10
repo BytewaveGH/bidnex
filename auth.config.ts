@@ -44,6 +44,8 @@ export const authConfig: NextAuthConfig = {
             email: d.user.email,
             username: d.user.username,
             avatar: d.user.avatar,
+            phone: d.user.phone,
+            isVerified: d.user.isVerified,
             userType: accountType,
             permission: [],
             tenant: accountType,
@@ -73,6 +75,8 @@ export const authConfig: NextAuthConfig = {
         token.userId = user.userId;
         token.username = user.username;
         token.avatar = user.avatar;
+        token.phone = user.phone;
+        token.isVerified = user.isVerified;
         token.userType = user.userType;
         token.permission = user.permission;
         token.tenant = user.tenant;
@@ -129,6 +133,8 @@ export const authConfig: NextAuthConfig = {
       session.user.userId = token.userId as string;
       session.user.username = token.username as string;
       session.user.avatar = token.avatar as string;
+      session.user.phone = token.phone as string;
+      session.user.isVerified = token.isVerified as boolean;
       session.user.userType = token.userType as
         | "admin"
         | "manager"

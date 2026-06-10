@@ -18,7 +18,7 @@ export function useOtp(phone: string, onSuccess: () => void, accountType: 'bidde
                 method: 'POST',
                 url: '/auth/send-otp',
                 headers: { 'X-Tenant-Domain': accountType },
-                data: { username: phone },
+                data: { phone },
             })
             if (response.status >= 400) {
                 showToast('failure', response.data?.message || 'Failed to send OTP.')
@@ -57,7 +57,7 @@ export function useOtp(phone: string, onSuccess: () => void, accountType: 'bidde
                 method: 'POST',
                 url: '/auth/verify-otp',
                 headers: { 'X-Tenant-Domain': accountType },
-                params: { username: phone },
+                params: { phone },
                 data: { otp },
             })
             if (response.status >= 400) {
