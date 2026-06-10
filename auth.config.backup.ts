@@ -53,6 +53,8 @@ export const authConfig: NextAuthConfig = {
             refreshTokenExpiry: data.refreshTokenExpiry,
             onboarding: false,
             organizationId: "",
+            phone: data.user.phone ?? "",
+            isVerified: data.user.isVerified ?? false,
           };
         } catch {
           return null;
@@ -82,6 +84,8 @@ export const authConfig: NextAuthConfig = {
         token.refreshTokenExpiry = user.refreshTokenExpiry;
         token.onboarding = user.onboarding;
         token.organizationId = user.organizationId;
+        token.phone = user.phone;
+        token.isVerified = user.isVerified;
       }
 
       const fiveMinutes = 5 * 60 * 1000;
@@ -141,6 +145,8 @@ export const authConfig: NextAuthConfig = {
       session.user.refreshTokenExpiry = token.refreshTokenExpiry as number;
       session.user.onboarding = token.onboarding as boolean;
       session.user.organizationId = token.organizationId as string;
+      session.user.phone = token.phone as string;
+      session.user.isVerified = token.isVerified as boolean;
       return session;
     },
 

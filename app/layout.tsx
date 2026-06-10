@@ -4,6 +4,7 @@ import "./globals.css";
 import ToastTemplate from "@/components/templates/toast-template";
 import { NextAuthProvider } from "@/components/generals/providers/next-auth";
 import { WatchlistProvider } from "@/components/generals/providers/watchlist-provider";
+import { WebSocketProvider } from "@/components/generals/providers/websocket-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { PreferencesStoreProvider } from "@/stores/preferences/preferences-provider";
 import { ThemeBootScript } from "@/scripts/theme-boot";
@@ -54,9 +55,11 @@ export default function RootLayout({
             font={font}
           >
             <NextAuthProvider>
-              <WatchlistProvider>
-                {children}
-              </WatchlistProvider>
+              <WebSocketProvider>
+                <WatchlistProvider>
+                  {children}
+                </WatchlistProvider>
+              </WebSocketProvider>
               <ToastTemplate />
             </NextAuthProvider>
           </PreferencesStoreProvider>

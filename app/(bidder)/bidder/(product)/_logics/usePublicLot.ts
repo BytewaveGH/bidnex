@@ -46,6 +46,8 @@ export type PublicLotDetail = {
   primaryImage: string;
   images: AuctionLotImage[];
   createdAt: string;
+  winnerId?: number | null;
+  bidderIds: number[];
   recentBids: unknown[];
   auction: PublicLotAuction;
 };
