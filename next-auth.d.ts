@@ -6,6 +6,8 @@ declare module "next-auth" {
       userId: string
       username: string
       avatar: string
+      phone: string
+      isVerified: boolean
       userType: "admin" | "manager" | "eso" | "participant" | "vendor" | "bidder"
       permission: string[]
       tenant: string
@@ -22,6 +24,8 @@ declare module "next-auth" {
     userId: string
     username: string
     avatar: string
+    phone: string
+    isVerified: boolean
     userType: "admin" | "manager" | "eso" | "participant" | "vendor" | "bidder"
     permission: string[]
     tenant: string
@@ -39,6 +43,8 @@ declare module "next-auth/jwt" {
     userId: string
     username: string
     avatar: string
+    phone: string
+    isVerified: boolean
     userType: "admin" | "manager" | "eso" | "participant" | "vendor" | "bidder"
     permission: string[]
     tenant: string

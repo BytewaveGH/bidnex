@@ -1,6 +1,7 @@
 import type { Session } from "next-auth"
 
-let sessionCache: Session | null = null
+// undefined = not yet loaded; null = loaded but no session; Session = loaded with session
+let sessionCache: Session | null | undefined = undefined
 let sessionResolve: ((s: Session | null) => void) | null = null
 let sessionPromise: Promise<Session | null> | null = null
 
@@ -14,7 +15,7 @@ export function setSession(session: Session | null) {
 }
 
 export function getSession(): Promise<Session | null> {
-  if (sessionCache !== null) {
+  if (sessionCache !== undefined) {
     return Promise.resolve(sessionCache)
   }
   if (!sessionPromise) {
@@ -26,7 +27,7 @@ export function getSession(): Promise<Session | null> {
 }
 
 export function clearSession() {
-  sessionCache = null
+  sessionCache = undefined
   sessionResolve = null
   sessionPromise = null
 }

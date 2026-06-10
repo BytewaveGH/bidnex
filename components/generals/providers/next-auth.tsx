@@ -10,7 +10,7 @@ interface NextAuthProviderProps {
 
 export function NextAuthProvider({ children }: NextAuthProviderProps) {
   return (
-    <SessionProvider>
+    <SessionProvider refetchOnWindowFocus={false}>
       <SessionBridge />
       <RefreshTokenHandler />
       {children}
