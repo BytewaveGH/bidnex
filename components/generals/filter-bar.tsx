@@ -13,6 +13,7 @@ type FilterBarProps = {
   defaultCategory?: string[]
   defaultCondition?: string[]
   defaultPrice?: string[]
+  rightSlot?: React.ReactNode
 }
 
 function parsePriceRange(values: string[]): { min: number | undefined; max: number | undefined } {
@@ -43,6 +44,7 @@ export default function FilterBar({
   defaultCategory = [],
   defaultCondition = [],
   defaultPrice = [],
+  rightSlot,
 }: FilterBarProps) {
   const { categories } = usePublicCategories()
 
@@ -98,7 +100,7 @@ export default function FilterBar({
           />
         </div>
       </div>
-      <div className="flex flex-col gap-4">
+      <div className="flex items-center gap-4">
         <SelectTemplate
           options={[
             { label: 'Ending Soonest', value: 'ending-soonest' },
@@ -106,6 +108,7 @@ export default function FilterBar({
           ]}
           placeholder="Ending soonest"
         />
+        {rightSlot}
       </div>
     </div>
   )

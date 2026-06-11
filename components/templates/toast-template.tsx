@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { toast as sonnerToast } from 'sonner';
-import { Check, CheckCircle2, X } from 'lucide-react';
+import { Check, CheckCircle2, Info, X } from 'lucide-react';
 import { Toaster } from '../ui/sonner';
 import { Separator } from '../ui/separator';
 
@@ -10,7 +10,7 @@ interface ToastProps {
   id: string | number;
   title: string;
   description: string;
-  type: 'success' | 'failure';
+  type: 'success' | 'failure' | 'outbid';
   onClose?: () => void;
 }
 
@@ -33,7 +33,8 @@ function Toast(props: ToastProps) {
   const { title, description, type, id } = props;
 
   const isSuccess = type === 'success';
-
+  const isOutbid = type === 'outbid';
+  const isFailure = type === 'failure';
   return (
     <div
       className="flex rounded-2xl border w-[385px] items-center p-4 gap-4 relative overflow-hidden bg-white"
@@ -48,7 +49,7 @@ function Toast(props: ToastProps) {
         />
       )}
 
-      {!isSuccess && (
+      {!isSuccess && !isOutbid && (
         <div
           className="absolute left-0 top-0 bottom-0 w-1/3 rounded-l-2xl"
           style={{
@@ -57,6 +58,14 @@ function Toast(props: ToastProps) {
         />
       )}
 
+      {isOutbid && (
+        <div
+          className="absolute left-0 top-0 bottom-0 w-1/3 rounded-l-2xl"
+          style={{
+            background: 'linear-gradient(115deg, #F3A218, #F3A218, #F3A218, #F3A218,#F3A218,#FFFFFF,  #FFFFFF,  #FFFFFF,   #FFFFFF)',
+          }}
+        />
+      )}
       {/* Content - positioned above gradient */}
       <div className="relative z-10 flex items-center gap-4 w-full min-h-[40px]">
         {/* Success Icon */}
@@ -73,7 +82,22 @@ function Toast(props: ToastProps) {
             </div>
           </div>
         )}
-        {!isSuccess && (
+
+        {isOutbid && (
+          <div className="shrink-0 relative">
+            <div
+              className="w-10 h-10 rounded-full flex items-center justify-center bg-yellow-50 "
+              style={{
+                // backgroundColor: '#0F973D',
+                boxShadow: '0 0 0 2px rgba(242, 188, 186, 1)',
+              }}
+            >
+              <Info className="w-5 h-5 text-white bg-[#F3A218] rounded-full p-1 " />
+            </div>
+          </div>
+        )}
+
+        {!isSuccess && !isOutbid && (
           <div className="shrink-0 relative">
             <div
               className="w-10 h-10 rounded-full flex items-center justify-center bg-red-100 "
@@ -115,9 +139,11 @@ export default function ToastTemplate() {
 }
 
 // Convenience function for showing success/failure toasts
-export function showToast(type: 'success' | 'failure', message: string, title?: string) {
+export function showToast(type: 'success' | 'failure' | 'outbid', message: string, title?: string) {
   toast({
-    title: title || (type === 'success' ? 'Success' : 'Error'),
+    title: title || (type === 'success' ? 'Success'
+      
+      : 'Error'),
     description: message,
     type,
   })
