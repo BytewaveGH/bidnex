@@ -68,7 +68,7 @@ export function RecentOrders({ refreshToken = 0 }: { refreshToken?: number }) {
   const [reviewStatusFilter, setReviewStatusFilter] = React.useState<LotFilter>("all");
   const [pagination, setPagination] = React.useState<PaginationState>({
     pageIndex: 0,
-    pageSize: 20,
+    pageSize: 10,
   });
   const [submitConfirmOpen, setSubmitConfirmOpen] = React.useState(false);
   const [lotToSubmitId, setLotToSubmitId] = React.useState<string | null>(null);

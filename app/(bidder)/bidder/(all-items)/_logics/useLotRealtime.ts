@@ -3,7 +3,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useWebSocket } from '@/components/generals/providers/websocket-provider'
+import { showToast } from '@/components/templates/toast-template'
 import type { AuctionLot } from './auctions'
+import { useAuctionSounds } from './useAuctionSounds'
 
 type RealtimeOverride = {
   currentBid?: number
@@ -31,6 +33,7 @@ export function useLotRealtime(lots: AuctionLot[]): RealtimeLot[] {
   const { subscribe } = useWebSocket()
   const { data: session } = useSession()
   const currentUserId = Number((session?.user as any)?.userId)
+  const { playWinning, playOutbid } = useAuctionSounds()
 
   const [lotUpdates, setLotUpdates] = useState<Map<number, RealtimeOverride>>(new Map())
   const [auctionUpdates, setAuctionUpdates] = useState<Map<number, AuctionOverride>>(new Map())
@@ -42,23 +45,44 @@ export function useLotRealtime(lots: AuctionLot[]): RealtimeLot[] {
       const data = msg.data
       if (!data) return
 
+      // Outbid notification targeted at this user
+      if (data.type === 'outbid' && data.userId === currentUserId) {
+        playOutbid()
+        showToast('outbid', data.lotTitle ?? 'Someone placed a higher bid.', "You've Been Outbid!")
+        setLotUpdates(prev => {
+          const next = new Map(prev)
+          const ex = next.get(data.lotId) ?? {}
+          next.set(data.lotId, { ...ex, currentBid: data.amount, isOutbid: true, isWinning: false })
+          return next
+        })
+        return
+      }
+
       // Bid placed on a lot
       if (data.lotId !== undefined && data.currentBid !== undefined) {
         const { lotId, currentBid, bidCount, endTime, bidderId, antiSniped } = data
         const lot = lots.find(l => l.id === lotId)
+        const hadBid = lot?.bidderIds?.includes(currentUserId) ?? false
+        const nowWinning = bidderId === currentUserId
+
+        if (nowWinning) {
+          playWinning()
+          showToast('success', lot?.title ?? 'You placed the top bid!', "You're Winning!")
+        }
+
         setLotUpdates(prev => {
           const next = new Map(prev)
-          const existing = next.get(lotId) ?? {}
-          const wasWinning = existing.isWinning ?? false
-          const hadBid = lot?.bidderIds?.includes(currentUserId) ?? false
+          const ex = next.get(lotId) ?? {}
+          const wasWinning = ex.isWinning ?? false
+          const nowOutbid = (wasWinning || hadBid) && bidderId !== currentUserId
           next.set(lotId, {
-            ...existing,
+            ...ex,
             currentBid,
             bidCount,
             bidEndTime: endTime,
             winnerId: bidderId,
-            isWinning: bidderId === currentUserId,
-            isOutbid: (wasWinning || hadBid) && bidderId !== currentUserId,
+            isWinning: nowWinning,
+            isOutbid: nowOutbid,
             antiSniped: antiSniped ?? false,
           })
           return next
