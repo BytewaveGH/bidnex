@@ -294,7 +294,7 @@ export default function ProductDetails({ params }: { params: Promise<{ id: strin
 
           {/* Product info */}
           <div className='flex flex-col gap-4 w-1/2 min-w-0'>
-            <h1 className='text-4xl font-bold'>{lot.title}</h1>
+            <h1 className='text-3xl font-bold'>{lot.title}</h1>
 
             <div className='flex items-center gap-2'>
               <div className={`w-fit px-2 py-2.5 rounded-[8px] text-white text-xs font-semibold ${conditionColor}`}>

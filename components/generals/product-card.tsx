@@ -75,12 +75,12 @@ export default function ProductCard({
     return (
         <div className={`h-max border w-full rounded-[16px] flex flex-col ${isClosed ? 'opacity-60' : ''} ${isWinning ? 'border-2 border-[#099137]' : isOutbid ? 'border-2 border-[#F3A218]' : isClosed ? 'border-2 border-[#D96B6B]' : 'border border-[#F0F2F5]'}`}
         >
-            <div className="bg-[#F9FAFB] h-72 relative overflow-hidden rounded-t-[16px] hover:cursor-pointer"
+            <div className="bg-[#F9FAFB] h-[340px] relative overflow-hidden rounded-t-[16px] hover:cursor-pointer"
                 onClick={() => router.push(`/bidder/product/${product.id}`)}
             >
                 <div className="absolute inset-0 flex items-center justify-center">
                     {product.image && !imgError ? (
-                        <Image src={product.image} alt={product.productName} fill className="object-fill rounded-t-[16px]" onError={() => setImgError(true)} />
+                        <Image src={product.image} alt={product.productName} fill className="object-cover rounded-t-[16px]" onError={() => setImgError(true)} />
                     ) : (
                         <div className="w-full h-full bg-[#f1f1f1] flex items-center justify-center">
                             <span className="text-[#98A2B3] text-sm">No image</span>
