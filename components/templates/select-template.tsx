@@ -10,10 +10,26 @@ import {
 import { cn } from "@/lib/utils"
   
   export default function SelectTemplate(
-    { className, placeholder, label, options }: { className?: string, placeholder: string, label?: string, options: { label: string, value: string }[] }
+    {
+      className,
+      placeholder,
+      label,
+      options,
+      value,
+      defaultValue,
+      onValueChange,
+    }: {
+      className?: string
+      placeholder: string
+      label?: string
+      options: { label: string; value: string }[]
+      value?: string
+      defaultValue?: string
+      onValueChange?: (value: string) => void
+    }
   ) {
     return (
-      <Select>
+      <Select value={value} defaultValue={defaultValue} onValueChange={onValueChange}>
         <SelectTrigger className={cn("w-full max-w-48", className)}>
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>

@@ -7,6 +7,7 @@ import banner from '@/assets/images/all-items.png'
 import CategoryBanner from '@/components/generals/category-banner'
 import FilterBar from '@/components/generals/filter-bar'
 import AllItems from './_widgets/all-items'
+import type { LotsOrderBy } from '../_logics/auctions'
 import {
     Pagination,
     PaginationContent,
@@ -49,6 +50,9 @@ function AllItemsContent() {
     const minPrice = parseNumber(searchParams.get('minPrice'))
     const maxPrice = parseNumber(searchParams.get('maxPrice'))
     const search = searchParams.get('search') ?? undefined
+    const orderByParam = searchParams.get('orderBy')
+    const orderBy: LotsOrderBy | undefined =
+        orderByParam === 'ending_soon' || orderByParam === 'ending_last' ? orderByParam : undefined
 
     const [page, setPage] = useState(1)
     const [totalPages, setTotalPages] = useState(1)
@@ -132,9 +136,11 @@ function AllItemsContent() {
                             maxPrice: max?.toString(),
                         })
                     }
+                    onOrderByChange={(nextOrderBy) => updateParams({ orderBy: nextOrderBy })}
                     defaultCategory={categoryId ? [String(categoryId)] : []}
                     defaultCondition={condition ? [condition] : []}
                     defaultPrice={getPriceDefaults(minPrice, maxPrice)}
+                    defaultOrderBy={orderBy}
                     rightSlot={topPagination}
                 />
             </section>
@@ -145,6 +151,7 @@ function AllItemsContent() {
                     minPrice={minPrice}
                     maxPrice={maxPrice}
                     search={search}
+                    orderBy={orderBy}
                     page={page}
                     onPageChange={setPage}
                     onTotalPagesChange={setTotalPages}
