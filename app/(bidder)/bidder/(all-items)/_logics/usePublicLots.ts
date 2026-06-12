@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAxios } from "@/hooks/use-axios";
 import {
   buildLotsParams,
@@ -14,12 +14,15 @@ export function usePublicLots(params: LotsQueryParams) {
   const [data, setData] = useState<LotsPage | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const hasLoadedRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
 
     async function fetchLots() {
-      setIsLoading(true);
+      if (!hasLoadedRef.current) {
+        setIsLoading(true);
+      }
       setError(null);
 
       try {
@@ -37,16 +40,21 @@ export function usePublicLots(params: LotsQueryParams) {
             (response.data as { message?: string })?.message ??
             "Failed to load lots.";
           setError(message);
-          setData(null);
+          if (!hasLoadedRef.current) {
+            setData(null);
+          }
           return;
         }
 
         const body = response.data as LotsApiResponse;
         setData(body.data);
+        hasLoadedRef.current = true;
       } catch {
         if (!cancelled) {
           setError("Network error. Please check your connection and try again.");
-          setData(null);
+          if (!hasLoadedRef.current) {
+            setData(null);
+          }
         }
       } finally {
         if (!cancelled) setIsLoading(false);
@@ -67,6 +75,7 @@ export function usePublicLots(params: LotsQueryParams) {
     params.maxPrice,
     params.categoryId,
     params.auctionId,
+    params.orderBy,
   ]);
 
   return { data, isLoading, error };

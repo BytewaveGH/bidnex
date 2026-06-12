@@ -11,27 +11,20 @@ import {
     PaginationNext,
     PaginationPrevious,
 } from '@/components/ui/pagination'
-import { usePublicLots } from '../../_logics/usePublicLots'
-import { useLotRealtime } from '../../_logics/useLotRealtime'
-import type { LotsOrderBy } from '../../_logics/auctions'
+import { useMyBids } from '../../_logics/useMyBids'
+import { useLotRealtime } from '@/app/(bidder)/bidder/(all-items)/_logics/useLotRealtime'
 
 const PAGE_SIZE = 12
 
-type AllItemsProps = {
-    condition?: string
-    minPrice?: number
-    maxPrice?: number
-    categoryId?: number
-    search?: string
-    orderBy?: LotsOrderBy
+type MyBidsProps = {
     page: number
     onPageChange: (page: number) => void
     onTotalPagesChange?: (total: number) => void
 }
 
-export default function AllItems({ condition, minPrice, maxPrice, categoryId, search, orderBy, page, onPageChange, onTotalPagesChange }: AllItemsProps) {
-    const { data, isLoading, error } = usePublicLots({ page, limit: PAGE_SIZE, condition, minPrice, maxPrice, categoryId, search, orderBy })
-    const baseLots = useMemo(() => data?.data ?? [], [data])
+export default function MyBids({ page, onPageChange, onTotalPagesChange }: MyBidsProps) {
+    const { data, lots, isLoading, error } = useMyBids({ page, limit: PAGE_SIZE })
+    const baseLots = useMemo(() => lots, [lots])
     const realtimeLots = useLotRealtime(baseLots)
 
     const totalPages = data ? Math.max(1, Math.ceil(data.count / PAGE_SIZE)) : 1
@@ -112,7 +105,7 @@ export default function AllItems({ condition, minPrice, maxPrice, categoryId, se
     if (realtimeLots.length === 0) {
         return (
             <div className="w-full flex justify-center items-center py-20">
-                <p className="text-[#657688] text-sm">No items available right now.</p>
+                <p className="text-[#657688] text-sm">You haven&apos;t placed any bids yet.</p>
             </div>
         )
     }

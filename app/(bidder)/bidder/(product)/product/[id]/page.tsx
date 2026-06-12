@@ -17,6 +17,7 @@ import { useWebSocket } from '@/components/generals/providers/websocket-provider
 import { useAxios } from '@/hooks/use-axios'
 import { useSession } from 'next-auth/react'
 import { resolveLotMediaUrl, formatLotCondition } from '@/app/(bidder)/bidder/(all-items)/_logics/auctions'
+import { LotImage } from '@/components/generals/lot-image'
 
 function Countdown({ endTime }: { endTime: string }) {
   const [timeRemaining, setTimeRemaining] = useState('')
@@ -54,7 +55,6 @@ export default function ProductDetails({ params }: { params: Promise<{ id: strin
   const currentUserId = Number((session?.user as any)?.userId)
 
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
-  const [erroredUrls, setErroredUrls] = useState<Set<string>>(new Set())
   const [isBidding, setIsBidding] = useState(false)
   const [bidError, setBidError] = useState<string | null>(null)
 
@@ -180,7 +180,6 @@ export default function ProductDetails({ params }: { params: Promise<{ id: strin
         : 'bg-[#D42620]'
 
   const currentImageUrl = galleryImages[selectedImageIndex] ?? ''
-  const mainImageBroken = erroredUrls.has(currentImageUrl)
 
   // Merge REST data with real-time overrides
   const currentBid = rt.currentBid ?? lot.currentBid
@@ -222,19 +221,12 @@ export default function ProductDetails({ params }: { params: Promise<{ id: strin
           <div className='flex flex-col gap-4 w-1/2 shrink-0 items-center'>
             <div className={`bg-[#F9FAFB] w-[539px] h-[539px] relative overflow-hidden rounded-[16px] border ${isClosed ? 'opacity-60' : ''}`}>
               <div className='absolute inset-0 flex items-center justify-center'>
-                {currentImageUrl && !mainImageBroken ? (
-                  <Image
-                    src={currentImageUrl}
-                    alt={lot.title}
-                    fill
-                    className='object-cover rounded-[16px]'
-                    onError={() => setErroredUrls((s) => new Set(s).add(currentImageUrl))}
-                  />
-                ) : (
-                  <div className='w-full h-full bg-[#f1f1f1] flex items-center justify-center'>
-                    <span className='text-[#98A2B3] text-sm'>No image</span>
-                  </div>
-                )}
+                <LotImage
+                  src={currentImageUrl}
+                  alt={lot.title}
+                  className='object-cover rounded-[16px]'
+                  sizes='539px'
+                />
               </div>
 
               {isWinning && (
@@ -275,13 +267,12 @@ export default function ProductDetails({ params }: { params: Promise<{ id: strin
                     onClick={() => setSelectedImageIndex(index)}
                     className={`relative w-[83px] h-[83px] rounded-[8px] overflow-hidden bg-[#F9FAFB] shrink-0 focus:outline-none ${selectedImageIndex === index ? 'border border-[#0A0A0B]' : 'bg-[#F9FAFB] border'}`}
                   >
-                    {img && !erroredUrls.has(img) ? (
-                      <Image
+                    {img ? (
+                      <LotImage
                         src={img}
                         alt={`View ${index + 1}`}
-                        fill
                         className='object-cover'
-                        onError={() => setErroredUrls((s) => new Set(s).add(img))}
+                        sizes='83px'
                       />
                     ) : (
                       <div className='w-full h-full bg-[#E4E7EC]' />
@@ -388,7 +379,7 @@ export default function ProductDetails({ params }: { params: Promise<{ id: strin
           </div>
         </div>
 
-        <RelatedProducts />
+        <RelatedProducts categoryId={lot.category?.id} excludeLotId={lot.id} />
       </div>
     </section>
   )

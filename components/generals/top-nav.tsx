@@ -24,6 +24,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { BadgeCheck, Bell, Check, CreditCard, LogOut } from 'lucide-react'
 import { cn, getInitials } from '@/lib/utils'
 import { useWatchlistIds } from '@/app/(bidder)/bidder/(all-items)/_logics/useWatchlistIds'
+import { useMyBidsCount } from '@/app/(bidder)/bidder/(my-bids)/_logics/useMyBids'
 
 
 const categoriesHoverItems = [
@@ -44,8 +45,9 @@ export default function TopNav({ onSearch, initialSearchValue }: { onSearch?: (q
   const [hoveredCategoryIndex, setHoveredCategoryIndex] = useState(0)
   const [searchQuery, setSearchQuery] = useState(initialSearchValue ?? '')
   const { count: watchlistCount } = useWatchlistIds()
+  const myBidsCount = useMyBidsCount()
   const navIcons = [
-    { src: legalHammer, label: 'My Bids', href: undefined, count: 0 },
+    { src: legalHammer, label: 'My Bids', href: '/bidder/my-bids', count: myBidsCount },
     { src: favoriteIcon, label: 'Watchlist', href: '/bidder/watchlist', count: watchlistCount },
     { src: champion, label: 'Won Items', href: undefined, count: 0 },
   ]

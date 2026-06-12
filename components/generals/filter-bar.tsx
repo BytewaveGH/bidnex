@@ -5,15 +5,31 @@ import MultiSelectTemplate from '../templates/multi-select-template'
 import PriceSelectTemplate from '../templates/price-select-template'
 import SelectTemplate from '../templates/select-template'
 import { usePublicCategories } from '@/app/(vendor)/vendor/(studio)/dashboard/lots/_logics/usePublicCategories'
+import type { LotsOrderBy } from '@/app/(bidder)/bidder/(all-items)/_logics/auctions'
 
 type FilterBarProps = {
   onCategoryChange?: (categoryId: number | undefined) => void
   onConditionChange?: (condition: string | undefined) => void
   onPriceChange?: (min: number | undefined, max: number | undefined) => void
+  onOrderByChange?: (orderBy: LotsOrderBy | undefined) => void
   defaultCategory?: string[]
   defaultCondition?: string[]
   defaultPrice?: string[]
+  defaultOrderBy?: LotsOrderBy
   rightSlot?: React.ReactNode
+}
+
+const ORDER_BY_OPTIONS = [
+  { label: 'Ending Soonest', value: 'ending-soonest', apiValue: 'ending_soon' as const },
+  { label: 'Ending Latest', value: 'ending-latest', apiValue: 'ending_last' as const },
+]
+
+function toOrderByOptionValue(orderBy: LotsOrderBy | undefined): string | undefined {
+  return ORDER_BY_OPTIONS.find((option) => option.apiValue === orderBy)?.value
+}
+
+function toOrderByApiValue(value: string): LotsOrderBy | undefined {
+  return ORDER_BY_OPTIONS.find((option) => option.value === value)?.apiValue
 }
 
 function parsePriceRange(values: string[]): { min: number | undefined; max: number | undefined } {
@@ -41,9 +57,11 @@ export default function FilterBar({
   onCategoryChange,
   onConditionChange,
   onPriceChange,
+  onOrderByChange,
   defaultCategory = [],
   defaultCondition = [],
   defaultPrice = [],
+  defaultOrderBy,
   rightSlot,
 }: FilterBarProps) {
   const { categories } = usePublicCategories()
@@ -102,11 +120,10 @@ export default function FilterBar({
       </div>
       <div className="flex items-center gap-4">
         <SelectTemplate
-          options={[
-            { label: 'Ending Soonest', value: 'ending-soonest' },
-            { label: 'Ending Latest', value: 'ending-latest' },
-          ]}
+          options={ORDER_BY_OPTIONS.map(({ label, value }) => ({ label, value }))}
           placeholder="Ending soonest"
+          value={toOrderByOptionValue(defaultOrderBy)}
+          onValueChange={(value) => onOrderByChange?.(toOrderByApiValue(value))}
         />
         {rightSlot}
       </div>

@@ -15,6 +15,8 @@ type WebSocketContextType = {
 const WebSocketContext = createContext<WebSocketContextType | null>(null)
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL ?? 'ws://localhost:8001/api/websocket/connect'
+const HEARTBEAT_INTERVAL = 30_000
+const MAX_RECONNECT_DELAY = 30_000
 
 export function WebSocketProvider({ children }: { children: React.ReactNode }) {
   const { data: session, update } = useSession()
@@ -27,6 +29,10 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
   const mountedRef = useRef(false)
   const isRefreshingRef = useRef(false)
   const updateRef = useRef(update)
+  // Generation counter: each new connect() call gets a unique ID.
+  // Stale onclose/onerror callbacks check this and bail out if they're no longer current.
+  const genRef = useRef(0)
+
   useEffect(() => { updateRef.current = update })
 
   const send = useCallback((msg: WsMessage) => {
@@ -51,29 +57,35 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
     if (!mountedRef.current) return
     if (reconnectRef.current !== null) { clearTimeout(reconnectRef.current); reconnectRef.current = null }
 
+    // Close any existing socket cleanly, without triggering its onclose reconnect logic
     if (wsRef.current) {
       wsRef.current.onclose = null
       wsRef.current.onerror = null
       wsRef.current.close()
     }
 
+    // Bump generation — any in-flight callbacks from prior sockets will see a stale gen and bail
+    const gen = ++genRef.current
     const ws = new WebSocket(WS_URL)
     wsRef.current = ws
 
     ws.onopen = () => {
+      if (gen !== genRef.current) { ws.close(); return }
       ws.send(JSON.stringify({ type: 'auth', token, role }))
     }
 
     ws.onmessage = (event) => {
+      if (gen !== genRef.current) return
       let msg: WsMessage
       try { msg = JSON.parse(event.data as string) } catch { return }
 
       if (msg.type === 'auth_success') {
         attemptRef.current = 0
         setIsConnected(true)
-        heartbeatRef.current = setInterval(() => send({ type: 'heartbeat' }), 30_000)
+        stopHeartbeat()
+        heartbeatRef.current = setInterval(() => send({ type: 'heartbeat' }), HEARTBEAT_INTERVAL)
       } else if (msg.type === 'auth_error') {
-        if (msg.error?.code === 'EXPIRED_TOKEN') {
+        if (msg.error?.code === 'EXPIRED_TOKEN' && !isRefreshingRef.current) {
           isRefreshingRef.current = true
           updateRef.current().finally(() => { isRefreshingRef.current = false })
         }
@@ -88,16 +100,22 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
     }
 
     ws.onclose = () => {
-      if (!mountedRef.current) return
+      // Discard if this is a stale socket or component unmounted
+      if (gen !== genRef.current || !mountedRef.current) return
       setIsConnected(false)
       stopHeartbeat()
       if (isRefreshingRef.current) return
-      const delay = Math.min(Math.pow(2, attemptRef.current) * 1000, 30_000)
+      // Exponential backoff with jitter
+      const base = Math.min(Math.pow(2, attemptRef.current) * 1000, MAX_RECONNECT_DELAY)
+      const delay = base + Math.random() * 1000
       attemptRef.current++
       reconnectRef.current = setTimeout(() => connect(token, role), delay)
     }
 
-    ws.onerror = () => ws.close()
+    ws.onerror = () => {
+      if (gen !== genRef.current) return
+      ws.close()
+    }
   }, [send, stopHeartbeat])
 
   useEffect(() => {
@@ -108,9 +126,14 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
     connect(token, role)
     return () => {
       mountedRef.current = false
+      genRef.current++ // invalidate any in-flight callbacks
       if (reconnectRef.current !== null) clearTimeout(reconnectRef.current)
       stopHeartbeat()
-      wsRef.current?.close()
+      if (wsRef.current) {
+        wsRef.current.onclose = null
+        wsRef.current.onerror = null
+        wsRef.current.close()
+      }
     }
   }, [session?.user?.accessToken, session?.user?.userType])
 
