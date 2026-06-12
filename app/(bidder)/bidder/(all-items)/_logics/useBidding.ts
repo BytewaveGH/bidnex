@@ -1,27 +1,29 @@
 'use client'
 
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useAxios } from '@/hooks/use-axios'
 
 type LotBidState = { loading: boolean; error: string | null }
+
+const EMPTY_BID_STATE: LotBidState = { loading: false, error: null }
 
 export function useBidding() {
   const callApi = useAxios()
   const [states, setStates] = useState<Map<number, LotBidState>>(new Map())
 
-  function getState(lotId: number): LotBidState {
-    return states.get(lotId) ?? { loading: false, error: null }
-  }
+  const getState = useCallback((lotId: number): LotBidState => {
+    return states.get(lotId) ?? EMPTY_BID_STATE
+  }, [states])
 
-  function clearError(lotId: number) {
+  const clearError = useCallback((lotId: number) => {
     setStates(prev => {
       const next = new Map(prev)
-      next.set(lotId, { ...(next.get(lotId) ?? { loading: false, error: null }), error: null })
+      next.set(lotId, { ...(next.get(lotId) ?? EMPTY_BID_STATE), error: null })
       return next
     })
-  }
+  }, [])
 
-  async function placeBid(lotId: number, amount: number): Promise<boolean> {
+  const placeBid = useCallback(async (lotId: number, amount: number): Promise<boolean> => {
     setStates(prev => { const n = new Map(prev); n.set(lotId, { loading: true, error: null }); return n })
     try {
       const res = await callApi({ method: 'POST', url: `/bidder/lots/${lotId}/bids`, data: { amount } }) as any
@@ -36,7 +38,7 @@ export function useBidding() {
       setStates(prev => { const n = new Map(prev); n.set(lotId, { loading: false, error: 'Network error. Please try again.' }); return n })
       return false
     }
-  }
+  }, [callApi])
 
   return { placeBid, getState, clearError }
 }
