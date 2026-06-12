@@ -54,7 +54,7 @@ function normalizeMyBidLots(lots: MyBidLot[], currentUserId: number): AuctionLot
 
 export function useMyBids(params: MyBidsQueryParams = {}) {
   const callApi = useAxios();
-  const { data: session } = useSession();
+  const { data: session } :any= useSession();
   const currentUserId = Number((session?.user as { userId?: number })?.userId);
   const [data, setData] = useState<MyBidsPage | null>(null);
   const [isLoading, setIsLoading] = useState(true);
