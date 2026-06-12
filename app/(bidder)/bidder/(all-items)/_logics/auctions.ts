@@ -94,6 +94,8 @@ export function buildAuctionsParams(params: AuctionsQueryParams) {
   return query;
 }
 
+export type LotsOrderBy = "ending_soon" | "ending_last";
+
 export type LotsQueryParams = {
   categoryId?: number;
   condition?: string;
@@ -103,6 +105,7 @@ export type LotsQueryParams = {
   auctionId?: number;
   page?: number;
   limit?: number;
+  orderBy?: LotsOrderBy;
 };
 
 export type LotsPage = {
@@ -127,6 +130,7 @@ export function buildLotsParams(params: LotsQueryParams): Record<string, string 
   if (params.minPrice !== undefined) query.minPrice = params.minPrice;
   if (params.maxPrice !== undefined) query.maxPrice = params.maxPrice;
   if (params.auctionId !== undefined) query.auctionId = params.auctionId;
+  if (params.orderBy) query.orderBy = params.orderBy;
   return query;
 }
 
@@ -154,4 +158,20 @@ export function computeTimeRemaining(endTime: string): string {
   const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
   return `${days} DAYS ${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+}
+
+export function mapLotToProductCard(lot: AuctionLot) {
+  return {
+    id: lot.id,
+    image: resolveLotMediaUrl(lot.primaryImage) ?? "",
+    condition: formatLotCondition(lot.condition),
+    quantity: 1,
+    timeRemaining: computeTimeRemaining(lot.bidEndTime),
+    bidEndTime: lot.bidEndTime,
+    bidders: lot.bidCount,
+    productName: lot.title,
+    marketPrice: `GHS ${lot.buyNowPrice.toFixed(2)}`,
+    currentBid: lot.currentBid,
+    increment: lot.bidIncrement,
+  };
 }

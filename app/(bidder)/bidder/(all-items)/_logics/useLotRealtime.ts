@@ -1,11 +1,9 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useWebSocket } from '@/components/generals/providers/websocket-provider'
-import { showToast } from '@/components/templates/toast-template'
 import type { AuctionLot } from './auctions'
-import { useAuctionSounds } from './useAuctionSounds'
 
 type RealtimeOverride = {
   currentBid?: number
@@ -18,7 +16,6 @@ type RealtimeOverride = {
   antiSniped?: boolean
 }
 
-// Auction-level overrides (ended/cancelled applies to all lots in that auction)
 type AuctionOverride = { isClosed: boolean }
 
 export type RealtimeLot = AuctionLot & {
@@ -33,7 +30,6 @@ export function useLotRealtime(lots: AuctionLot[]): RealtimeLot[] {
   const { subscribe } = useWebSocket()
   const { data: session } = useSession()
   const currentUserId = Number((session?.user as any)?.userId)
-  const { playWinning, playOutbid } = useAuctionSounds()
 
   const [lotUpdates, setLotUpdates] = useState<Map<number, RealtimeOverride>>(new Map())
   const [auctionUpdates, setAuctionUpdates] = useState<Map<number, AuctionOverride>>(new Map())
@@ -41,14 +37,11 @@ export function useLotRealtime(lots: AuctionLot[]): RealtimeLot[] {
   useEffect(() => {
     return subscribe((msg) => {
       if (msg.type !== 'auction_update') return
-
       const data = msg.data
       if (!data) return
 
-      // Outbid notification targeted at this user
+      // Outbid — update card state only (toast/sound handled globally)
       if (data.type === 'outbid' && data.userId === currentUserId) {
-        playOutbid()
-        showToast('outbid', data.lotTitle ?? 'Someone placed a higher bid.', "You've Been Outbid!")
         setLotUpdates(prev => {
           const next = new Map(prev)
           const ex = next.get(data.lotId) ?? {}
@@ -58,17 +51,12 @@ export function useLotRealtime(lots: AuctionLot[]): RealtimeLot[] {
         return
       }
 
-      // Bid placed on a lot
+      // Generic bid update — update card state only (toast/sound handled globally)
       if (data.lotId !== undefined && data.currentBid !== undefined) {
         const { lotId, currentBid, bidCount, endTime, bidderId, antiSniped } = data
         const lot = lots.find(l => l.id === lotId)
         const hadBid = lot?.bidderIds?.includes(currentUserId) ?? false
         const nowWinning = bidderId === currentUserId
-
-        if (nowWinning) {
-          playWinning()
-          showToast('success', lot?.title ?? 'You placed the top bid!', "You're Winning!")
-        }
 
         setLotUpdates(prev => {
           const next = new Map(prev)
@@ -89,7 +77,7 @@ export function useLotRealtime(lots: AuctionLot[]): RealtimeLot[] {
         })
       }
 
-      // Auction status changed (no lotId — applies to whole auction)
+      // Auction closed
       if (data.lotId === undefined && data.auctionId !== undefined && data.status !== undefined) {
         const closed = data.status === 'ended' || data.status === 'cancelled'
         if (closed) {
@@ -117,28 +105,43 @@ export function useLotRealtime(lots: AuctionLot[]): RealtimeLot[] {
     })
   }, [subscribe])
 
-  return useMemo(() => lots.map(lot => {
-    const rt = lotUpdates.get(lot.id)
-    const auctionClosed = lot.auctionId ? (auctionUpdates.get(lot.auctionId)?.isClosed ?? false) : false
-    const currentBid = rt?.currentBid ?? lot.currentBid
-    const bidCount = rt?.bidCount ?? lot.bidCount
-    const winnerId = rt?.winnerId !== undefined ? rt.winnerId : (lot.winnerId ?? null)
-    const isWinning = rt?.isWinning !== undefined ? rt.isWinning : winnerId === currentUserId
-    const isOutbid = rt?.isOutbid ?? (lot.bidderIds.includes(currentUserId) && winnerId !== currentUserId)
-    const isClosed = auctionClosed || ['sold', 'unsold', 'cancelled'].includes(lot.status)
-    const suggestedBid = bidCount === 0 ? lot.startingBid : currentBid + lot.bidIncrement
+  const cacheRef = useRef(new Map<number, { lot: AuctionLot; realtime: RealtimeLot }>())
 
-    return {
-      ...lot,
-      currentBid,
-      bidCount,
-      bidEndTime: rt?.bidEndTime ?? lot.bidEndTime,
-      winnerId,
-      isWinning,
-      isOutbid,
-      isClosed,
-      antiSniped: rt?.antiSniped ?? false,
-      suggestedBid,
-    }
-  }), [lots, lotUpdates, auctionUpdates, currentUserId])
+  return useMemo(() => {
+    const cache = cacheRef.current
+
+    return lots.map((lot) => {
+      const rt = lotUpdates.get(lot.id)
+      const auctionClosed = lot.auctionId ? (auctionUpdates.get(lot.auctionId)?.isClosed ?? false) : false
+
+      if (!rt && !auctionClosed) {
+        const cached = cache.get(lot.id)
+        if (cached?.lot === lot) return cached.realtime
+      }
+
+      const currentBid = rt?.currentBid ?? lot.currentBid
+      const bidCount = rt?.bidCount ?? lot.bidCount
+      const winnerId = rt?.winnerId !== undefined ? rt.winnerId : (lot.winnerId ?? null)
+      const isWinning = rt?.isWinning !== undefined ? rt.isWinning : winnerId === currentUserId
+      const isOutbid = rt?.isOutbid ?? (lot.bidderIds.includes(currentUserId) && winnerId !== currentUserId)
+      const isClosed = auctionClosed || ['sold', 'unsold', 'cancelled'].includes(lot.status)
+      const suggestedBid = bidCount === 0 ? lot.startingBid : currentBid + lot.bidIncrement
+
+      const realtime: RealtimeLot = {
+        ...lot,
+        currentBid,
+        bidCount,
+        bidEndTime: rt?.bidEndTime ?? lot.bidEndTime,
+        winnerId,
+        isWinning,
+        isOutbid,
+        isClosed,
+        antiSniped: rt?.antiSniped ?? false,
+        suggestedBid,
+      }
+
+      cache.set(lot.id, { lot, realtime })
+      return realtime
+    })
+  }, [lots, lotUpdates, auctionUpdates, currentUserId])
 }

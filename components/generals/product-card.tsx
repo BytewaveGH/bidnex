@@ -7,6 +7,7 @@ import type { ProductCardType } from '@/lib/interfaces'
 import InputTemplate from '../templates/input-template'
 import { useRouter } from 'next/navigation'
 import AlertDialogTemplate from '../templates/alert-dialog-template'
+import { LotImage } from './lot-image'
 
 function CardCountdown({ endTime, fallback }: { endTime: string; fallback: string }) {
     const [label, setLabel] = useState(fallback)
@@ -64,8 +65,11 @@ export default function ProductCard({
     onClearBidError,
 }: ProductCardProps) {
     const router = useRouter()
-    const [imgError, setImgError] = useState(false)
     const effectiveSuggestedBid = suggestedBid ?? (product.currentBid + product.increment)
+    const imageSrc =
+        typeof product.image === 'string'
+            ? product.image
+            : product.image?.src ?? ''
 
     async function handleBid() {
         if (!onBid) return
@@ -79,13 +83,12 @@ export default function ProductCard({
                 onClick={() => router.push(`/bidder/product/${product.id}`)}
             >
                 <div className="absolute inset-0 flex items-center justify-center">
-                    {product.image && !imgError ? (
-                        <Image src={product.image} alt={product.productName} fill className="object-cover rounded-t-[16px]" onError={() => setImgError(true)} />
-                    ) : (
-                        <div className="w-full h-full bg-[#f1f1f1] flex items-center justify-center">
-                            <span className="text-[#98A2B3] text-sm">No image</span>
-                        </div>
-                    )}
+                    <LotImage
+                        src={imageSrc}
+                        alt={product.productName}
+                        className="object-cover rounded-t-[16px]"
+                        sizes="340px"
+                    />
                 </div>
                 <hr />
                 <div className="absolute top-4 right-0 z-10 ">
