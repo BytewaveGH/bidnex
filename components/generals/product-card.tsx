@@ -1,5 +1,5 @@
 import { AlarmClock, UsersRound, Loader2 } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import ButtonTemplate from '../templates/button-template'
 import Image from 'next/image'
 import eyeIcon from '@/assets/svgs/eye.svg'
@@ -9,13 +9,24 @@ import { useRouter } from 'next/navigation'
 import AlertDialogTemplate from '../templates/alert-dialog-template'
 import { LotImage } from './lot-image'
 
-function CardCountdown({ endTime, fallback }: { endTime: string; fallback: string }) {
+function CardCountdown({ endTime, fallback, onExpired }: { endTime: string; fallback: string; onExpired?: () => void }) {
     const [label, setLabel] = useState(fallback)
+    const firedRef = useRef(false)
+    const onExpiredRef = useRef(onExpired)
+    onExpiredRef.current = onExpired
 
     useEffect(() => {
+        firedRef.current = false
         function tick() {
             const diff = new Date(endTime).getTime() - Date.now()
-            if (diff <= 0) { setLabel('ENDED'); return }
+            if (diff <= 0) {
+                setLabel('ENDED')
+                if (!firedRef.current) {
+                    firedRef.current = true
+                    onExpiredRef.current?.()
+                }
+                return
+            }
             const days = Math.floor(diff / 86400000)
             const hours = Math.floor((diff % 86400000) / 3600000)
             const mins = Math.floor((diff % 3600000) / 60000)
@@ -47,6 +58,7 @@ type ProductCardProps = {
     antiSniped?: boolean
     onBid?: (amount: number) => Promise<boolean>
     onClearBidError?: () => void
+    onExpired?: () => void
 }
 
 export default function ProductCard({
@@ -65,8 +77,14 @@ export default function ProductCard({
     antiSniped,
     onBid,
     onClearBidError,
+    onExpired,
 }: ProductCardProps) {
     const router = useRouter()
+    const [timeEnded, setTimeEnded] = useState(false)
+    const handleExpired = useCallback(() => {
+        setTimeEnded(true)
+        onExpired?.()
+    }, [onExpired])
     const effectiveSuggestedBid = suggestedBid ?? (product.currentBid + product.increment)
     const imageSrc =
         typeof product.image === 'string'
@@ -178,13 +196,13 @@ export default function ProductCard({
                     <div className="text-xs font-medium flex items-center gap-2 bg-[#D42620] text-white rounded-[48px] px-3 py-1.5 border border-[#D42620] shrink-0">
                         <AlarmClock className="w-3.5 h-3.5 shrink-0" />
                         {product.bidEndTime
-                            ? <CardCountdown endTime={product.bidEndTime} fallback={product.timeRemaining} />
+                            ? <CardCountdown endTime={product.bidEndTime} fallback={product.timeRemaining} onExpired={handleExpired} />
                             : <span className="whitespace-nowrap">{product.timeRemaining}</span>
                         }
                     </div>
                     <div className="text-xs font-medium flex items-center gap-2 text-black border border-[#D0D5DD] rounded-[48px] px-3 py-1.5 min-w-0 overflow-hidden">
                         <UsersRound className="w-3.5 h-3.5 shrink-0" />
-                        <span className="truncate whitespace-nowrap">{product.bidders} BIDDERS</span>
+                        <span className="truncate whitespace-nowrap">{product.bidders} BIDS</span>
                     </div>
                 </div>
 
@@ -206,8 +224,8 @@ export default function ProductCard({
                                     ? <Loader2 className="w-4 h-4 animate-spin" />
                                     : `Bid GHS ${effectiveSuggestedBid.toFixed(2)}`
                             }
-                            className={`w-full h-10 mt-3 ${isWinning ? 'bg-[#099137] hover:bg-[#099137]' : 'bg-black hover:bg-black'} text-white`}
-                            disabled={isBidding || isClosed || isWinning}
+                            className={`w-full h-10 mt-3 ${isWinning ? 'bg-[#099137] hover:bg-[#099137]' : 'bg-black hover:bg-black'} text-white disabled:opacity-50`}
+                            disabled={isBidding || isClosed || isWinning || timeEnded}
                             onClick={handleBid}
                         />
 

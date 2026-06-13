@@ -10,9 +10,10 @@ import type { RealtimeLot } from '@/app/(bidder)/bidder/(all-items)/_logics/useL
 type LotCardItemProps = {
   lot: RealtimeLot
   isLoggedIn?: boolean
+  onExpired?: (id: number) => void
 }
 
-function LotCardItemComponent({ lot, isLoggedIn = true }: LotCardItemProps) {
+function LotCardItemComponent({ lot, isLoggedIn = true, onExpired }: LotCardItemProps) {
   const { watchlistIds, pendingIds, toggleWatchlist } = useWatchlistIds()
   const { placeBid, getState, clearError } = useBidding()
   const bidState = getState(lot.id)
@@ -31,6 +32,10 @@ function LotCardItemComponent({ lot, isLoggedIn = true }: LotCardItemProps) {
     clearError(lot.id)
   }, [lot.id, clearError])
 
+  const handleExpired = useCallback(() => {
+    onExpired?.(lot.id)
+  }, [lot.id, onExpired])
+
   return (
     <ProductCard
       isLoggedIn={isLoggedIn}
@@ -47,11 +52,12 @@ function LotCardItemComponent({ lot, isLoggedIn = true }: LotCardItemProps) {
       bidError={bidState.error}
       onBid={onBid}
       onClearBidError={onClearBidError}
+      onExpired={handleExpired}
     />
   )
 }
 
 export const LotCardItem = memo(
   LotCardItemComponent,
-  (prev, next) => prev.lot === next.lot && prev.isLoggedIn === next.isLoggedIn,
+  (prev, next) => prev.lot === next.lot && prev.isLoggedIn === next.isLoggedIn && prev.onExpired === next.onExpired,
 )
