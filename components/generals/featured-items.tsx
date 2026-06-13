@@ -1,29 +1,38 @@
 "use client";
 
 import { ArrowLeft, ArrowRight } from "lucide-react";
-import { useRef, useState, useEffect, useMemo } from "react";
-import ButtonTemplate from "../templates/button-template";
-import ProductCard from "./product-card";
-import { usePublicAuctions } from "@/app/(bidder)/bidder/(all-items)/_logics/usePublicAuctions";
-import { mapLotToProductCard } from "@/app/(bidder)/bidder/(all-items)/_logics/auctions";
-import { useWatchlistIds } from "@/app/(bidder)/bidder/(all-items)/_logics/useWatchlistIds";
+import { useRef, useState, useEffect, useMemo, useCallback } from "react";
 import { useSession } from "next-auth/react";
+import ButtonTemplate from "../templates/button-template";
+import { LotCardItem } from "./lot-card-item";
+import { usePublicAuctions } from "@/app/(bidder)/bidder/(all-items)/_logics/usePublicAuctions";
+import { useLotRealtime } from "@/app/(bidder)/bidder/(all-items)/_logics/useLotRealtime";
 
 export default function FeaturedItems() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
+  const [expiredIds, setExpiredIds] = useState<Set<number>>(new Set());
 
   const { data: session } = useSession();
-  const isLoggedIn = !!session?.user;
-  const { watchlistIds, pendingIds, toggleWatchlist } = useWatchlistIds();
+  const isLoggedIn = session?.user?.userType === "bidder";
 
   const { data, isLoading } = usePublicAuctions({ featured: true, limit: 10 });
 
-  const items = useMemo(() => {
+  const baseLots = useMemo(() => {
     if (!data) return [];
-    return data.data.flatMap((auction) => auction.lots ?? []).map(mapLotToProductCard);
+    return data.data.flatMap((auction) => auction.lots ?? []);
   }, [data]);
+
+  const realtimeLots = useLotRealtime(baseLots);
+  const visibleLots = useMemo(
+    () => realtimeLots.filter((l) => !expiredIds.has(l.id)),
+    [realtimeLots, expiredIds],
+  );
+
+  const handleExpired = useCallback((id: number) => {
+    setExpiredIds((prev) => new Set(prev).add(id));
+  }, []);
 
   const checkScroll = () => {
     const el = scrollContainerRef.current;
@@ -43,7 +52,7 @@ export default function FeaturedItems() {
       el.removeEventListener("scroll", checkScroll);
       window.removeEventListener("resize", checkScroll);
     };
-  }, [items]);
+  }, [visibleLots]);
 
   const scrollLeft = () => {
     scrollContainerRef.current?.scrollBy({ left: -400, behavior: "smooth" });
@@ -79,7 +88,7 @@ export default function FeaturedItems() {
             <div key={i} className="w-[340px] h-[480px] shrink-0 rounded-[16px] bg-[#F0F2F5] animate-pulse" />
           ))}
         </div>
-      ) : items.length === 0 ? (
+      ) : visibleLots.length === 0 ? (
         <div className="w-full flex justify-center items-center py-10">
           <p className="text-[#657688] text-sm">No featured items available.</p>
         </div>
@@ -88,15 +97,9 @@ export default function FeaturedItems() {
           ref={scrollContainerRef}
           className="flex gap-7 w-full overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
         >
-          {items.map((item) => (
-            <div key={item.id} className="w-[340px] shrink-0">
-              <ProductCard
-                product={item}
-                isLoggedIn={isLoggedIn}
-                isInWatchlist={watchlistIds.has(item.id)}
-                onWatchlistToggle={() => toggleWatchlist(item.id)}
-                isWatchlistLoading={pendingIds.has(item.id)}
-              />
+          {visibleLots.map((lot) => (
+            <div key={lot.id} className="w-[340px] shrink-0">
+              <LotCardItem lot={lot} isLoggedIn={isLoggedIn} onExpired={handleExpired} />
             </div>
           ))}
         </div>
