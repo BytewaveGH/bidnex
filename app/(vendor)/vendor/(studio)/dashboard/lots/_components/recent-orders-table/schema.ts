@@ -35,5 +35,6 @@ export type LotRow = {
   primaryImageUrl: string | null;
   primaryMediaType?: "image" | "video";
   images: Array<{ id: number; url: string; mediaType: "image" | "video" }>;
+  specifications?: Record<string, unknown> | null;
   createdAt: string;
 };

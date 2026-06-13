@@ -46,6 +46,7 @@ export type AuctionLot = {
   category?: AuctionLotCategory | null;
   primaryImage: string;
   images: AuctionLotImage[];
+  specifications?: Record<string, unknown> | null;
   createdAt: string;
 };
 
