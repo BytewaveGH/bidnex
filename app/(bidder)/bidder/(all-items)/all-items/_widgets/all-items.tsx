@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { LotCardItem } from '@/components/generals/lot-card-item'
 import {
     Pagination,
@@ -33,6 +33,14 @@ export default function AllItems({ condition, minPrice, maxPrice, categoryId, se
     const { data, isLoading, error } = usePublicLots({ page, limit: PAGE_SIZE, condition, minPrice, maxPrice, categoryId, search, orderBy })
     const baseLots = useMemo(() => data?.data ?? [], [data])
     const realtimeLots = useLotRealtime(baseLots)
+
+    const [expiredIds, setExpiredIds] = useState<Set<number>>(new Set())
+    // Reset expired set when page/filters change
+    useEffect(() => { setExpiredIds(new Set()) }, [page, condition, minPrice, maxPrice, categoryId, search, orderBy])
+    const handleExpired = useCallback((id: number) => {
+        setExpiredIds(prev => new Set(prev).add(id))
+    }, [])
+    const visibleLots = useMemo(() => realtimeLots.filter(l => !expiredIds.has(l.id)), [realtimeLots, expiredIds])
 
     const totalPages = data ? Math.max(1, Math.ceil(data.count / PAGE_SIZE)) : 1
 
@@ -109,7 +117,7 @@ export default function AllItems({ condition, minPrice, maxPrice, categoryId, se
         )
     }
 
-    if (realtimeLots.length === 0) {
+    if (visibleLots.length === 0) {
         return (
             <div className="w-full flex justify-center items-center py-20">
                 <p className="text-[#657688] text-sm">No items available right now.</p>
@@ -121,9 +129,9 @@ export default function AllItems({ condition, minPrice, maxPrice, categoryId, se
         <div className="w-full flex flex-col items-center mb-20">
             <div className="w-full px-4">
                 <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-4 w-full">
-                    {realtimeLots.map((lot) => (
+                    {visibleLots.map((lot) => (
                         <div key={lot.id} className="w-full">
-                            <LotCardItem lot={lot} />
+                            <LotCardItem lot={lot} onExpired={handleExpired} />
                         </div>
                     ))}
                 </div>
