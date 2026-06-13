@@ -20,29 +20,24 @@ import { resolveLotMediaUrl, formatLotCondition } from '@/app/(bidder)/bidder/(a
 import { LotImage } from '@/components/generals/lot-image'
 
 function Countdown({ endTime }: { endTime: string }) {
-  const [timeRemaining, setTimeRemaining] = useState('')
+  const [label, setLabel] = useState('')
 
   useEffect(() => {
     function tick() {
       const diff = new Date(endTime).getTime() - Date.now()
-      if (diff <= 0) { setTimeRemaining('ENDED'); return }
+      if (diff <= 0) { setLabel('ENDED'); return }
       const days = Math.floor(diff / 86400000)
       const hours = Math.floor((diff % 86400000) / 3600000)
       const mins = Math.floor((diff % 3600000) / 60000)
       const secs = Math.floor((diff % 60000) / 1000)
-      setTimeRemaining(`${days} DAYS ${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`)
+      setLabel(`${days} DAYS ${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`)
     }
     tick()
     const interval = setInterval(tick, 1000)
     return () => clearInterval(interval)
   }, [endTime])
 
-  return (
-    <div className='text-xs font-medium flex items-center justify-center gap-2 bg-[#E5E5EA] text-black rounded-[48px] px-4 py-2.5'>
-      <AlarmClock className='w-4 h-4' />
-      <span className="tabular-nums whitespace-nowrap">{timeRemaining}</span>
-    </div>
-  )
+  return <span className="tabular-nums whitespace-nowrap">{label}</span>
 }
 
 export default function ProductDetails({ params }: { params: Promise<{ id: string }> }) {
@@ -65,7 +60,20 @@ export default function ProductDetails({ params }: { params: Promise<{ id: strin
     bidEndTime?: string
     isWinning?: boolean
     isOutbid?: boolean
+    isClosed?: boolean
   }>({})
+
+  // Must be declared before early returns to obey Rules of Hooks
+  const [isTimeEnded, setIsTimeEnded] = useState(false)
+  const bidEndTimeForTimer = rt.bidEndTime ?? lot?.bidEndTime ?? ''
+  useEffect(() => {
+    if (!bidEndTimeForTimer) return
+    setIsTimeEnded(false)
+    const diff = new Date(bidEndTimeForTimer).getTime() - Date.now()
+    if (diff <= 0) { setIsTimeEnded(true); return }
+    const t = setTimeout(() => setIsTimeEnded(true), diff)
+    return () => clearTimeout(t)
+  }, [bidEndTimeForTimer])
 
   // Join auction room once lot is loaded and WS is connected
   useEffect(() => {
@@ -80,23 +88,36 @@ export default function ProductDetails({ params }: { params: Promise<{ id: strin
     return subscribe((msg) => {
       if (!lot) return
 
-      if (msg.type === 'auction_update' && msg.data?.lotId === lot.id) {
+      if (
+        msg.type === 'auction_update' &&
+        Number(msg.data?.lotId) === Number(lot.id) &&
+        msg.data?.currentBid !== undefined
+      ) {
         const { currentBid, bidCount, endTime, bidderId } = msg.data
         setRt(prev => {
           const hadBid = prev.isWinning || prev.isOutbid || lot.bidderIds.includes(currentUserId)
+          const nowWinning = Number(bidderId) === currentUserId
           return {
             ...prev,
             currentBid,
-            bidCount,
-            bidEndTime: endTime,
-            isWinning: bidderId === currentUserId,
-            isOutbid: hadBid && bidderId !== currentUserId,
+            ...(bidCount != null && { bidCount }),
+            ...(endTime != null && { bidEndTime: endTime }),
+            isWinning: nowWinning,
+            isOutbid: hadBid && !nowWinning,
           }
         })
       }
 
       if (msg.type === 'user_event' && msg.event === 'bidder_outbid' && msg.data?.lotId === lot.id) {
         setRt(prev => ({ ...prev, isOutbid: true, isWinning: false }))
+      }
+
+      // Auction/lot closed
+      if (msg.type === 'auction_update' && msg.data?.auctionId !== undefined && msg.data?.status !== undefined) {
+        const closed = msg.data.status === 'ended' || msg.data.status === 'cancelled'
+        if (closed && String(msg.data.auctionId) === String(lot.auction.id)) {
+          setRt(prev => ({ ...prev, isClosed: true }))
+        }
       }
     })
   }, [subscribe, lot?.id, currentUserId])
@@ -197,7 +218,7 @@ export default function ProductDetails({ params }: { params: Promise<{ id: strin
   const isWon = lot.status === 'sold' && lot.winnerId === currentUserId
   const isWinning = !isWon && (rt.isWinning ?? (lot.winnerId === currentUserId))
   const isOutbid = !isWon && (rt.isOutbid ?? (lot.bidderIds.includes(currentUserId) && lot.winnerId !== currentUserId))
-  const isClosed = !isWon && (lot.status === 'ended' || lot.status === 'cancelled' || lot.auction.status === 'ended' || lot.auction.status === 'cancelled')
+  const isClosed = !isWon && (rt.isClosed || lot.status === 'ended' || lot.status === 'cancelled' || lot.auction.status === 'ended' || lot.auction.status === 'cancelled')
   const suggestedBid = bidCount === 0 ? lot.startingBid : currentBid + lot.bidIncrement
 
   const deliveryContent = (
@@ -272,8 +293,12 @@ export default function ProductDetails({ params }: { params: Promise<{ id: strin
               )}
 
               <div className='absolute bottom-4 right-4 z-10'>
-                <Countdown endTime={bidEndTime} />
+                <div className='text-xs font-medium flex items-center justify-center gap-2 bg-[#E5E5EA] text-black rounded-[48px] px-4 py-2.5'>
+                  <AlarmClock className='w-4 h-4' />
+                  <Countdown endTime={bidEndTime} />
+                </div>
               </div>
+
             </div>
 
             {galleryImages.length > 1 && (
@@ -305,37 +330,26 @@ export default function ProductDetails({ params }: { params: Promise<{ id: strin
           <div className='flex flex-col gap-4 w-1/2 min-w-0'>
             <h1 className='text-3xl font-bold'>{lot.title}</h1>
 
-            <div className='flex items-center gap-2'>
+            <div className='flex items-center gap-2 flex-wrap'>
               <div className={`w-fit px-2 py-2.5 rounded-[8px] text-white text-xs font-semibold ${conditionColor}`}>
                 {conditionFormatted}
               </div>
               <div className='bg-[#E4E7EC] w-fit px-2 py-2.5 rounded-[8px] text-black text-xs font-semibold'>
                 1 qty
               </div>
-              {/* {isWinning && (
-                <div className='bg-[#099137] text-white text-xs font-bold px-3 py-2 rounded-[8px]'>
-                  YOU&apos;RE WINNING
-                </div>
-              )} */}
+              <div className='text-xs font-medium flex items-center gap-1.5 text-black border border-[#D0D5DD] rounded-[48px] px-3 py-1.5'>
+                <UsersRound className='w-3.5 h-3.5 shrink-0' />
+                <span>{bidCount} BIDS</span>
+              </div>
             </div>
 
-            {/* {isOutbid && (
-              <div className='rounded-[8px] bg-[#FFF3CD] border border-[#FFCC00] px-3 py-2 text-sm font-medium text-[#7A5F00]'>
-                You were outbid — place a new bid to get back in the lead.
-              </div>
-            )} */}
-
-            <div className='flex items-center gap-4 flex-wrap'>
+<div className='flex items-center gap-4 flex-wrap'>
               <p className='text-sm font-medium'>
                 CURRENT BID: <span className='font-semibold text-lg'>GHS {currentBid.toFixed(2)}</span>
               </p>
               <p className='text-sm text-[#657688]'>
                 MKT PR: <span className='text-lg font-semibold'>GHS {lot.buyNowPrice.toFixed(2)}</span>
               </p>
-              <div className='text-xs font-medium flex items-center gap-1.5 text-black border border-[#D0D5DD] rounded-[48px] px-3 py-1.5'>
-                <UsersRound className='w-3.5 h-3.5 shrink-0' />
-                <span>{bidCount} BIDDERS</span>
-              </div>
             </div>
 
             {!isWon && (
@@ -346,8 +360,8 @@ export default function ProductDetails({ params }: { params: Promise<{ id: strin
                       ? <Loader2 className='w-4 h-4 animate-spin' />
                       : `Bid GHS ${suggestedBid.toFixed(2)}`
                   }
-                  className={`w-full h-[48px] mt-4 ${isWinning ? 'bg-[#099137] hover:bg-[#099137]' : 'bg-black hover:bg-black'} text-white`}
-                  disabled={isBidding}
+                  className={`w-full h-[48px] mt-4 ${isWinning ? 'bg-[#099137] hover:bg-[#099137]' : 'bg-black hover:bg-black'} text-white disabled:opacity-50`}
+                  disabled={isBidding || isWinning || isClosed || isTimeEnded}
                   onClick={() => handleBid(suggestedBid)}
                 />
 

@@ -1,25 +1,30 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import ProductCard from "./product-card";
-import { usePublicLots } from "@/app/(bidder)/bidder/(all-items)/_logics/usePublicLots";
-import { mapLotToProductCard } from "@/app/(bidder)/bidder/(all-items)/_logics/auctions";
-import { useWatchlistIds } from "@/app/(bidder)/bidder/(all-items)/_logics/useWatchlistIds";
 import { useSession } from "next-auth/react";
+import { LotCardItem } from "./lot-card-item";
+import { usePublicLots } from "@/app/(bidder)/bidder/(all-items)/_logics/usePublicLots";
+import { useLotRealtime } from "@/app/(bidder)/bidder/(all-items)/_logics/useLotRealtime";
 
 export default function LiveAuctions() {
   const router = useRouter();
   const { data: session } = useSession();
-  const isLoggedIn = !!session?.user;
-  const { watchlistIds, pendingIds, toggleWatchlist } = useWatchlistIds();
+  const isLoggedIn = session?.user?.userType === "bidder";
+  const [expiredIds, setExpiredIds] = useState<Set<number>>(new Set());
 
   const { data, isLoading } = usePublicLots({ orderBy: "ending_soon", limit: 5 });
 
-  const items = useMemo(() => {
-    if (!data) return [];
-    return data.data.map(mapLotToProductCard);
-  }, [data]);
+  const baseLots = useMemo(() => data?.data ?? [], [data]);
+  const realtimeLots = useLotRealtime(baseLots);
+  const visibleLots = useMemo(
+    () => realtimeLots.filter((l) => !expiredIds.has(l.id)),
+    [realtimeLots, expiredIds],
+  );
+
+  const handleExpired = useCallback((id: number) => {
+    setExpiredIds((prev) => new Set(prev).add(id));
+  }, []);
 
   return (
     <div className="flex flex-col items-center justify-center w-full">
@@ -50,21 +55,15 @@ export default function LiveAuctions() {
             <div key={i} className="w-[340px] h-[480px] shrink-0 rounded-[16px] bg-[#F0F2F5] animate-pulse" />
           ))}
         </div>
-      ) : items.length === 0 ? (
+      ) : visibleLots.length === 0 ? (
         <div className="w-full flex justify-center items-center py-10">
           <p className="text-[#657688] text-sm">No live auctions right now.</p>
         </div>
       ) : (
         <div className="flex gap-7 w-full overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-          {items.map((item) => (
-            <div key={item.id} className="w-[340px] shrink-0">
-              <ProductCard
-                product={item}
-                isLoggedIn={isLoggedIn}
-                isInWatchlist={watchlistIds.has(item.id)}
-                onWatchlistToggle={() => toggleWatchlist(item.id)}
-                isWatchlistLoading={pendingIds.has(item.id)}
-              />
+          {visibleLots.map((lot) => (
+            <div key={lot.id} className="w-[340px] shrink-0">
+              <LotCardItem lot={lot} isLoggedIn={isLoggedIn} onExpired={handleExpired} />
             </div>
           ))}
         </div>
