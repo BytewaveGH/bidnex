@@ -8,7 +8,7 @@ import { Armchair, CarFront, CookingPot, MonitorSmartphone, SearchIcon, Shirt, S
 import legalHammer from '@/assets/svgs/legal-hammer.svg'
 import champion from '@/assets/svgs/champion.svg'
 import favoriteIcon from '@/assets/svgs/eye.svg'
-import profileIcon from '@/assets/svgs/profile.jpg'
+
 import Image from 'next/image'
 import HoverCardTemplate from '@/components/templates/hover-card-template'
 import electronics from '@/assets/images/electronics.png'
@@ -20,11 +20,11 @@ import utensils from '@/assets/images/utensils.png'
 import { useSession, signOut } from 'next-auth/react'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { BadgeCheck, Bell, Check, CreditCard, LogOut } from 'lucide-react'
-import { cn, getInitials } from '@/lib/utils'
+import { cn } from '@/lib/utils'
 import { useWatchlistIds } from '@/app/(bidder)/bidder/(all-items)/_logics/useWatchlistIds'
-import { useMyBidsCount } from '@/app/(bidder)/bidder/(my-bids)/_logics/useMyBids'
+import { useNavCounts } from '@/components/generals/providers/nav-counts-provider'
 
 
 const categoriesHoverItems = [
@@ -45,11 +45,11 @@ export default function TopNav({ onSearch, initialSearchValue }: { onSearch?: (q
   const [hoveredCategoryIndex, setHoveredCategoryIndex] = useState(0)
   const [searchQuery, setSearchQuery] = useState(initialSearchValue ?? '')
   const { count: watchlistCount } = useWatchlistIds()
-  const myBidsCount = useMyBidsCount()
+  const { myBidsCount, wonItemsCount } = useNavCounts()
   const navIcons = [
     { src: legalHammer, label: 'My Bids', href: '/bidder/my-bids', count: myBidsCount },
     { src: favoriteIcon, label: 'Watchlist', href: '/bidder/watchlist', count: watchlistCount },
-    { src: champion, label: 'Won Items', href: undefined, count: 0 },
+    { src: champion, label: 'Won Items', href: '/bidder/won-items', count: wonItemsCount },
   ]
   return (
     <div className="sticky top-0 z-50 bg-white">
@@ -94,8 +94,7 @@ export default function TopNav({ onSearch, initialSearchValue }: { onSearch?: (q
                   <TooltipTrigger asChild>
                     <DropdownMenuTrigger asChild>
                       <Avatar className="size-8 rounded-lg cursor-pointer">
-                        <AvatarImage src={profileIcon.src} alt={session?.user?.name ?? ''} />
-                        <AvatarFallback>{getInitials(session?.user?.name ?? '')}</AvatarFallback>
+                        <AvatarFallback>{session?.user?.name?.[0]?.toUpperCase() ?? '?'}</AvatarFallback>
                       </Avatar>
                     </DropdownMenuTrigger>
                   </TooltipTrigger>
@@ -104,8 +103,7 @@ export default function TopNav({ onSearch, initialSearchValue }: { onSearch?: (q
                     <DropdownMenuItem className={cn("p-0", "bg-accent/50")}>
                       <div className="flex w-full items-center gap-2 px-1 py-1.5">
                         <Avatar className="size-9 rounded-lg">
-                          <AvatarImage src={profileIcon.src} alt={session?.user?.name ?? ''} />
-                          <AvatarFallback>{getInitials(session?.user?.name ?? '')}</AvatarFallback>
+                          <AvatarFallback>{session?.user?.name?.[0]?.toUpperCase() ?? '?'}</AvatarFallback>
                         </Avatar>
                         <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
                           <span className="truncate font-semibold">{session?.user?.name}</span>

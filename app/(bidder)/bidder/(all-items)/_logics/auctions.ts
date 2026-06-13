@@ -83,14 +83,16 @@ export type AuctionsQueryParams = {
   limit?: number;
   search?: string;
   status?: AuctionStatus;
+  featured?: boolean;
 };
 
 export function buildAuctionsParams(params: AuctionsQueryParams) {
-  const query: Record<string, string | number> = {};
+  const query: Record<string, string | number | boolean> = {};
   if (params.page !== undefined) query.page = params.page;
   if (params.limit !== undefined) query.limit = params.limit;
   if (params.search) query.search = params.search;
   if (params.status) query.status = params.status;
+  if (params.featured !== undefined) query.featured = params.featured;
   return query;
 }
 
