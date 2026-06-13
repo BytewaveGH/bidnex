@@ -60,7 +60,7 @@ export function usePublicAuctions(params: AuctionsQueryParams, refreshToken = 0)
     return () => {
       cancelled = true;
     };
-  }, [params.limit, params.page, params.search, params.status, refreshToken]);
+  }, [params.limit, params.page, params.search, params.status, params.featured, refreshToken]);
 
   return { data, isLoading, error };
 }

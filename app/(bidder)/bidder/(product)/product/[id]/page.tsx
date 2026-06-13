@@ -185,9 +185,10 @@ export default function ProductDetails({ params }: { params: Promise<{ id: strin
   const currentBid = rt.currentBid ?? lot.currentBid
   const bidCount = rt.bidCount ?? lot.bidCount
   const bidEndTime = rt.bidEndTime ?? lot.bidEndTime
-  const isWinning = rt.isWinning ?? (lot.winnerId === currentUserId)
-  const isOutbid = rt.isOutbid ?? (lot.bidderIds.includes(currentUserId) && lot.winnerId !== currentUserId)
-  const isClosed = lot.status === 'ended' || lot.status === 'cancelled' || lot.auction.status === 'ended' || lot.auction.status === 'cancelled'
+  const isWon = lot.status === 'sold' && lot.winnerId === currentUserId
+  const isWinning = !isWon && (rt.isWinning ?? (lot.winnerId === currentUserId))
+  const isOutbid = !isWon && (rt.isOutbid ?? (lot.bidderIds.includes(currentUserId) && lot.winnerId !== currentUserId))
+  const isClosed = !isWon && (lot.status === 'ended' || lot.status === 'cancelled' || lot.auction.status === 'ended' || lot.auction.status === 'cancelled')
   const suggestedBid = bidCount === 0 ? lot.startingBid : currentBid + lot.bidIncrement
 
   const deliveryContent = (
@@ -249,6 +250,14 @@ export default function ProductDetails({ params }: { params: Promise<{ id: strin
                 <div className='absolute  -top-2 -left-8 overflow-hidden w-40 h-40 z-10 pointer-events-none'>
                   <div className='absolute bg-[#D96B6B] text-white text-sm font-bold py-2 w-56 text-center -rotate-45 top-10 -left-8 tracking-wide whitespace-nowrap'>
                     SOLD • SOLD • SOLD • SOLD •
+                  </div>
+                </div>
+              )}
+
+              {isWon && (
+                <div className='absolute -top-2 -left-8 overflow-hidden w-40 h-40 z-10 pointer-events-none'>
+                  <div className='absolute bg-[#099137] text-white text-sm font-bold py-2 w-56 text-center -rotate-45 top-10 -left-8 tracking-wide whitespace-nowrap'>
+                    WON • WON • WON • WON •
                   </div>
                 </div>
               )}
@@ -316,54 +325,58 @@ export default function ProductDetails({ params }: { params: Promise<{ id: strin
               </p>
             </div>
 
-            <ButtonTemplate
-              title={
-                isBidding
-                  ? <Loader2 className='w-4 h-4 animate-spin' />
-                  : `Bid GHS ${suggestedBid.toFixed(2)}`
-              }
-              className={`w-full h-[48px] mt-4 ${isWinning ? 'bg-[#099137] hover:bg-[#099137]' : 'bg-black hover:bg-black'} text-white`}
-              disabled={isBidding}
-              onClick={() => handleBid(suggestedBid)}
-            />
-
-            {bidError && (
-              <p className='text-[#D42620] text-sm -mt-2 cursor-pointer' onClick={() => setBidError(null)}>
-                {bidError}
-              </p>
-            )}
-
-            <div className='flex items-center my-2 gap-4'>
-              <div className='flex-1 min-w-0'>
-                <InputTemplate placeholder='GHS 0.00' className='h-11 shadow-none w-full' inputAlign='center' />
-              </div>
-              <div className='flex-1 min-w-0'>
-                <AlertDialogTemplate
-                  trigger={<ButtonTemplate title='Set Max Bid' className='bg-[#FFCC00] text-black hover:bg-[#FFCC00] h-11 w-full' />}
+            {!isWon && (
+              <>
+                <ButtonTemplate
+                  title={
+                    isBidding
+                      ? <Loader2 className='w-4 h-4 animate-spin' />
+                      : `Bid GHS ${suggestedBid.toFixed(2)}`
+                  }
+                  className={`w-full h-[48px] mt-4 ${isWinning ? 'bg-[#099137] hover:bg-[#099137]' : 'bg-black hover:bg-black'} text-white`}
+                  disabled={isBidding}
+                  onClick={() => handleBid(suggestedBid)}
                 />
-              </div>
-            </div>
 
-            <ButtonTemplate
-              title={
-                <div className='flex items-center gap-2'>
-                  <Image
-                    src={favoriteIcon}
-                    alt='watchlist'
-                    className='size-5'
-                    style={watchlistIds.has(lot.id) ? { filter: 'brightness(0) saturate(100%) invert(70%) sepia(100%) saturate(1475%) hue-rotate(1deg) brightness(110%)' } : undefined}
-                  />
-                  <span className='text-sm font-medium'>
-                    {pendingIds.has(lot.id)
-                      ? watchlistIds.has(lot.id) ? 'Removing...' : 'Adding...'
-                      : watchlistIds.has(lot.id) ? 'Remove from Watchlist' : 'Add to Watchlist'}
-                  </span>
+                {bidError && (
+                  <p className='text-[#D42620] text-sm -mt-2 cursor-pointer' onClick={() => setBidError(null)}>
+                    {bidError}
+                  </p>
+                )}
+
+                <div className='flex items-center my-2 gap-4'>
+                  <div className='flex-1 min-w-0'>
+                    <InputTemplate placeholder='GHS 0.00' className='h-11 shadow-none w-full' inputAlign='center' />
+                  </div>
+                  <div className='flex-1 min-w-0'>
+                    <AlertDialogTemplate
+                      trigger={<ButtonTemplate title='Set Max Bid' className='bg-[#FFCC00] text-black hover:bg-[#FFCC00] h-11 w-full' />}
+                    />
+                  </div>
                 </div>
-              }
-              className='bg-white text-black hover:bg-white border w-full h-[48px]'
-              disabled={pendingIds.has(lot.id)}
-              onClick={() => toggleWatchlist(lot.id)}
-            />
+
+                <ButtonTemplate
+                  title={
+                    <div className='flex items-center gap-2'>
+                      <Image
+                        src={favoriteIcon}
+                        alt='watchlist'
+                        className='size-5'
+                        style={watchlistIds.has(lot.id) ? { filter: 'brightness(0) saturate(100%) invert(70%) sepia(100%) saturate(1475%) hue-rotate(1deg) brightness(110%)' } : undefined}
+                      />
+                      <span className='text-sm font-medium'>
+                        {pendingIds.has(lot.id)
+                          ? watchlistIds.has(lot.id) ? 'Removing...' : 'Adding...'
+                          : watchlistIds.has(lot.id) ? 'Remove from Watchlist' : 'Add to Watchlist'}
+                      </span>
+                    </div>
+                  }
+                  className='bg-white text-black hover:bg-white border w-full h-[48px]'
+                  disabled={pendingIds.has(lot.id)}
+                  onClick={() => toggleWatchlist(lot.id)}
+                />
+              </>
+            )}
 
             <div>
               <Separator className='h-px' />

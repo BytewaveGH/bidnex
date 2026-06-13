@@ -5,6 +5,7 @@ import ToastTemplate from "@/components/templates/toast-template";
 import { NextAuthProvider } from "@/components/generals/providers/next-auth";
 import { WatchlistProvider } from "@/components/generals/providers/watchlist-provider";
 import { WebSocketProvider } from "@/components/generals/providers/websocket-provider";
+import { NavCountsProvider } from "@/components/generals/providers/nav-counts-provider";
 import { BidNotificationsProvider } from "@/components/generals/providers/bid-notifications-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { PreferencesStoreProvider } from "@/stores/preferences/preferences-provider";
@@ -59,7 +60,9 @@ export default function RootLayout({
               <WebSocketProvider>
                 <BidNotificationsProvider>
                   <WatchlistProvider>
-                    {children}
+                    <NavCountsProvider>
+                      {children}
+                    </NavCountsProvider>
                   </WatchlistProvider>
                 </BidNotificationsProvider>
               </WebSocketProvider>

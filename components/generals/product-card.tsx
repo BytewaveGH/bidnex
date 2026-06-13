@@ -36,6 +36,7 @@ type ProductCardProps = {
     isInWatchlist?: boolean
     onWatchlistToggle?: () => void
     isWatchlistLoading?: boolean
+    isWon?: boolean
     // real-time bid props
     isWinning?: boolean
     isOutbid?: boolean
@@ -54,6 +55,7 @@ export default function ProductCard({
     isInWatchlist,
     onWatchlistToggle,
     isWatchlistLoading,
+    isWon,
     isWinning,
     isOutbid,
     isClosed,
@@ -77,7 +79,7 @@ export default function ProductCard({
     }
 
     return (
-        <div className={`h-max border w-full rounded-[16px] flex flex-col ${isClosed ? 'opacity-60' : ''} ${isWinning ? 'border-2 border-[#099137]' : isOutbid ? 'border-2 border-[#F3A218]' : isClosed ? 'border-2 border-[#D96B6B]' : 'border border-[#F0F2F5]'}`}
+        <div className={`h-max border w-full rounded-[16px] flex flex-col ${isClosed ? 'opacity-60' : ''} ${isWon ? 'border-2 border-[#099137]' : isWinning ? 'border-2 border-[#099137]' : isOutbid ? 'border-2 border-[#F3A218]' : isClosed ? 'border-2 border-[#D96B6B]' : 'border border-[#F0F2F5]'}`}
         >
             <div className="bg-[#F9FAFB] h-[340px] relative overflow-hidden rounded-t-[16px] hover:cursor-pointer"
                 onClick={() => router.push(`/bidder/product/${product.id}`)}
@@ -107,23 +109,25 @@ export default function ProductCard({
                     </div>
                 </div>
 
-                <div className="absolute bottom-4 right-4 z-10" onClick={(e) => e.stopPropagation()}>
-                    <ButtonTemplate
-                        title={
-                            isWatchlistLoading
-                                ? <Loader2 className="w-4 h-4 animate-spin text-[#344054]" />
-                                : <Image
-                                    src={eyeIcon}
-                                    alt="watchlist"
-                                    className="w-5 h-5"
-                                    style={isInWatchlist ? { filter: 'brightness(0) saturate(100%) invert(70%) sepia(100%) saturate(1475%) hue-rotate(1deg) brightness(110%)' } : undefined}
-                                />
-                        }
-                        className="bg-white text-black hover:bg-white h-10 w-10 border border-[#F0F2F5] rounded-full p-0"
-                        onClick={onWatchlistToggle}
-                        disabled={isWatchlistLoading}
-                    />
-                </div>
+                {!isWon && (
+                    <div className="absolute bottom-4 right-4 z-10" onClick={(e) => e.stopPropagation()}>
+                        <ButtonTemplate
+                            title={
+                                isWatchlistLoading
+                                    ? <Loader2 className="w-4 h-4 animate-spin text-[#344054]" />
+                                    : <Image
+                                        src={eyeIcon}
+                                        alt="watchlist"
+                                        className="w-5 h-5"
+                                        style={isInWatchlist ? { filter: 'brightness(0) saturate(100%) invert(70%) sepia(100%) saturate(1475%) hue-rotate(1deg) brightness(110%)' } : undefined}
+                                    />
+                            }
+                            className="bg-white text-black hover:bg-white h-10 w-10 border border-[#F0F2F5] rounded-full p-0"
+                            onClick={onWatchlistToggle}
+                            disabled={isWatchlistLoading}
+                        />
+                    </div>
+                )}
 
                 {/* Anti-snipe flash */}
                 {antiSniped && (
@@ -158,6 +162,15 @@ export default function ProductCard({
                         </div>
                     </div>
                 )}
+
+                {/* Won ribbon */}
+                {isWon && (
+                    <div className="absolute top-0 -left-4 overflow-hidden w-32 h-32 z-10 pointer-events-none">
+                        <div className="absolute bg-[#099137] text-white text-[12px] font-bold py-1.5 w-44 text-center -rotate-45 top-7 -left-7 tracking-wide whitespace-nowrap">
+                            WON • WON • WON • WON •
+                        </div>
+                    </div>
+                )}
             </div>
 
             <section className="p-3 border-t border-gray-100">
@@ -179,13 +192,13 @@ export default function ProductCard({
                 <p className="text-xs font-light text-[#657688] mt-1">MKT PR: {product.marketPrice}</p>
                 <p className="text-sm font-medium mt-1">CURRENT BID: GHS {product.currentBid.toFixed(2)}</p>
 
-                {!isLoggedIn && (
+                {!isWon && !isLoggedIn && (
                     <div onClick={(e) => e.stopPropagation()}>
                         <ButtonTemplate title="Login To Bid" className="bg-black text-white hover:bg-black w-full h-10 mt-3" />
                     </div>
                 )}
 
-                {isLoggedIn && (
+                {!isWon && isLoggedIn && (
                     <div onClick={(e) => e.stopPropagation()}>
                         <ButtonTemplate
                             title={
