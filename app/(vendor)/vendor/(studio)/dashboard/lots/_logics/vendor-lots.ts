@@ -13,6 +13,7 @@ export type CreateVendorLotPayload = {
   sku: string;
   pickupAvailable: boolean;
   shippingAvailable: boolean;
+  specifications?: Record<string, unknown>;
 };
 
 export type CreateVendorLotApiResponse = {
@@ -77,6 +78,7 @@ export type VendorLot = {
   category?: VendorLotCategory | null;
   primaryImage?: string | null;
   images?: VendorLotImage[];
+  specifications?: Record<string, unknown> | null;
   createdAt: string;
 };
 
@@ -165,6 +167,7 @@ export function mapVendorLotToLotRow(lot: VendorLot): LotRow {
       url: resolveLotMediaUrl(img.url) ?? img.url,
       mediaType: img.mediaType,
     })),
+    specifications: lot.specifications ?? null,
     createdAt: lot.createdAt,
   };
 }

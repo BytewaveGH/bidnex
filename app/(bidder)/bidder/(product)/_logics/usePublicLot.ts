@@ -48,6 +48,7 @@ export type PublicLotDetail = {
   createdAt: string;
   winnerId?: number | null;
   bidderIds: number[];
+  specifications?: Record<string, unknown> | null;
   recentBids: unknown[];
   auction: PublicLotAuction;
 };

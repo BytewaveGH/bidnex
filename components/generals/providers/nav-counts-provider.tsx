@@ -18,14 +18,14 @@ export function NavCountsProvider({ children }: { children: React.ReactNode }) {
   const [wonItemsCount, setWonItemsCount] = useState(0)
 
   useEffect(() => {
-    if (!session?.user) return
+    if (session?.user?.userType !== 'bidder') return
     callApi({ method: 'GET', url: '/bidder/bids', params: { page: 1, limit: 1 } })
       .then((res: any) => { setMyBidsCount(res.data?.data?.count ?? 0) })
       .catch(() => {})
     callApi({ method: 'GET', url: '/bidder/lots/won', params: { page: 1, limit: 1 } })
       .then((res: any) => { setWonItemsCount(res.data?.data?.count ?? 0) })
       .catch(() => {})
-  }, [!!session?.user])
+  }, [session?.user?.userType])
 
   return (
     <NavCountsContext.Provider value={{ myBidsCount, wonItemsCount }}>

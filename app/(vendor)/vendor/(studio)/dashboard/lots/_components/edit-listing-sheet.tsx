@@ -3,8 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ImageIcon, Info, X } from "lucide-react";
-import { Controller, useForm, type Resolver } from "react-hook-form";
+import { ImageIcon, Info, Plus, X } from "lucide-react";
+import { Controller, useFieldArray, useForm, type Resolver } from "react-hook-form";
 
 import { showToast } from "@/components/templates/toast-template";
 import { Button } from "@/components/ui/button";
@@ -38,6 +38,9 @@ type EditListingSheetProps = {
 };
 
 function lotToFormValues(lot: LotRow): LotFormValues {
+  const specifications = lot.specifications
+    ? Object.entries(lot.specifications).map(([key, value]) => ({ key, value: String(value) }))
+    : [];
   return {
     title: lot.title,
     description: lot.description,
@@ -50,6 +53,7 @@ function lotToFormValues(lot: LotRow): LotFormValues {
     sku: lot.sku,
     pickupAvailable: lot.pickupAvailable,
     shippingAvailable: lot.shippingAvailable,
+    specifications,
   };
 }
 
@@ -75,7 +79,13 @@ export function EditListingSheet({ lot, open, onOpenChange, onSuccess }: EditLis
     defaultValues: {
       pickupAvailable: false,
       shippingAvailable: false,
+      specifications: [],
     },
+  });
+
+  const { fields: specFields, append: appendSpec, remove: removeSpec } = useFieldArray({
+    control,
+    name: "specifications",
   });
 
   useEffect(() => {
@@ -107,6 +117,13 @@ export function EditListingSheet({ lot, open, onOpenChange, onSuccess }: EditLis
   async function onSubmit(values: LotFormValues) {
     if (!lot || !canSave) return;
 
+    const specifications = values.specifications
+      .filter(s => s.key.trim())
+      .reduce<Record<string, unknown>>((acc, { key, value }) => {
+        acc[key.trim()] = value.trim();
+        return acc;
+      }, {});
+
     const payload: CreateVendorLotPayload = {
       title: values.title,
       description: values.description,
@@ -119,6 +136,7 @@ export function EditListingSheet({ lot, open, onOpenChange, onSuccess }: EditLis
       sku: values.sku,
       pickupAvailable: values.pickupAvailable,
       shippingAvailable: values.shippingAvailable,
+      ...(Object.keys(specifications).length > 0 && { specifications }),
     };
 
     setSubmitPhase("saving");
@@ -230,6 +248,48 @@ export function EditListingSheet({ lot, open, onOpenChange, onSuccess }: EditLis
               <Field label="SKU" error={errors.sku?.message}>
                 <Input className="h-11" placeholder="SKU-001" {...register("sku")} />
               </Field>
+
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-1.5">
+                  <Label>Specifications</Label>
+                  <FieldTooltip hint="Key/value pairs describing product specs (e.g. Storage: 256GB)." />
+                </div>
+                {specFields.length > 0 && (
+                  <div className="flex flex-col gap-2">
+                    {specFields.map((field, index) => (
+                      <div key={field.id} className="flex items-center gap-2">
+                        <Input
+                          className="h-9 flex-1"
+                          placeholder="Key (e.g. Storage)"
+                          {...register(`specifications.${index}.key`)}
+                        />
+                        <Input
+                          className="h-9 flex-1"
+                          placeholder="Value (e.g. 256GB)"
+                          {...register(`specifications.${index}.value`)}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeSpec(index)}
+                          className="shrink-0 rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                        >
+                          <X className="size-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="self-start"
+                  onClick={() => appendSpec({ key: "", value: "" })}
+                >
+                  <Plus className="size-4" />
+                  Add Specification
+                </Button>
+              </div>
 
               <div className="flex flex-col gap-3">
                 <div className="flex items-center gap-1.5">
