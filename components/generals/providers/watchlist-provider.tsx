@@ -22,7 +22,7 @@ export function WatchlistProvider({ children }: { children: React.ReactNode }) {
   const [count, setCount] = useState(0)
 
   useEffect(() => {
-    if (!session?.user) return
+    if (session?.user?.userType !== 'bidder') return
     callApi({ method: 'GET', url: '/bidder/watchlist', params: { limit: 1000 } })
       .then((res: any) => {
         const page = res.data?.data

@@ -3,10 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ImageIcon, Info, ShoppingBag, X } from "lucide-react";
-import { Controller, useForm, type Resolver } from "react-hook-form";
-import { z } from "zod";
-
+import { ImageIcon, Info, Plus, ShoppingBag, X } from "lucide-react";
+import { Controller, useFieldArray, useForm, type Resolver } from "react-hook-form";
 import { showToast } from "@/components/templates/toast-template";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,22 +27,7 @@ import { useCreateVendorLot } from "../_logics/useCreateVendorLot";
 import { usePublicCategories } from "../_logics/usePublicCategories";
 import { useUploadVendorLotImages } from "../_logics/useUploadVendorLotImages";
 import { getCreatedLotId, type CreateVendorLotPayload } from "../_logics/vendor-lots";
-
-const schema = z.object({
-  title: z.string().min(1, "Title is required"),
-  description: z.string().min(1, "Description is required"),
-  categoryId: z.coerce.number().int().positive("Please select a category"),
-  condition: z.enum(["new", "like_new", "used", "refurbished"], { error: "Condition is required" }),
-  startingBid: z.coerce.number().positive("Must be greater than 0"),
-  bidIncrement: z.coerce.number().positive("Must be greater than 0"),
-  reservePrice: z.coerce.number().positive("Must be greater than 0"),
-  buyNowPrice: z.coerce.number().positive("Must be greater than 0"),
-  sku: z.string().min(1, "SKU is required"),
-  pickupAvailable: z.boolean(),
-  shippingAvailable: z.boolean(),
-});
-
-type FormValues = z.infer<typeof schema>;
+import { lotFormSchema, type LotFormValues } from "./lot-form-schema";
 
 type NewProductSheetProps = {
   onSuccess?: () => void;
@@ -85,15 +68,28 @@ export function NewProductSheet({ onSuccess }: NewProductSheetProps) {
     reset,
     control,
     formState: { errors },
-  } = useForm<FormValues>({
-    resolver: zodResolver(schema) as Resolver<FormValues>,
+  } = useForm<LotFormValues>({
+    resolver: zodResolver(lotFormSchema) as Resolver<LotFormValues>,
     defaultValues: {
       pickupAvailable: false,
       shippingAvailable: false,
+      specifications: [],
     },
   });
 
-  async function onSubmit(values: FormValues) {
+  const { fields: specFields, append: appendSpec, remove: removeSpec } = useFieldArray({
+    control,
+    name: "specifications",
+  });
+
+  async function onSubmit(values: LotFormValues) {
+    const specifications = values.specifications
+      .filter(s => s.key.trim())
+      .reduce<Record<string, unknown>>((acc, { key, value }) => {
+        acc[key.trim()] = value.trim();
+        return acc;
+      }, {});
+
     const payload: CreateVendorLotPayload = {
       title: values.title,
       description: values.description,
@@ -106,6 +102,7 @@ export function NewProductSheet({ onSuccess }: NewProductSheetProps) {
       sku: values.sku,
       pickupAvailable: values.pickupAvailable,
       shippingAvailable: values.shippingAvailable,
+      ...(Object.keys(specifications).length > 0 && { specifications }),
     };
 
     setSubmitPhase("creating");
@@ -185,7 +182,7 @@ export function NewProductSheet({ onSuccess }: NewProductSheetProps) {
               </Field>
 
               <Field label="Condition" hint="The physical state of the item. Choose the option that best describes its current condition." error={errors.condition?.message}>
-                <Select onValueChange={(v) => setValue("condition", v as FormValues["condition"], { shouldValidate: true })}>
+                <Select onValueChange={(v) => setValue("condition", v as LotFormValues["condition"], { shouldValidate: true })}>
                   <SelectTrigger size="lg" className="w-full">
                     <SelectValue placeholder="Select condition" />
                   </SelectTrigger>
@@ -217,6 +214,48 @@ export function NewProductSheet({ onSuccess }: NewProductSheetProps) {
               <Field label="SKU" hint="Your internal stock-keeping unit code for this product." error={errors.sku?.message}>
                 <Input className="h-11" placeholder="SKU-001" {...register("sku")} />
               </Field>
+
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-1.5">
+                  <Label>Specifications</Label>
+                  <FieldTooltip hint="Key/value pairs describing product specs (e.g. Storage: 256GB)." />
+                </div>
+                {specFields.length > 0 && (
+                  <div className="flex flex-col gap-2">
+                    {specFields.map((field, index) => (
+                      <div key={field.id} className="flex items-center gap-2">
+                        <Input
+                          className="h-9 flex-1"
+                          placeholder="Key (e.g. Storage)"
+                          {...register(`specifications.${index}.key`)}
+                        />
+                        <Input
+                          className="h-9 flex-1"
+                          placeholder="Value (e.g. 256GB)"
+                          {...register(`specifications.${index}.value`)}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeSpec(index)}
+                          className="shrink-0 rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                        >
+                          <X className="size-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="self-start"
+                  onClick={() => appendSpec({ key: "", value: "" })}
+                >
+                  <Plus className="size-4" />
+                  Add Specification
+                </Button>
+              </div>
 
               <div className="flex flex-col gap-3">
                 <div className="flex items-center gap-1.5">

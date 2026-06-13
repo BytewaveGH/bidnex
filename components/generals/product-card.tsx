@@ -132,7 +132,7 @@ export default function ProductCard({
                 {/* Anti-snipe flash */}
                 {antiSniped && (
                     <div className="absolute top-4 left-4 z-10 bg-[#FFCC00] text-black text-[10px] font-bold px-2 py-1 rounded-full animate-pulse">
-                        +10s
+                        +3mins
                     </div>
                 )}
 
