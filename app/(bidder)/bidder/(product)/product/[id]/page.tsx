@@ -2,7 +2,7 @@
 
 import TopNav from '@/components/generals/top-nav'
 import ButtonTemplate from '@/components/templates/button-template'
-import { AlarmClock, ChevronRight, Loader2, MoveLeft } from 'lucide-react'
+import { AlarmClock, ChevronRight, Loader2, MoveLeft, UsersRound } from 'lucide-react'
 import Image from 'next/image'
 import { use, useState, useEffect } from 'react'
 import InputTemplate from '@/components/templates/input-template'
@@ -82,14 +82,17 @@ export default function ProductDetails({ params }: { params: Promise<{ id: strin
 
       if (msg.type === 'auction_update' && msg.data?.lotId === lot.id) {
         const { currentBid, bidCount, endTime, bidderId } = msg.data
-        setRt(prev => ({
-          ...prev,
-          currentBid,
-          bidCount,
-          bidEndTime: endTime,
-          isWinning: bidderId === currentUserId,
-          isOutbid: (prev.isWinning ?? lot.bidderIds.includes(currentUserId)) && bidderId !== currentUserId,
-        }))
+        setRt(prev => {
+          const hadBid = prev.isWinning || prev.isOutbid || lot.bidderIds.includes(currentUserId)
+          return {
+            ...prev,
+            currentBid,
+            bidCount,
+            bidEndTime: endTime,
+            isWinning: bidderId === currentUserId,
+            isOutbid: hadBid && bidderId !== currentUserId,
+          }
+        })
       }
 
       if (msg.type === 'user_event' && msg.event === 'bidder_outbid' && msg.data?.lotId === lot.id) {
@@ -112,7 +115,13 @@ export default function ProductDetails({ params }: { params: Promise<{ id: strin
     try {
       const res = await callApi({ method: 'POST', url: `/bidder/lots/${lot.id}/bids`, data: { amount } }) as any
       if (res.status === 201 || res.status === 200) {
-        setRt(prev => ({ ...prev, isWinning: true, isOutbid: false }))
+        setRt(prev => ({
+          ...prev,
+          isWinning: true,
+          isOutbid: false,
+          currentBid: amount,
+          bidCount: (prev.bidCount ?? lot.bidCount) + 1,
+        }))
       } else {
         setBidError(res.data?.error ?? res.data?.message ?? 'Failed to place bid.')
       }
@@ -316,13 +325,17 @@ export default function ProductDetails({ params }: { params: Promise<{ id: strin
               </div>
             )} */}
 
-            <div className='flex items-center gap-4'>
+            <div className='flex items-center gap-4 flex-wrap'>
               <p className='text-sm font-medium'>
                 CURRENT BID: <span className='font-semibold text-lg'>GHS {currentBid.toFixed(2)}</span>
               </p>
               <p className='text-sm text-[#657688]'>
                 MKT PR: <span className='text-lg font-semibold'>GHS {lot.buyNowPrice.toFixed(2)}</span>
               </p>
+              <div className='text-xs font-medium flex items-center gap-1.5 text-black border border-[#D0D5DD] rounded-[48px] px-3 py-1.5'>
+                <UsersRound className='w-3.5 h-3.5 shrink-0' />
+                <span>{bidCount} BIDDERS</span>
+              </div>
             </div>
 
             {!isWon && (
@@ -384,7 +397,22 @@ export default function ProductDetails({ params }: { params: Promise<{ id: strin
                 className='w-full'
                 items={[
                   { value: 'details', trigger: 'Details', content: lot.description || 'No details available.' },
-                  { value: 'specification', trigger: 'Specification', content: 'Specifications not available.' },
+                  {
+                    value: 'specification',
+                    trigger: 'Specification',
+                    content: lot.specifications && Object.keys(lot.specifications).length > 0
+                      ? (
+                        <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+                          {Object.entries(lot.specifications).map(([key, value]) => (
+                            <div key={key} className="contents">
+                              <span className="font-medium capitalize">{key}</span>
+                              <span className="text-muted-foreground">{String(value)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )
+                      : 'Specifications not available.',
+                  },
                   { value: 'delivery-info', trigger: 'Delivery Info', content: deliveryContent },
                 ]}
               />

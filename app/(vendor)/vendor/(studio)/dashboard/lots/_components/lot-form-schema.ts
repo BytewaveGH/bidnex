@@ -1,5 +1,10 @@
 import { z } from "zod";
 
+export const specRowSchema = z.object({
+  key: z.string(),
+  value: z.string(),
+});
+
 export const lotFormSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().min(1, "Description is required"),
@@ -12,6 +17,7 @@ export const lotFormSchema = z.object({
   sku: z.string().min(1, "SKU is required"),
   pickupAvailable: z.boolean(),
   shippingAvailable: z.boolean(),
+  specifications: z.array(specRowSchema).default([]),
 });
 
 export type LotFormValues = z.infer<typeof lotFormSchema>;

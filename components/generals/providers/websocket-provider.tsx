@@ -39,7 +39,7 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
     const role = session?.user?.userType
     const client = clientRef.current
 
-    if (!token || !role) {
+    if (!token || role !== 'bidder') {
       client.setCredentials(null)
       return
     }
