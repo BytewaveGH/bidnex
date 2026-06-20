@@ -46,11 +46,8 @@ function lotToFormValues(lot: LotRow): LotFormValues {
     description: lot.description,
     categoryId: lot.categoryId ?? 0,
     condition: lot.conditionRaw,
-    startingBid: lot.startingBidAmount,
-    bidIncrement: lot.bidIncrementAmount,
     reservePrice: lot.reservePriceAmount,
     buyNowPrice: lot.buyNowPriceAmount,
-    sku: lot.sku,
     pickupAvailable: lot.pickupAvailable,
     shippingAvailable: lot.shippingAvailable,
     specifications,
@@ -128,12 +125,9 @@ export function EditListingSheet({ lot, open, onOpenChange, onSuccess }: EditLis
       title: values.title,
       description: values.description,
       condition: values.condition,
-      startingBid: values.startingBid,
-      bidIncrement: values.bidIncrement,
       reservePrice: values.reservePrice,
       buyNowPrice: values.buyNowPrice,
       categoryId: values.categoryId,
-      sku: values.sku,
       pickupAvailable: values.pickupAvailable,
       shippingAvailable: values.shippingAvailable,
       ...(Object.keys(specifications).length > 0 && { specifications }),
@@ -221,20 +215,12 @@ export function EditListingSheet({ lot, open, onOpenChange, onSuccess }: EditLis
                       <SelectContent>
                         <SelectItem value="new">New</SelectItem>
                         <SelectItem value="like_new">Like New</SelectItem>
-                        <SelectItem value="used">Used</SelectItem>
-                        <SelectItem value="refurbished">Refurbished</SelectItem>
+                        <SelectItem value="good_condition">Good Condition</SelectItem>
+                        <SelectItem value="as_is">As Is</SelectItem>
                       </SelectContent>
                     </Select>
                   )}
                 />
-              </Field>
-
-              <Field label="Starting Bid (GHS)" error={errors.startingBid?.message}>
-                <Input className="h-11" type="number" min={0} step="0.01" {...register("startingBid")} />
-              </Field>
-
-              <Field label="Bid Increment (GHS)" error={errors.bidIncrement?.message}>
-                <Input className="h-11" type="number" min={0} step="0.01" {...register("bidIncrement")} />
               </Field>
 
               <Field label="Reserve Price (GHS)" error={errors.reservePrice?.message}>
@@ -243,10 +229,6 @@ export function EditListingSheet({ lot, open, onOpenChange, onSuccess }: EditLis
 
               <Field label="Buy Now Price (GHS)" error={errors.buyNowPrice?.message}>
                 <Input className="h-11" type="number" min={0} step="0.01" {...register("buyNowPrice")} />
-              </Field>
-
-              <Field label="SKU" error={errors.sku?.message}>
-                <Input className="h-11" placeholder="SKU-001" {...register("sku")} />
               </Field>
 
               <div className="flex flex-col gap-3">

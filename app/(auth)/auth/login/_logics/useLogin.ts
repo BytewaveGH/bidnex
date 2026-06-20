@@ -15,10 +15,10 @@ const roleRedirects: Record<string, string> = {
 export function useLogin() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [loginAs, setLoginAs] = useState<"bidder" | "vendor">("bidder");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async () => {
-    console.log("LOGIN BUTTON CLICKED");
     if (!username.trim()) {
       showToast("failure", "Username is required");
       return;
@@ -32,11 +32,10 @@ export function useLogin() {
     setIsLoading(true);
 
     try {
-      console.log("API URL =", process.env.NEXT_PUBLIC_API_URL);
-      console.log("LOGIN URL =", "/auth/login");
       const result = await signIn("credentials", {
         username,
         password,
+        loginAs,
         redirect: false,
       });
 
@@ -75,6 +74,8 @@ export function useLogin() {
     setUsername,
     password,
     setPassword,
+    loginAs,
+    setLoginAs,
     isLoading,
     handleLogin,
   };
