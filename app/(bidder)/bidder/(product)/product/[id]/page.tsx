@@ -14,6 +14,7 @@ import RelatedProducts from '@/components/generals/related-products'
 import { usePublicLot } from '../../_logics/usePublicLot'
 import { useWatchlistIds } from '@/app/(bidder)/bidder/(all-items)/_logics/useWatchlistIds'
 import { useWebSocket } from '@/components/generals/providers/websocket-provider'
+import { useNavCounts } from '@/components/generals/providers/nav-counts-provider'
 import { useAxios } from '@/hooks/use-axios'
 import { useSession } from 'next-auth/react'
 import { resolveLotMediaUrl, formatLotCondition } from '@/app/(bidder)/bidder/(all-items)/_logics/auctions'
@@ -45,6 +46,7 @@ export default function ProductDetails({ params }: { params: Promise<{ id: strin
   const { data: lot, isLoading, error } = usePublicLot(id)
   const { watchlistIds, pendingIds, toggleWatchlist } = useWatchlistIds()
   const { send, subscribe, isConnected } = useWebSocket()
+  const { incrementMyBidsCount } = useNavCounts()
   const callApi = useAxios()
   const { data: session } = useSession()
   const currentUserId = Number((session?.user as any)?.userId)
@@ -136,6 +138,7 @@ export default function ProductDetails({ params }: { params: Promise<{ id: strin
     try {
       const res = await callApi({ method: 'POST', url: `/bidder/lots/${lot.id}/bids`, data: { amount } }) as any
       if (res.status === 201 || res.status === 200) {
+        const isFirstBid = !rt.isWinning && !rt.isOutbid && !lot.bidderIds.includes(currentUserId)
         setRt(prev => ({
           ...prev,
           isWinning: true,
@@ -143,6 +146,7 @@ export default function ProductDetails({ params }: { params: Promise<{ id: strin
           currentBid: amount,
           bidCount: (prev.bidCount ?? lot.bidCount) + 1,
         }))
+        if (isFirstBid) incrementMyBidsCount()
       } else {
         setBidError(res.data?.error ?? res.data?.message ?? 'Failed to place bid.')
       }

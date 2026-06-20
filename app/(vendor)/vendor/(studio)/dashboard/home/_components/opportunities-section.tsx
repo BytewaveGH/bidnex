@@ -1,5 +1,4 @@
 "use client";
-"use no memo";
 
 import * as React from "react";
 
@@ -34,21 +33,25 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 import { opportunitiesColumns } from "./opportunities-table/columns";
-import opportunitiesData from "./opportunities-table/data.json";
-import { opportunitiesSchema } from "./opportunities-table/schema";
+import type { OpportunityRow } from "./opportunities-table/schema";
+import { useTopLots } from "../_logics/useTopLots";
 
-const stageOptions = ["all", "Proposal Sent", "Discovery", "Negotiation", "Qualified"] as const;
-const healthOptions = ["all", "On Track", "Needs Review", "At Risk", "On Hold"] as const;
-const opportunities = opportunitiesSchema.parse(opportunitiesData);
+const EMPTY_LOTS: OpportunityRow[] = [];
+const stageOptions = ["all", "Live", "Scheduled", "Ended", "Draft"] as const;
+const healthOptions = ["all", "Active", "Expiring Soon", "No Bids", "Withdrawn"] as const;
 
 function preventPaginationNavigation(event: React.MouseEvent<HTMLAnchorElement>) {
   event.preventDefault();
 }
 
 export function OpportunitiesSection() {
+  const { data: lots, isLoading, error } = useTopLots();
+  const tableData = React.useMemo(() => lots ?? EMPTY_LOTS, [lots]);
+
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility] = React.useState<VisibilityState>({});
@@ -59,7 +62,7 @@ export function OpportunitiesSection() {
   });
 
   const table = useReactTable({
-    data: opportunities,
+    data: tableData,
     columns: opportunitiesColumns,
     state: {
       rowSelection,
@@ -70,6 +73,7 @@ export function OpportunitiesSection() {
     },
     getRowId: (row) => row.id,
     enableRowSelection: true,
+    autoResetPageIndex: false,
     onRowSelectionChange: setRowSelection,
     onColumnFiltersChange: setColumnFilters,
     onGlobalFilterChange: setGlobalFilter,
@@ -80,8 +84,8 @@ export function OpportunitiesSection() {
     globalFilterFn: "includesString",
   });
   const searchQuery = table.getState().globalFilter ?? "";
-  const stageFilter = (table.getColumn("stage")?.getFilterValue() as string) ?? "all";
-  const healthFilter = (table.getColumn("health")?.getFilterValue() as string) ?? "all";
+  const stageFilter = (table.getColumn("status")?.getFilterValue() as string) ?? "all";
+  const healthFilter = (table.getColumn("activity")?.getFilterValue() as string) ?? "all";
   const currentPage = table.getState().pagination.pageIndex + 1;
   const pageCount = table.getPageCount();
   const filteredOpportunityCount = table.getFilteredRowModel().rows.length;
@@ -90,10 +94,8 @@ export function OpportunitiesSection() {
     if (pageCount <= 3) {
       return Array.from({ length: pageCount }, (_, index) => index + 1);
     }
-
     if (currentPage <= 2) return [1, 2, 3];
     if (currentPage >= pageCount - 1) return [pageCount - 2, pageCount - 1, pageCount];
-
     return [currentPage - 1, currentPage, currentPage + 1];
   }, [currentPage, pageCount]);
 
@@ -103,13 +105,13 @@ export function OpportunitiesSection() {
         <CardHeader>
           <CardTitle className="leading-none">Submitted Lots</CardTitle>
           <CardDescription>
-            Track qualified leads moving through discovery, proposal, and closing stages.
+            Track your submitted lots, current bids, and auction status in real time.
           </CardDescription>
           <CardAction>
             <div className="flex items-center gap-2">
               <Input
                 className="h-7 w-44 md:w-52"
-                placeholder="Search deals..."
+                placeholder="Search lots..."
                 value={searchQuery}
                 onChange={(event) => {
                   table.setGlobalFilter(event.target.value || undefined);
@@ -120,7 +122,7 @@ export function OpportunitiesSection() {
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm">
                     <ListFilter data-icon="inline-start" />
-                    Stage
+                    Status
                     <ChevronDownIcon data-icon="inline-end" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -128,13 +130,13 @@ export function OpportunitiesSection() {
                   <DropdownMenuRadioGroup
                     value={stageFilter}
                     onValueChange={(value) => {
-                      table.getColumn("stage")?.setFilterValue(value === "all" ? undefined : value);
+                      table.getColumn("status")?.setFilterValue(value === "all" ? undefined : value);
                       table.setPageIndex(0);
                     }}
                   >
                     {stageOptions.map((option) => (
                       <DropdownMenuRadioItem key={option} value={option}>
-                        {option === "all" ? "All stages" : option}
+                        {option === "all" ? "All statuses" : option}
                       </DropdownMenuRadioItem>
                     ))}
                   </DropdownMenuRadioGroup>
@@ -144,7 +146,7 @@ export function OpportunitiesSection() {
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm">
                     <ListFilter data-icon="inline-start" />
-                    Health
+                    Activity
                     <ChevronDownIcon data-icon="inline-end" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -152,13 +154,13 @@ export function OpportunitiesSection() {
                   <DropdownMenuRadioGroup
                     value={healthFilter}
                     onValueChange={(value) => {
-                      table.getColumn("health")?.setFilterValue(value === "all" ? undefined : value);
+                      table.getColumn("activity")?.setFilterValue(value === "all" ? undefined : value);
                       table.setPageIndex(0);
                     }}
                   >
                     {healthOptions.map((option) => (
                       <DropdownMenuRadioItem key={option} value={option}>
-                        {option === "all" ? "All health" : option}
+                        {option === "all" ? "All activity" : option}
                       </DropdownMenuRadioItem>
                     ))}
                   </DropdownMenuRadioGroup>
@@ -182,7 +184,23 @@ export function OpportunitiesSection() {
                 ))}
               </TableHeader>
               <TableBody className="**:data-[slot='table-row']:border-border/50 **:data-[slot='table-row']:hover:bg-transparent">
-                {table.getRowModel().rows.length ? (
+                {isLoading ? (
+                  Array.from({ length: 5 }, (_, i) => (
+                    <TableRow key={i}>
+                      {Array.from({ length: 8 }, (_, j) => (
+                        <TableCell key={j}>
+                          <Skeleton className="h-4 w-full" />
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))
+                ) : error ? (
+                  <TableRow>
+                    <TableCell colSpan={table.getVisibleLeafColumns().length} className="h-24 text-center text-muted-foreground text-sm">
+                      Failed to load lots. Please refresh.
+                    </TableCell>
+                  </TableRow>
+                ) : table.getRowModel().rows.length ? (
                   table.getRowModel().rows.map((row) => (
                     <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
                       {row.getVisibleCells().map((cell) => (
@@ -202,7 +220,7 @@ export function OpportunitiesSection() {
           </div>
           <div className="flex items-center justify-between gap-4 px-4 pb-1">
             <p className="text-muted-foreground text-sm">
-              Viewing {visibleOpportunityCount} out of {filteredOpportunityCount.toLocaleString()} opportunities
+              Viewing {visibleOpportunityCount} out of {filteredOpportunityCount.toLocaleString()} lots
             </p>
 
             <Pagination className="mx-0 w-auto justify-end">
