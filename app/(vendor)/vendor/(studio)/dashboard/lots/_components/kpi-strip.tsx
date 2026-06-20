@@ -1,11 +1,14 @@
 "use client";
 
 import { format, parse } from "date-fns";
-import { ArrowUpRight, DollarSign, PackageCheck, ReceiptText, RotateCcw, ShoppingBag, Users } from "lucide-react";
+import { AlertCircle, ArrowUpRight, BadgeCheck, DollarSign, Gavel, PackageCheck, Users } from "lucide-react";
 import { Area, Bar, CartesianGrid, ComposedChart, XAxis, YAxis } from "recharts";
 
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { type ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { Skeleton } from "@/components/ui/skeleton";
+
+import { useLotsStats, type LotsStatsMetric } from "../_logics/useLotsStats";
 
 const revenueBucketRanges = ["01-05", "06-10", "11-15", "16-20", "21-25", "26-31"] as const;
 
@@ -84,7 +87,59 @@ function formatCurrencyTooltipValue(value: unknown) {
   return typeof value === "number" ? `$${value.toLocaleString()}` : String(value ?? "");
 }
 
+function formatMetricValue(metric: LotsStatsMetric | undefined, options?: { suffix?: string; currency?: string }) {
+  if (!metric || metric.value == null) return "—";
+  const prefix = options?.currency ?? "";
+  const suffix = options?.suffix ?? "";
+  return `${prefix}${metric.value.toLocaleString("en-US")}${suffix}`;
+}
+
+function formatChange(metric: LotsStatsMetric | undefined) {
+  if (!metric) return { text: "—", positive: true };
+
+  if (metric.changePercent !== undefined) {
+    const positive = metric.changePercent >= 0;
+    return {
+      text: `${positive ? "+" : ""}${metric.changePercent.toFixed(1)}%`,
+      positive,
+    };
+  }
+
+  if (metric.changePoints !== undefined) {
+    const positive = metric.changePoints >= 0;
+    return {
+      text: `${positive ? "+" : ""}${metric.changePoints.toFixed(1)} pts`,
+      positive,
+    };
+  }
+
+  if (metric.changeAbsolute !== undefined) {
+    const positive = metric.changeAbsolute >= 0;
+    const prefix = metric.currency ? `${metric.currency} ` : "";
+    return {
+      text: `${positive ? "+" : "-"}${prefix}${Math.abs(metric.changeAbsolute).toLocaleString("en-US")}`,
+      positive,
+    };
+  }
+
+  return { text: "—", positive: true };
+}
+
+function MetricChange({ metric }: { metric: LotsStatsMetric | undefined }) {
+  const change = formatChange(metric);
+  return (
+    <div className="text-sm">
+      <span className={change.positive ? "text-green-700 dark:text-green-300" : "text-destructive"}>
+        {change.text}
+      </span>
+      <span className="text-muted-foreground"> vs last month</span>
+    </div>
+  );
+}
+
 export function KpiStrip() {
+  const { data: stats, isLoading } = useLotsStats();
+
   return (
     <div className="h-full overflow-hidden rounded-xl bg-card ring-1 ring-foreground/10 xl:col-span-12">
       <div>
@@ -92,116 +147,114 @@ export function KpiStrip() {
           <div className="grid grid-cols-1 md:grid-cols-2 md:grid-rows-3 xl:col-span-5 xl:border-r">
             <Card className="h-full rounded-none border-0 border-border border-b ring-0 md:border-r">
               <CardHeader>
-                <CardTitle className="font-normal text-sm">Total Sales</CardTitle>
+                <CardTitle className="font-normal text-sm">Auction Revenue</CardTitle>
                 <CardDescription className="text-3xl text-foreground tabular-nums leading-none tracking-tight">
-                  $48,560.00
+                  {isLoading ? (
+                    <Skeleton className="h-8 w-40" />
+                  ) : (
+                    formatMetricValue(stats?.auctionRevenue, {
+                      currency: `${stats?.auctionRevenue?.currency ?? "GHS"} `,
+                    })
+                  )}
                 </CardDescription>
                 <CardAction className="grid size-6 place-items-center rounded-sm bg-muted">
                   <DollarSign className="size-3 text-foreground" />
                 </CardAction>
               </CardHeader>
               <CardContent>
-                <div className="text-sm">
-                  <span className="text-green-700 dark:text-green-300">+15.8%</span>
-                  <span className="text-muted-foreground"> vs last week</span>
-                </div>
+                {isLoading ? <Skeleton className="h-4 w-28" /> : <MetricChange metric={stats?.auctionRevenue} />}
               </CardContent>
             </Card>
 
             <Card className="h-full rounded-none border-0 border-border border-b ring-0">
               <CardHeader>
-                <CardTitle className="font-normal text-sm">Total Orders</CardTitle>
+                <CardTitle className="font-normal text-sm">Lots Submitted</CardTitle>
                 <CardDescription className="text-3xl text-foreground tabular-nums leading-none tracking-tight">
-                  379
+                  {isLoading ? <Skeleton className="h-8 w-16" /> : formatMetricValue(stats?.lotsSubmitted)}
                 </CardDescription>
                 <CardAction className="grid size-6 place-items-center rounded-sm bg-muted">
-                  <ShoppingBag className="size-3 text-foreground" />
+                  <Gavel className="size-3 text-foreground" />
                 </CardAction>
               </CardHeader>
               <CardContent>
-                <div className="text-sm">
-                  <span className="text-green-700 dark:text-green-300">+8.3%</span>
-                  <span className="text-muted-foreground"> vs last week</span>
-                </div>
+                {isLoading ? <Skeleton className="h-4 w-20" /> : <MetricChange metric={stats?.lotsSubmitted} />}
               </CardContent>
             </Card>
 
             <Card className="h-full rounded-none border-0 border-border border-b ring-0 md:border-r">
               <CardHeader>
-                <CardTitle className="font-normal text-sm">Customer Growth</CardTitle>
+                <CardTitle className="font-normal text-sm">Unique Bidders</CardTitle>
                 <CardDescription className="text-3xl text-foreground tabular-nums leading-none tracking-tight">
-                  820
+                  {isLoading ? <Skeleton className="h-8 w-16" /> : formatMetricValue(stats?.uniqueBidders)}
                 </CardDescription>
                 <CardAction className="grid size-6 place-items-center rounded-sm bg-muted">
                   <Users className="size-3 text-foreground" />
                 </CardAction>
               </CardHeader>
               <CardContent>
-                <div className="text-sm">
-                  <span className="text-green-700 dark:text-green-300">+12.5%</span>
-                  <span className="text-muted-foreground"> vs last month</span>
-                </div>
+                {isLoading ? <Skeleton className="h-4 w-24" /> : <MetricChange metric={stats?.uniqueBidders} />}
               </CardContent>
             </Card>
 
             <Card className="h-full rounded-none border-0 border-border border-b ring-0">
               <CardHeader>
-                <CardTitle className="font-normal text-sm">Average Order</CardTitle>
+                <CardTitle className="font-normal text-sm">Avg. Reserve Price</CardTitle>
                 <CardDescription className="text-3xl text-foreground tabular-nums leading-none tracking-tight">
-                  $128
-                </CardDescription>
-                <CardAction className="grid size-6 place-items-center rounded-sm bg-muted">
-                  <ReceiptText className="size-3 text-foreground" />
-                </CardAction>
-              </CardHeader>
-              <CardContent>
-                <div className="text-sm">
-                  <span className="text-destructive">-$4.20</span>
-                  <span className="text-muted-foreground"> vs last week</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="h-full rounded-none border-0 border-border border-b ring-0 md:border-r md:border-b-0">
-              <CardHeader>
-                <CardTitle className="font-normal text-sm">Return Requests</CardTitle>
-                <CardDescription className="text-3xl text-foreground tabular-nums leading-none tracking-tight">
-                  18
-                </CardDescription>
-                <CardAction className="grid size-6 place-items-center rounded-sm bg-muted">
-                  <RotateCcw className="size-3 text-foreground" />
-                </CardAction>
-              </CardHeader>
-              <CardContent>
-                <div className="text-sm">
-                  <span className="text-destructive">+0.6%</span>
-                  <span className="text-muted-foreground"> vs last month</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="h-full rounded-none border-0 ring-0">
-              <CardHeader>
-                <CardTitle className="font-normal text-sm">Stock Accuracy</CardTitle>
-                <CardDescription className="text-3xl text-foreground tabular-nums leading-none tracking-tight">
-                  97%
+                  {isLoading ? (
+                    <Skeleton className="h-8 w-24" />
+                  ) : (
+                    formatMetricValue(stats?.avgReservePrice, {
+                      currency: `${stats?.avgReservePrice?.currency ?? "GHS"} `,
+                    })
+                  )}
                 </CardDescription>
                 <CardAction className="grid size-6 place-items-center rounded-sm bg-muted">
                   <PackageCheck className="size-3 text-foreground" />
                 </CardAction>
               </CardHeader>
               <CardContent>
-                <div className="text-sm">
-                  <span className="text-green-700 dark:text-green-300">+2.4 pts</span>
-                  <span className="text-muted-foreground"> vs last audit</span>
-                </div>
+                {isLoading ? <Skeleton className="h-4 w-24" /> : <MetricChange metric={stats?.avgReservePrice} />}
+              </CardContent>
+            </Card>
+
+            <Card className="h-full rounded-none border-0 border-border border-b ring-0 md:border-r md:border-b-0">
+              <CardHeader>
+                <CardTitle className="font-normal text-sm">Open Disputes</CardTitle>
+                <CardDescription className="text-3xl text-foreground tabular-nums leading-none tracking-tight">
+                  {isLoading ? <Skeleton className="h-8 w-12" /> : formatMetricValue(stats?.openDisputes)}
+                </CardDescription>
+                <CardAction className="grid size-6 place-items-center rounded-sm bg-muted">
+                  <AlertCircle className="size-3 text-foreground" />
+                </CardAction>
+              </CardHeader>
+              <CardContent>
+                {isLoading ? <Skeleton className="h-4 w-16" /> : <MetricChange metric={stats?.openDisputes} />}
+              </CardContent>
+            </Card>
+
+            <Card className="h-full rounded-none border-0 ring-0">
+              <CardHeader>
+                <CardTitle className="font-normal text-sm">Approval Rate</CardTitle>
+                <CardDescription className="text-3xl text-foreground tabular-nums leading-none tracking-tight">
+                  {isLoading ? (
+                    <Skeleton className="h-8 w-16" />
+                  ) : (
+                    formatMetricValue(stats?.approvalRate, { suffix: "%" })
+                  )}
+                </CardDescription>
+                <CardAction className="grid size-6 place-items-center rounded-sm bg-muted">
+                  <BadgeCheck className="size-3 text-foreground" />
+                </CardAction>
+              </CardHeader>
+              <CardContent>
+                {isLoading ? <Skeleton className="h-4 w-24" /> : <MetricChange metric={stats?.approvalRate} />}
               </CardContent>
             </Card>
           </div>
 
           <Card className="h-full rounded-none border-0 ring-0 xl:col-span-7">
             <CardHeader>
-              <CardTitle className="font-normal">Sales Overview</CardTitle>
+              <CardTitle className="font-normal">Revenue Overview</CardTitle>
               <CardAction>
                 <ArrowUpRight className="size-4" />
               </CardAction>

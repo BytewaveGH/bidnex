@@ -60,14 +60,12 @@ export function useSignup(onSuccess: (phone: string) => void, accountType: 'bidd
             const response: any = await callApi({
                 method: 'POST',
                 url: '/auth/register',
-                params: { type: accountType },
-                headers: { 'X-Tenant-Domain': accountType },
                 data: {
                     username: formData.username,
                     email: formData.email,
                     phone: formData.phone,
                     password: formData.password,
-                    confirmPassword: formData.confirmPassword,
+                    accountType,
                 },
             })
 

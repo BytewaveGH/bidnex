@@ -7,9 +7,14 @@ import { useAxios } from '@/hooks/use-axios'
 type NavCountsContextType = {
   myBidsCount: number
   wonItemsCount: number
+  incrementMyBidsCount: () => void
 }
 
-const NavCountsContext = createContext<NavCountsContextType>({ myBidsCount: 0, wonItemsCount: 0 })
+const NavCountsContext = createContext<NavCountsContextType>({
+  myBidsCount: 0,
+  wonItemsCount: 0,
+  incrementMyBidsCount: () => {},
+})
 
 export function NavCountsProvider({ children }: { children: React.ReactNode }) {
   const { data: session } = useSession()
@@ -27,8 +32,12 @@ export function NavCountsProvider({ children }: { children: React.ReactNode }) {
       .catch(() => {})
   }, [session?.user?.userType])
 
+  function incrementMyBidsCount() {
+    setMyBidsCount(prev => prev + 1)
+  }
+
   return (
-    <NavCountsContext.Provider value={{ myBidsCount, wonItemsCount }}>
+    <NavCountsContext.Provider value={{ myBidsCount, wonItemsCount, incrementMyBidsCount }}>
       {children}
     </NavCountsContext.Provider>
   )

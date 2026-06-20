@@ -1,114 +1,93 @@
-import { siBarclays, siBitcoin, siEthereum, siHsbc, siRevolut } from "simple-icons";
+"use client";
 
-import { SimpleIcon } from "@/components/simple-icon";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Building2, Plus, Smartphone } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 
-const walletCards = [
-  {
-    id: 1,
-    bank: "Revolut Premium",
-    last4: "4182",
-    balance: "$12,450.60",
-    icon: siRevolut,
-    iconColor: "fill-foreground",
-  },
-  {
-    id: 2,
-    bank: "HSBC Bank",
-    last4: "1004",
-    balance: "$3,200.11",
-    icon: siHsbc,
-    iconColor: "fill-foreground",
-  },
+import { usePayoutAccounts } from "../_logics/usePayoutAccounts";
+import type { PayoutAccount } from "../_logics/usePayoutAccounts";
 
-  {
-    id: 4,
-    bank: "Barclays Bank",
-    last4: "9912",
-    balance: "$1,450.00",
-    icon: siBarclays,
-    iconColor: "fill-foreground",
-  },
-];
+function AccountRow({ account }: { account: PayoutAccount }) {
+  const Icon = account.type === "mobile_money" ? Smartphone : Building2;
+  const label = account.last4
+    ? `${account.name} • **** ${account.last4}`
+    : account.number
+      ? `${account.name} • ${account.number}`
+      : account.name;
 
-const cryptoAssets = [
-  {
-    id: 1,
-    name: "Bitcoin",
-    vault: "Binance",
-    balance: "0.42 BTC",
-    usdValue: "$24,150.00",
-    icon: siBitcoin,
-  },
-  {
-    id: 2,
-    name: "Ethereum",
-    vault: "MetaMask",
-    balance: "4.85 ETH",
-    usdValue: "$12,420.10",
-    icon: siEthereum,
-  },
-];
+  return (
+    <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-0.5">
+        <span className="font-medium text-foreground text-sm leading-none">{label}</span>
+        {account.isDefault && (
+          <span className="font-normal text-muted-foreground text-xs">Default account</span>
+        )}
+      </div>
+      <div className="flex size-9 shrink-0 items-center justify-center rounded-md border bg-background">
+        <Icon className="size-4" />
+      </div>
+    </div>
+  );
+}
 
 export function Wallet() {
+  const { data: accounts, isLoading } = usePayoutAccounts();
+
+  const bankAccounts = (accounts ?? []).filter((a) => a.type === "bank");
+  const mobileAccounts = (accounts ?? []).filter((a) => a.type === "mobile_money");
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-normal">Wallet</CardTitle>
+        <CardTitle className="font-normal">Payout Accounts</CardTitle>
+        <CardAction>
+          <Button size="sm" variant="outline">
+            <Plus />
+            Add Account
+          </Button>
+        </CardAction>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
-        <div className="flex flex-col gap-4">
-          {walletCards.map((card) => (
-            <div key={card.id} className="flex items-center justify-between">
-              <div className="flex flex-col gap-0.5">
-                <div className="flex items-center gap-2">
-                  <span className="font-medium text-foreground text-sm leading-none">
-                    {card.bank} • **** {card.last4}
-                  </span>
+        {isLoading ? (
+          <div className="flex flex-col gap-4">
+            {Array.from({ length: 3 }, (_, i) => (
+              <div key={i} className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <Skeleton className="h-4 w-40" />
+                  <Skeleton className="h-3 w-24" />
                 </div>
-                <span className="font-normal text-muted-foreground text-xs">{card.balance}</span>
+                <Skeleton className="size-9 rounded-md" />
               </div>
-              <div className="flex size-9 shrink-0 items-center justify-center rounded-md border bg-background">
-                <SimpleIcon icon={card.icon} />
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <Separator />
-
-        <div className="flex flex-col gap-4">
-          {cryptoAssets.map((asset) => (
-            <div key={asset.id} className="flex items-center justify-between">
-              <div className="flex flex-col gap-0.5">
-                <div className="flex items-center gap-2">
-                  <span className="font-medium text-foreground text-sm leading-none">
-                    {asset.name} • {asset.vault}
-                  </span>
-                </div>
-                <span className="font-normal text-muted-foreground text-xs">
-                  {asset.balance} • {asset.usdValue}
-                </span>
-              </div>
-              <div className="flex size-9 shrink-0 items-center justify-center rounded-md border bg-background">
-                <SimpleIcon icon={asset.icon} />
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5">
-            <span className="font-medium text-[10px] text-muted-foreground">
-              Physical Vault: <span className="text-foreground">Ledger Nano X</span>
-            </span>
+            ))}
           </div>
-          <div className="flex items-center gap-1.5">
-            <div className="size-1 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
-            <span className="font-bold text-[9px] text-green-500 uppercase tracking-widest">Air-Gapped</span>
-          </div>
-        </div>
+        ) : accounts?.length === 0 ? (
+          <p className="text-center text-muted-foreground text-sm py-4">
+            No payout accounts added yet. Add one to receive payouts.
+          </p>
+        ) : (
+          <>
+            {bankAccounts.length > 0 && (
+              <div className="flex flex-col gap-4">
+                {bankAccounts.map((account) => (
+                  <AccountRow key={account.id} account={account} />
+                ))}
+              </div>
+            )}
+
+            {bankAccounts.length > 0 && mobileAccounts.length > 0 && <Separator />}
+
+            {mobileAccounts.length > 0 && (
+              <div className="flex flex-col gap-4">
+                {mobileAccounts.map((account) => (
+                  <AccountRow key={account.id} account={account} />
+                ))}
+              </div>
+            )}
+          </>
+        )}
       </CardContent>
     </Card>
   );

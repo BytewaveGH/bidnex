@@ -1,8 +1,7 @@
 "use client";
-console.log("LOGIN FORM VERSION 2");
 
 import React, { useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
+import { EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import InputTemplate from "@/components/templates/input-template";
 import ButtonTemplate from "@/components/templates/button-template";
@@ -17,6 +16,8 @@ export default function LoginForm() {
     setUsername,
     password,
     setPassword,
+    loginAs,
+    setLoginAs,
     isLoading,
     handleLogin,
   } = useLogin();
@@ -44,6 +45,23 @@ export default function LoginForm() {
 
       {/* Form */}
       <form className="w-[550px]" onSubmit={(e) => { e.preventDefault(); handleLogin(); }}>
+        {/* Login as radio */}
+        <div className="flex gap-6 mb-6">
+          {(["bidder", "vendor"] as const).map((role) => (
+            <label key={role} className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="loginAs"
+                value={role}
+                checked={loginAs === role}
+                onChange={() => setLoginAs(role)}
+                className="accent-[#13161A]"
+              />
+              <span className="text-sm font-medium text-[#13161A] capitalize">{role}</span>
+            </label>
+          ))}
+        </div>
+
         <div className=" flex flex-col gap-6 mb-2">
           <InputTemplate
             label="Email Address / Phone Number"
