@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 
-import { CustomerReviews } from "./customer-reviews";
+import { AwaitingPaymentCard } from "./awaiting-payment-card";
 import { Inventory } from "./inventory";
+import { KpiStrip } from "./kpi-strip";
 import { NewProductSheet } from "./new-product-sheet";
 import { RecentOrders } from "./recent-orders";
 import { TopProducts } from "./top-products";
@@ -28,6 +29,8 @@ export function LotsPageContent({ formattedDate }: LotsPageContentProps) {
         </div>
       </div>
 
+      {/* <KpiStrip /> */}
+
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
         <div className="xl:col-span-4">
           <TopProducts />
@@ -35,9 +38,9 @@ export function LotsPageContent({ formattedDate }: LotsPageContentProps) {
         <div className="xl:col-span-4">
           <Inventory />
         </div>
-        <div className="xl:col-span-4">
-          <CustomerReviews />
-        </div>
+        {/* <div className="xl:col-span-4">
+          <AwaitingPaymentCard />
+        </div> */}
         <div className="xl:col-span-12">
           <RecentOrders refreshToken={refreshToken} />
         </div>

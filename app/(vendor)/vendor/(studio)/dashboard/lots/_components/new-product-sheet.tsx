@@ -94,12 +94,9 @@ export function NewProductSheet({ onSuccess }: NewProductSheetProps) {
       title: values.title,
       description: values.description,
       condition: values.condition,
-      startingBid: values.startingBid,
-      bidIncrement: values.bidIncrement,
       reservePrice: values.reservePrice,
       buyNowPrice: values.buyNowPrice,
       categoryId: values.categoryId,
-      sku: values.sku,
       pickupAvailable: values.pickupAvailable,
       shippingAvailable: values.shippingAvailable,
       ...(Object.keys(specifications).length > 0 && { specifications }),
@@ -189,18 +186,10 @@ export function NewProductSheet({ onSuccess }: NewProductSheetProps) {
                   <SelectContent>
                     <SelectItem value="new">New</SelectItem>
                     <SelectItem value="like_new">Like New</SelectItem>
-                    <SelectItem value="used">Used</SelectItem>
-                    <SelectItem value="refurbished">Refurbished</SelectItem>
+                    <SelectItem value="good_condition">Good Condition</SelectItem>
+                    <SelectItem value="as_is">As Is</SelectItem>
                   </SelectContent>
                 </Select>
-              </Field>
-
-              <Field label="Starting Bid (GHS)" hint="The opening bid amount for this lot." error={errors.startingBid?.message}>
-                <Input className="h-11" type="number" min={0} step="0.01" placeholder="50" {...register("startingBid")} />
-              </Field>
-
-              <Field label="Bid Increment (GHS)" hint="The minimum amount each new bid must increase by." error={errors.bidIncrement?.message}>
-                <Input className="h-11" type="number" min={0} step="0.01" placeholder="5" {...register("bidIncrement")} />
               </Field>
 
               <Field label="Reserve Price (GHS)" hint="The minimum price you're willing to accept. The item won't sell unless bidding reaches this amount." error={errors.reservePrice?.message}>
@@ -209,10 +198,6 @@ export function NewProductSheet({ onSuccess }: NewProductSheetProps) {
 
               <Field label="Buy Now Price (GHS)" hint="Buyers can instantly purchase the item at this price, ending the auction immediately." error={errors.buyNowPrice?.message}>
                 <Input className="h-11" type="number" min={0} step="0.01" placeholder="500" {...register("buyNowPrice")} />
-              </Field>
-
-              <Field label="SKU" hint="Your internal stock-keeping unit code for this product." error={errors.sku?.message}>
-                <Input className="h-11" placeholder="SKU-001" {...register("sku")} />
               </Field>
 
               <div className="flex flex-col gap-3">

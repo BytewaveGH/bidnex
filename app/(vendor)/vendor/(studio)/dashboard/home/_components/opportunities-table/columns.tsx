@@ -1,5 +1,4 @@
 "use client";
-"use no memo";
 
 import type { ColumnDef } from "@tanstack/react-table";
 import { Pencil } from "lucide-react";
@@ -11,20 +10,20 @@ import { cn } from "@/lib/utils";
 
 import type { OpportunityRow } from "./schema";
 
-const healthStripSlots = Array.from({ length: 18 }, (_, index) => ({
+const activityStripSlots = Array.from({ length: 18 }, (_, index) => ({
   id: `strip-${index + 1}`,
   threshold: index + 1,
 }));
 
-function getHealthScore(health: OpportunityRow["health"]) {
-  switch (health) {
-    case "On Track":
+function getActivityScore(activity: OpportunityRow["activity"]) {
+  switch (activity) {
+    case "Active":
       return 18;
-    case "Needs Review":
+    case "Expiring Soon":
       return 11;
-    case "At Risk":
+    case "No Bids":
       return 7;
-    case "On Hold":
+    case "Withdrawn":
       return 4;
     default:
       return 0;
@@ -38,56 +37,65 @@ export const opportunitiesColumns: ColumnDef<OpportunityRow>[] = [
       <Checkbox
         checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")}
         onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all opportunities"
+        aria-label="Select all lots"
       />
     ),
     cell: ({ row }) => (
       <Checkbox
         checked={row.getIsSelected()}
         onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label={`Select ${row.original.account}`}
+        aria-label={`Select ${row.original.title}`}
       />
     ),
     enableHiding: false,
   },
   {
     accessorKey: "id",
-    header: "ID",
+    header: "Lot ID",
     cell: ({ row }) => <div className="text-sm tracking-tight">{row.original.id}</div>,
     enableHiding: false,
   },
   {
-    accessorKey: "account",
-    header: "Account",
-    cell: ({ row }) => <div className="font-medium text-sm">{row.original.account}</div>,
+    accessorKey: "title",
+    header: "Lot Title",
+    cell: ({ row }) => <div className="font-medium text-sm">{row.original.title}</div>,
   },
   {
-    accessorKey: "stage",
-    header: "Stage",
-    cell: ({ row }) => (
-      <Badge variant="outline" className="rounded-full px-2.5">
-        {row.original.stage}
-      </Badge>
-    ),
+    accessorKey: "status",
+    header: "Status",
+    cell: ({ row }) => {
+      const status = row.original.status;
+      const styles = {
+        Live: "border-green-200 bg-green-500/10 text-green-700 dark:border-green-900/40 dark:bg-green-500/15 dark:text-green-400",
+        Scheduled: "border-amber-200 bg-amber-500/10 text-amber-700 dark:border-amber-900/40 dark:bg-amber-500/15 dark:text-amber-400",
+        Ended: "border-border bg-muted/60 text-muted-foreground",
+        Draft: "border-border bg-muted/60 text-muted-foreground",
+      } as Record<string, string>;
+      return (
+        <Badge variant="outline" className={cn("rounded-full px-2.5", styles[status] ?? "")}>
+          {status}
+        </Badge>
+      );
+    },
     filterFn: "equalsString",
   },
   {
-    accessorKey: "priority",
-    header: "Priority",
-    cell: ({ row }) => <div className="text-sm">{row.original.priority}</div>,
+    accessorKey: "bids",
+    header: "Bids",
+    cell: ({ row }) => <div className="text-sm tabular-nums">{row.original.bids}</div>,
   },
   {
-    accessorKey: "health",
-    header: "Health",
+    accessorKey: "activity",
+    header: "Activity",
     cell: ({ row }) => (
-      <div className="flex items-end gap-0.5" title={row.original.health}>
-        <span className="sr-only">{row.original.health}</span>
-        {healthStripSlots.map((slot) => (
+      <div className="flex items-end gap-0.5" title={row.original.activity}>
+        <span className="sr-only">{row.original.activity}</span>
+        {activityStripSlots.map((slot) => (
           <div
             key={`${row.original.id}-${slot.id}`}
             className={cn(
               "h-5 w-1 rounded-full",
-              slot.threshold <= getHealthScore(row.original.health) ? "bg-green-500/85" : "bg-green-500/15",
+              slot.threshold <= getActivityScore(row.original.activity) ? "bg-green-500/85" : "bg-green-500/15",
             )}
           />
         ))}
@@ -96,9 +104,9 @@ export const opportunitiesColumns: ColumnDef<OpportunityRow>[] = [
     filterFn: "equalsString",
   },
   {
-    accessorKey: "value",
-    header: "Value",
-    cell: ({ row }) => <div className="font-medium text-sm tabular-nums">{row.original.value}</div>,
+    accessorKey: "currentBid",
+    header: "Current Bid",
+    cell: ({ row }) => <div className="font-medium text-sm tabular-nums">{row.original.currentBid}</div>,
   },
   {
     id: "actions",
@@ -111,7 +119,7 @@ export const opportunitiesColumns: ColumnDef<OpportunityRow>[] = [
           className="size-8 rounded-full text-muted-foreground hover:bg-transparent focus-visible:bg-transparent"
         >
           <Pencil />
-          <span className="sr-only">Edit opportunity</span>
+          <span className="sr-only">Edit lot</span>
         </Button>
       </div>
     ),

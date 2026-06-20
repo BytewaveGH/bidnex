@@ -5,12 +5,9 @@ export type CreateVendorLotPayload = {
   title: string;
   description: string;
   condition: string;
-  startingBid: number;
-  bidIncrement: number;
   reservePrice: number;
   buyNowPrice: number;
   categoryId: number;
-  sku: string;
   pickupAvailable: boolean;
   shippingAvailable: boolean;
   specifications?: Record<string, unknown>;
@@ -147,17 +144,17 @@ export function mapVendorLotToLotRow(lot: VendorLot): LotRow {
     reviewRejectReason: lot.reviewRejectReason ?? "",
     lotLabel: lot.sku || `Lot ${lot.lotOrder}`,
     sku: lot.sku,
-    startingBid: `GHS ${lot.startingBid.toFixed(2)}`,
-    startingBidAmount: lot.startingBid,
-    currentBid: `GHS ${lot.currentBid.toFixed(2)}`,
-    currentBidAmount: lot.currentBid,
-    bidCount: lot.bidCount,
-    bidIncrement: `GHS ${lot.bidIncrement.toFixed(2)}`,
-    bidIncrementAmount: lot.bidIncrement,
-    reservePrice: `GHS ${lot.reservePrice.toFixed(2)}`,
-    reservePriceAmount: lot.reservePrice,
-    buyNowPrice: `GHS ${lot.buyNowPrice.toFixed(2)}`,
-    buyNowPriceAmount: lot.buyNowPrice,
+    startingBid: `GHS ${(lot.startingBid ?? 0).toFixed(2)}`,
+    startingBidAmount: lot.startingBid ?? 0,
+    currentBid: `GHS ${(lot.currentBid ?? 0).toFixed(2)}`,
+    currentBidAmount: lot.currentBid ?? 0,
+    bidCount: lot.bidCount ?? 0,
+    bidIncrement: `GHS ${(lot.bidIncrement ?? 0).toFixed(2)}`,
+    bidIncrementAmount: lot.bidIncrement ?? 0,
+    reservePrice: `GHS ${(lot.reservePrice ?? 0).toFixed(2)}`,
+    reservePriceAmount: lot.reservePrice ?? 0,
+    buyNowPrice: `GHS ${(lot.buyNowPrice ?? 0).toFixed(2)}`,
+    buyNowPriceAmount: lot.buyNowPrice ?? 0,
     pickupAvailable: lot.pickupAvailable,
     shippingAvailable: lot.shippingAvailable,
     primaryImageUrl: primaryImage.url,

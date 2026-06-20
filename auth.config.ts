@@ -19,20 +19,21 @@ export const authConfig: NextAuthConfig = {
 
         try {
           const response = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/auth/customer-login/vendor`,
+            `${process.env.NEXT_PUBLIC_API_URL}/auth/login`,
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 username: credentials?.username,
                 password: credentials?.password,
+                loginAs: credentials?.loginAs,
               }),
               signal: controller.signal,
             },
           );
 
           const json = await response.json();
-          if (!json.status || !json.data) return null;
+          if (!json.data) return null;
 
           const d = json.data;
           const accountType = d.user.accountType as "vendor" | "bidder";
@@ -43,9 +44,9 @@ export const authConfig: NextAuthConfig = {
             name: d.user.username,
             email: d.user.email,
             username: d.user.username,
-            avatar: d.user.avatar,
+            avatar: d.user.avatar ?? "",
             phone: d.user.phone,
-            isVerified: d.user.isVerified,
+            isVerified: d.user.isVerified ?? false,
             userType: accountType,
             permission: [],
             tenant: accountType,
@@ -87,6 +88,11 @@ export const authConfig: NextAuthConfig = {
         token.onboarding = user.onboarding;
         token.organizationId = user.organizationId;
       }
+
+      // Skip the network refresh in Edge Runtime (middleware). Middleware only
+      // needs to know the user is authenticated; stale access tokens are fine
+      // there. Blocking the Edge request with a fetch causes navigation hangs.
+      if (process.env.NEXT_RUNTIME === "edge") return token;
 
       const fiveMinutes = 5 * 60 * 1000;
       const now = Date.now();

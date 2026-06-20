@@ -9,6 +9,7 @@ import { NavCountsProvider } from "@/components/generals/providers/nav-counts-pr
 import { BidNotificationsProvider } from "@/components/generals/providers/bid-notifications-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { PreferencesStoreProvider } from "@/stores/preferences/preferences-provider";
+import { ReactQueryProvider } from "@/components/generals/providers/react-query-provider";
 import { ThemeBootScript } from "@/scripts/theme-boot";
 import { PREFERENCE_DEFAULTS } from "@/lib/preferences/preferences-config";
 import { fontVars } from "@/lib/fonts/registry";
@@ -48,6 +49,7 @@ export default function RootLayout({
         <ThemeBootScript />
       </head>
       <body className={`${roboto.variable} ${fontVars} antialiased`}>
+        <ReactQueryProvider>
         <TooltipProvider>
           <PreferencesStoreProvider
             themeMode={theme_mode}
@@ -70,6 +72,7 @@ export default function RootLayout({
             </NextAuthProvider>
           </PreferencesStoreProvider>
         </TooltipProvider>
+        </ReactQueryProvider>
       </body>
     </html>
   );
