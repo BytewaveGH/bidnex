@@ -59,7 +59,7 @@ export function PipelineActivity() {
         <CardContent>
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
             {isLoading ? (
-              <div className="h-72 lg:col-span-8 flex items-end gap-1 px-2">
+              <div className="flex h-72 items-end gap-1 px-2 lg:col-span-8">
                 {Array.from({ length: 12 }, (_, i) => (
                   <Skeleton key={i} className="flex-1 rounded-t-sm" style={{ height: `${40 + (i % 5) * 12}%` }} />
                 ))}
@@ -67,51 +67,51 @@ export function PipelineActivity() {
             ) : (
               <ChartContainer config={bidChartConfig} className="h-72 w-full lg:col-span-8">
                 <BarChart data={bidChartData} margin={{ left: 0, right: 0, top: 0, bottom: 0 }} barSize={38}>
-                  <defs>
-                    <pattern
-                      id="crm-qualified-pattern"
-                      width="4"
-                      height="4"
-                      patternUnits="userSpaceOnUse"
-                      patternTransform="rotate(45)"
-                    >
-                      <rect width="6" height="6" fill="var(--color-bids)" fillOpacity="0.15" />
-                      <line
-                        x1="0"
-                        y1="0"
-                        x2="0"
-                        y2="6"
-                        stroke="var(--color-bids)"
-                        strokeWidth="1.25"
-                        strokeOpacity="0.40"
-                      />
-                    </pattern>
-                  </defs>
-                  <CartesianGrid vertical={false} strokeDasharray="0" />
-                  <XAxis
-                    dataKey="date"
-                    tickLine={false}
-                    tickMargin={10}
-                    axisLine={false}
-                    tickFormatter={(value) => axisMonthFormatter.format(new Date(String(value)))}
-                  />
-                  <YAxis hide />
-                  <ChartTooltip
-                    content={
-                      <ChartTooltipContent
-                        hideIndicator
-                        labelFormatter={(value) => tooltipMonthFormatter.format(new Date(String(value)))}
-                      />
-                    }
-                  />
-                  <Bar
-                    dataKey="bids"
-                    fill="url(#crm-qualified-pattern)"
-                    radius={[8, 8, 0, 0]}
-                    stroke="var(--color-bids)"
-                    strokeOpacity={0.5}
-                    strokeWidth={0.5}
-                  />
+                    <defs>
+                      <pattern
+                        id="crm-qualified-pattern"
+                        width="4"
+                        height="4"
+                        patternUnits="userSpaceOnUse"
+                        patternTransform="rotate(45)"
+                      >
+                        <rect width="6" height="6" fill="var(--color-bids)" fillOpacity="0.15" />
+                        <line
+                          x1="0"
+                          y1="0"
+                          x2="0"
+                          y2="6"
+                          stroke="var(--color-bids)"
+                          strokeWidth="1.25"
+                          strokeOpacity="0.40"
+                        />
+                      </pattern>
+                    </defs>
+                    <CartesianGrid vertical={false} strokeDasharray="0" />
+                    <XAxis
+                      dataKey="date"
+                      tickLine={false}
+                      tickMargin={10}
+                      axisLine={false}
+                      tickFormatter={(value) => axisMonthFormatter.format(new Date(String(value)))}
+                    />
+                    <YAxis hide />
+                    <ChartTooltip
+                      content={
+                        <ChartTooltipContent
+                          hideIndicator
+                          labelFormatter={(value) => tooltipMonthFormatter.format(new Date(String(value)))}
+                        />
+                      }
+                    />
+                    <Bar
+                      dataKey="bids"
+                      fill="url(#crm-qualified-pattern)"
+                      radius={[8, 8, 0, 0]}
+                      stroke="var(--color-bids)"
+                      strokeOpacity={0.5}
+                      strokeWidth={0.5}
+                    />
                 </BarChart>
               </ChartContainer>
             )}
