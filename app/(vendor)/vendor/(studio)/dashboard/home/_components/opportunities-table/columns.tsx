@@ -58,7 +58,11 @@ export const opportunitiesColumns: ColumnDef<OpportunityRow>[] = [
   {
     accessorKey: "title",
     header: "Lot Title",
-    cell: ({ row }) => <div className="font-medium text-sm">{row.original.title}</div>,
+    cell: ({ row }) => (
+      <div className="max-w-64 truncate font-medium text-sm" title={row.original.title}>
+        {row.original.title}
+      </div>
+    ),
   },
   {
     accessorKey: "status",
