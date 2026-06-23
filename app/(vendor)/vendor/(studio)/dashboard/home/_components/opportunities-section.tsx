@@ -100,8 +100,8 @@ export function OpportunitiesSection() {
   }, [currentPage, pageCount]);
 
   return (
-    <section>
-      <Card>
+    <section className="min-w-0">
+      <Card className="min-w-0 overflow-hidden">
         <CardHeader>
           <CardTitle className="leading-none">Submitted Lots</CardTitle>
           <CardDescription>
@@ -169,9 +169,9 @@ export function OpportunitiesSection() {
             </div>
           </CardAction>
         </CardHeader>
-        <CardContent className="flex flex-col gap-4 px-0">
-          <div className="overflow-hidden">
-            <Table className="**:data-[slot='table-cell']:px-4 **:data-[slot='table-head']:px-4 **:data-[slot='table-cell']:py-4">
+        <CardContent className="flex min-w-0 flex-col gap-4 px-0">
+          <div className="min-w-0 overflow-x-auto">
+            <Table className="w-full **:data-[slot='table-cell']:px-4 **:data-[slot='table-head']:px-4 **:data-[slot='table-cell']:py-4">
               <TableHeader className="border-t **:data-[slot='table-head']:h-11 **:data-[slot='table-head']:font-medium **:data-[slot='table-head']:text-foreground **:data-[slot='table-head']:text-sm">
                 {table.getHeaderGroups().map((headerGroup) => (
                   <TableRow key={headerGroup.id}>
