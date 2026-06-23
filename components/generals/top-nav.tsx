@@ -120,7 +120,7 @@ export default function TopNav({ onSearch, initialSearchValue }: { onSearch?: (q
                         <BadgeCheck />
                         Account
                       </DropdownMenuItem>
-                      <DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => router.push('/bidder/billing')}>
                         <CreditCard />
                         Billing
                       </DropdownMenuItem>

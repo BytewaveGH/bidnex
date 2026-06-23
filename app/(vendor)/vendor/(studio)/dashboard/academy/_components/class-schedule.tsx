@@ -70,12 +70,12 @@ function AuctionRow({ auction }: { auction: AuctionToday }) {
   const bidLabel = `Lot #${auction.id} · ${bids} bids · Starting GHS ${startingPrice.toLocaleString("en-US")}`;
 
   return (
-    <div className="grid grid-cols-1 gap-3 bg-card py-3 transition-colors hover:bg-muted/30 sm:grid-cols-[9rem_1fr_auto] sm:items-center">
-      <div className="flex gap-2">
+    <div className="grid min-w-0 grid-cols-1 gap-3 py-3 transition-colors hover:bg-muted/30 sm:grid-cols-[minmax(0,7rem)_minmax(0,1fr)_auto] sm:items-center">
+      <div className="flex min-w-0 gap-2">
         <div className={`w-1 shrink-0 rounded-md ${cfg.barColor}`} />
-        <div className="text-nowrap text-xs">
-          {timeLabel && <div className="font-medium text-foreground">{timeLabel}</div>}
-          <div className="text-muted-foreground">{today}</div>
+        <div className="min-w-0 text-xs">
+          {timeLabel && <div className="truncate font-medium text-foreground">{timeLabel}</div>}
+          <div className="truncate text-muted-foreground">{today}</div>
         </div>
       </div>
 
@@ -95,7 +95,7 @@ export function ClassSchedule() {
   const { data: auctions, isLoading } = useAuctionsToday();
 
   return (
-    <Card className="h-full">
+    <Card className="h-full min-w-0 overflow-hidden">
       <CardHeader>
         <CardTitle className="text-sm">Upcoming Auctions</CardTitle>
         <CardAction className="flex items-center gap-1 text-muted-foreground text-xs">

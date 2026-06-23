@@ -10,10 +10,17 @@ type LotImageProps = {
   sizes?: string
 }
 
+function resolveUrl(src: string): string {
+  if (src.startsWith('http://') || src.startsWith('https://') || src.startsWith('/')) return src
+  const base = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') ?? ''
+  return `${base}/${src}`
+}
+
 function LotImageComponent({ src, alt, className, sizes }: LotImageProps) {
   const [imgError, setImgError] = useState(false)
+  const resolvedSrc = src ? resolveUrl(src) : ''
 
-  if (!src || imgError) {
+  if (!resolvedSrc || imgError) {
     return (
       <div className="w-full h-full bg-[#f1f1f1] flex items-center justify-center">
         <span className="text-[#98A2B3] text-sm">No image</span>
@@ -23,7 +30,7 @@ function LotImageComponent({ src, alt, className, sizes }: LotImageProps) {
 
   return (
     <Image
-      src={src}
+      src={resolvedSrc}
       alt={alt}
       fill
       className={className}
