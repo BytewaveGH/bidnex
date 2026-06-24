@@ -16,7 +16,7 @@ export default function WonItems() {
     if (isLoading) {
         return (
             <div className="w-full px-4">
-                <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-4 w-full">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-4 w-full">
                     {Array.from({ length: 8 }).map((_, i) => (
                         <div key={i} className="h-[480px] rounded-[16px] bg-[#F0F2F5] animate-pulse" />
                     ))}
@@ -44,7 +44,7 @@ export default function WonItems() {
     return (
         <div className="w-full flex justify-center items-center mb-20">
             <div className="w-full px-4 flex justify-center items-center">
-                <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-4 w-full">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-4 w-full">
                     {items.map((item) => (
                         <div key={item.id} className="w-full">
                             <ProductCard product={item} isWon />

@@ -13,7 +13,7 @@ export default function CheckEmail(
   return (
     <main className="min-h-screen bg-gray-50">
     {/* Header */}
-    <header className="w-full px-8 py-6 flex items-center justify-between">
+    <header className="w-full px-4 sm:px-8 py-5 sm:py-6 flex items-center justify-between gap-4">
         <Logo className="text-3xl font-bold text-gray-900" />
         <p className="text-base text-[#657688] font-normal">
             Don't have an account?{' '}
@@ -37,7 +37,7 @@ export default function CheckEmail(
                To proceed with resetting your password, please look for <br/>an email we sent you.
             </p>
 
-            <div className='w-[450px] flex flex-col  mb-4 '>
+            <div className='w-full flex flex-col mb-4'>
            
 
                 <ButtonTemplate onClick={onChangePage} title='Open Email' className='w-full h-11' />

@@ -99,7 +99,7 @@ export default function ProductCard({
     return (
         <div className={`h-max border w-full rounded-[16px] flex flex-col ${isClosed ? 'opacity-60' : ''} ${isWon ? 'border-2 border-[#099137]' : isWinning ? 'border-2 border-[#099137]' : isOutbid ? 'border-2 border-[#F3A218]' : isClosed ? 'border-2 border-[#D96B6B]' : 'border border-[#F0F2F5]'}`}
         >
-            <div className="bg-[#F9FAFB] h-[340px] relative overflow-hidden rounded-t-[16px] hover:cursor-pointer"
+            <div className="bg-[#F9FAFB] h-[240px] sm:h-[340px] relative overflow-hidden rounded-t-[16px] hover:cursor-pointer"
                 onClick={() => router.push(`/bidder/product/${product.id}`)}
             >
                 <div className="absolute inset-0 flex items-center justify-center">
@@ -192,7 +192,7 @@ export default function ProductCard({
             </div>
 
             <section className="p-3 border-t border-gray-100">
-                <div className="flex gap-3 mb-3 min-w-0">
+                <div className="flex gap-2 mb-3 min-w-0 flex-wrap">
                     <div className="text-xs font-medium flex items-center gap-2 bg-[#D42620] text-white rounded-[48px] px-3 py-1.5 border border-[#D42620] shrink-0">
                         <AlarmClock className="w-3.5 h-3.5 shrink-0" />
                         {product.bidEndTime
@@ -238,7 +238,7 @@ export default function ProductCard({
                             </p>
                         )}
 
-                        <div className='flex items-center mt-2 gap-3'>
+                        <div className='flex items-center mt-2 gap-2'>
                             <div className='flex-1 min-w-0'>
                                 <InputTemplate placeholder={'GHS0.00'} className='h-9 shadow-none w-full' inputAlign="center" />
                             </div>

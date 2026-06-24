@@ -107,16 +107,15 @@ const mockProducts: ProductCardType[] = [
 ]
 
 export default function Popular() {
-    return (<div className="w-full flex justify-center items-center">
-        <div className="w-full px-4 flex justify-center items-center">
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-2 justify-items-start w-full">
+    return (
+        <div className="w-full">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-4 w-full">
                 {mockProducts.map((product) => (
                     <div key={product.id} className="w-full">
-                        <ProductCard    isLoggedIn={true} product={product} />
+                        <ProductCard isLoggedIn={true} product={product} />
                     </div>
                 ))}
             </div>
-        </div>
         </div>
     )
 }
