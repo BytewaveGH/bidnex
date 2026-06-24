@@ -70,7 +70,7 @@ export default function Categories() {
                 </div>
                 
             </div>
-            <div className="grid grid-cols-3 gap-6 w-full">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6 w-full">
                 {mockProducts.map((category) => (
                     <CategoryCard key={category.id} category={category}  />
                 ))}

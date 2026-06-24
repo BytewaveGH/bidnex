@@ -4,7 +4,7 @@ import ButtonTemplate from '../templates/button-template'
 import InputTemplate from '../templates/input-template'
 import Logo from '../templates/logo'
 import { useRouter } from 'next/navigation'
-import { Armchair, CarFront, CookingPot, MonitorSmartphone, SearchIcon, Shirt, Smartphone } from 'lucide-react'
+import { Armchair, CarFront, CookingPot, MonitorSmartphone, SearchIcon, Shirt, Smartphone, Menu, X } from 'lucide-react'
 import legalHammer from '@/assets/svgs/legal-hammer.svg'
 import champion from '@/assets/svgs/champion.svg'
 import favoriteIcon from '@/assets/svgs/eye.svg'
@@ -41,9 +41,15 @@ export default function TopNav({ onSearch, initialSearchValue }: { onSearch?: (q
   const router = useRouter()
   const { data: session } = useSession()
   const isSignedIn = !!session?.user
-  const [navItems] = useState<{ name: string, path: string }[]>([{ name: 'All Items', path: '/bidder/all-items' }, { name: 'Categories', path: '/bidder/categories' }, { name: 'Buy Now', path: '/bidder/buy-now' }, { name: 'Popular', path: '/bidder/popular' }])
+  const [navItems] = useState<{ name: string, path: string }[]>([
+    { name: 'All Items', path: '/bidder/all-items' },
+    { name: 'Categories', path: '/bidder/categories' },
+    { name: 'Buy Now', path: '/bidder/buy-now' },
+    { name: 'Popular', path: '/bidder/popular' },
+  ])
   const [hoveredCategoryIndex, setHoveredCategoryIndex] = useState(0)
   const [searchQuery, setSearchQuery] = useState(initialSearchValue ?? '')
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const { count: watchlistCount } = useWatchlistIds()
   const { myBidsCount, wonItemsCount } = useNavCounts()
   const navIcons = [
@@ -51,120 +57,260 @@ export default function TopNav({ onSearch, initialSearchValue }: { onSearch?: (q
     { src: favoriteIcon, label: 'Watchlist', href: '/bidder/watchlist', count: watchlistCount },
     { src: champion, label: 'Won Items', href: '/bidder/won-items', count: wonItemsCount },
   ]
+
+  const totalCount = (myBidsCount ?? 0) + (watchlistCount ?? 0) + (wonItemsCount ?? 0)
+
+  function handleNavAndClose(path: string) {
+    router.push(path)
+    setIsMobileMenuOpen(false)
+  }
+
   return (
     <div className="sticky top-0 z-50 bg-white">
-      <section className="py-4">
+
+      {/* ── Desktop top bar ── */}
+      <section className="py-4 hidden sm:block">
         <div className="page-container flex justify-between items-center gap-4 min-w-0">
-        <Logo />
-        <div className="flex-1 min-w-0 max-w-[600px] h-[40px] shadow-none rounded-[100px]">
-          <InputTemplate
-            icon={<SearchIcon />}
-            placeholder="Search for anything"
-            className="flex-1 min-w-0 max-w-[600px] h-[40px] shadow-none rounded-[100px]"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') onSearch?.(searchQuery)
-            }}
-          />
-        </div>
-        {isSignedIn ?
-          <div className='flex gap-5 shrink-0 items-center'>
-            <TooltipProvider>
-              {navIcons.map((icon, index) => (
-                <Tooltip key={index}>
-                  <TooltipTrigger asChild>
-                    <div
-                      className='relative flex items-center justify-center border rounded-full p-2 cursor-pointer'
-                      onClick={() => icon.href && router.push(icon.href)}
-                    >
-                      <Image src={icon.src} alt={icon.label} className='size-5' />
-                      <span className='absolute -top-3 -right-2 flex size-5.5 items-center justify-center rounded-full bg-[#344054] text-[10px] font-medium text-white'>
-                        {icon.count}
-                      </span>
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">{icon.label}</TooltipContent>
-                </Tooltip>
-              ))}
-            </TooltipProvider>
-            <TooltipProvider>
-              <Tooltip>
-                <DropdownMenu>
-                  <TooltipTrigger asChild>
-                    <DropdownMenuTrigger asChild>
-                      <Avatar className="size-8 rounded-lg cursor-pointer">
-                        <AvatarFallback>{session?.user?.name?.[0]?.toUpperCase() ?? '?'}</AvatarFallback>
-                      </Avatar>
-                    </DropdownMenuTrigger>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">Profile</TooltipContent>
-                  <DropdownMenuContent className="min-w-56 space-y-1 rounded-lg" side="bottom" align="end" sideOffset={4}>
-                    <DropdownMenuItem className={cn("p-0", "bg-accent/50")}>
-                      <div className="flex w-full items-center gap-2 px-1 py-1.5">
-                        <Avatar className="size-9 rounded-lg">
+          <Logo />
+          <div className="flex-1 min-w-0 md:max-w-[600px] h-[40px] shadow-none rounded-[100px]">
+            <InputTemplate
+              icon={<SearchIcon />}
+              placeholder="Search for anything"
+              className="flex-1 min-w-0 md:max-w-[600px] h-[40px] shadow-none rounded-[100px]"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') onSearch?.(searchQuery)
+              }}
+            />
+          </div>
+          {isSignedIn ? (
+            <div className='flex gap-2 sm:gap-5 shrink-0 items-center'>
+              <TooltipProvider>
+                {navIcons.map((icon, index) => (
+                  <Tooltip key={index}>
+                    <TooltipTrigger asChild>
+                      <div
+                        className='relative flex items-center justify-center border rounded-full p-2 cursor-pointer'
+                        onClick={() => icon.href && router.push(icon.href)}
+                      >
+                        <Image src={icon.src} alt={icon.label} className='size-5' />
+                        {!!icon.count && (
+                          <span className='absolute -top-3 -right-2 flex size-5.5 items-center justify-center rounded-full bg-[#344054] text-[10px] font-medium text-white'>
+                            {icon.count}
+                          </span>
+                        )}
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">{icon.label}</TooltipContent>
+                  </Tooltip>
+                ))}
+              </TooltipProvider>
+              <TooltipProvider>
+                <Tooltip>
+                  <DropdownMenu>
+                    <TooltipTrigger asChild>
+                      <DropdownMenuTrigger asChild>
+                        <Avatar className="size-8 rounded-lg cursor-pointer">
                           <AvatarFallback>{session?.user?.name?.[0]?.toUpperCase() ?? '?'}</AvatarFallback>
                         </Avatar>
-                        <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
-                          <span className="truncate font-semibold">{session?.user?.name}</span>
-                          <span className="truncate text-xs ">{session?.user?.email}</span>
+                      </DropdownMenuTrigger>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">Profile</TooltipContent>
+                    <DropdownMenuContent className="min-w-56 space-y-1 rounded-lg" side="bottom" align="end" sideOffset={4}>
+                      <DropdownMenuItem className={cn("p-0", "bg-accent/50")}>
+                        <div className="flex w-full items-center gap-2 px-1 py-1.5">
+                          <Avatar className="size-9 rounded-lg">
+                            <AvatarFallback>{session?.user?.name?.[0]?.toUpperCase() ?? '?'}</AvatarFallback>
+                          </Avatar>
+                          <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
+                            <span className="truncate font-semibold">{session?.user?.name}</span>
+                            <span className="truncate text-xs ">{session?.user?.email}</span>
+                          </div>
+                          <span className="mr-1 flex size-5 items-center justify-center rounded-full text-primary opacity-100">
+                            <Check aria-hidden="true" />
+                          </span>
                         </div>
-                        <span className="mr-1 flex size-5 items-center justify-center rounded-full text-primary opacity-100">
-                          <Check aria-hidden="true" />
-                        </span>
-                      </div>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuGroup>
-                      <DropdownMenuItem>
-                        <BadgeCheck />
-                        Account
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => router.push('/bidder/billing')}>
-                        <CreditCard />
-                        Billing
+                      <DropdownMenuSeparator />
+                      <DropdownMenuGroup>
+                        <DropdownMenuItem>
+                          <BadgeCheck />
+                          Account
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => router.push('/bidder/billing')}>
+                          <CreditCard />
+                          Billing
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <Bell />
+                          Notifications
+                        </DropdownMenuItem>
+                      </DropdownMenuGroup>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => signOut({ callbackUrl: '/auth/login' })}>
+                        <LogOut />
+                        Log out
                       </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <Bell />
-                        Notifications
-                      </DropdownMenuItem>
-                    </DropdownMenuGroup>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => signOut({ callbackUrl: '/auth/login' })}>
-                      <LogOut />
-                      Log out
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
-          :
-          <div className="flex gap-2 shrink-0">
-            <ButtonTemplate
-              className=" bg-white text-[#344054] border whitespace-nowrap hover:bg-white"
-              title="Login"
-              onClick={() => router.push('/auth/login')}
-            />
-            <ButtonTemplate
-              title="Sign up"
-              onClick={() => router.push('/auth/sign-up')}
-              className=" whitespace-nowrap" />
-          </div>}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          ) : (
+            <div className="flex gap-2 shrink-0">
+              <ButtonTemplate
+                className="bg-white text-[#344054] border whitespace-nowrap hover:bg-white"
+                title="Login"
+                onClick={() => router.push('/auth/login')}
+              />
+              <ButtonTemplate
+                title="Sign up"
+                onClick={() => router.push('/auth/sign-up')}
+                className="whitespace-nowrap"
+              />
+            </div>
+          )}
         </div>
       </section>
-      <section className="flex items-center justify-center bg-black gap-10 text-white text-sm font-semibold h-[50px]">
+
+      {/* ── Mobile top bar ── */}
+      <section className="py-3 sm:hidden border-b border-[#F0F2F5]">
+        <div className="page-container flex items-center justify-between">
+          <Logo />
+          <div className="flex items-center gap-2">
+            {isSignedIn ? (
+              <button
+                onClick={() => setIsMobileMenuOpen((v) => !v)}
+                className="relative flex items-center justify-center size-9 rounded-full border border-[#E4E7EC] bg-white"
+              >
+                {isMobileMenuOpen
+                  ? <X className="size-4 text-[#344054]" />
+                  : <Menu className="size-4 text-[#344054]" />
+                }
+                {totalCount > 0 && !isMobileMenuOpen && (
+                  <span className="absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-[#344054] text-[9px] font-medium text-white">
+                    {totalCount > 9 ? '9+' : totalCount}
+                  </span>
+                )}
+              </button>
+            ) : (
+              <>
+                <ButtonTemplate
+                  className="bg-white text-[#344054] border whitespace-nowrap hover:bg-white h-8 text-xs px-3"
+                  title="Login"
+                  onClick={() => router.push('/auth/login')}
+                />
+                <ButtonTemplate
+                  title="Sign up"
+                  onClick={() => router.push('/auth/sign-up')}
+                  className="whitespace-nowrap h-8 text-xs px-3"
+                />
+              </>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Mobile dropdown menu ── */}
+      {isMobileMenuOpen && (
+        <div className="sm:hidden fixed top-[61px] left-0 right-0 bottom-0 bg-white z-50 overflow-y-auto">
+          {/* Search */}
+          <div className="px-4 py-3 border-b border-[#F0F2F5]">
+            <InputTemplate
+              icon={<SearchIcon />}
+              placeholder="Search for anything"
+              className="w-full h-[40px] shadow-none rounded-[100px]"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  onSearch?.(searchQuery)
+                  setIsMobileMenuOpen(false)
+                }
+              }}
+            />
+          </div>
+
+          {/* Nav icon links */}
+          <div className="px-2 py-2 border-b border-[#F0F2F5]">
+            {navIcons.map((icon) => (
+              <button
+                key={icon.label}
+                onClick={() => handleNavAndClose(icon.href)}
+                className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-[#F9FAFB] transition-colors text-left"
+              >
+                <div className="relative flex size-9 shrink-0 items-center justify-center rounded-full border border-[#E4E7EC]">
+                  <Image src={icon.src} alt={icon.label} className="size-5" />
+                  {!!icon.count && (
+                    <span className="absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-[#344054] text-[9px] font-medium text-white">
+                      {icon.count}
+                    </span>
+                  )}
+                </div>
+                <span className="text-sm font-medium text-[#344054]">{icon.label}</span>
+                {!!icon.count && (
+                  <span className="ml-auto text-xs text-[#657688]">{icon.count}</span>
+                )}
+              </button>
+            ))}
+          </div>
+
+          {/* Page nav links */}
+          <div className="px-2 py-2 border-b border-[#F0F2F5]">
+            {navItems.map((item) => (
+              <button
+                key={item.name}
+                onClick={() => handleNavAndClose(item.path)}
+                className="w-full flex items-center px-3 py-3 rounded-xl hover:bg-[#F9FAFB] transition-colors text-left text-sm font-medium text-[#344054]"
+              >
+                {item.name}
+              </button>
+            ))}
+          </div>
+
+          {/* Account actions */}
+          <div className="px-2 py-2">
+            <div className="flex items-center gap-3 px-3 py-3">
+              <Avatar className="size-8 rounded-lg">
+                <AvatarFallback>{session?.user?.name?.[0]?.toUpperCase() ?? '?'}</AvatarFallback>
+              </Avatar>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-[#344054] truncate">{session?.user?.name}</p>
+                <p className="text-xs text-[#657688] truncate">{session?.user?.email}</p>
+              </div>
+            </div>
+            <button
+              onClick={() => handleNavAndClose('/bidder/billing')}
+              className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-[#F9FAFB] transition-colors text-left"
+            >
+              <CreditCard className="size-4 text-[#657688]" />
+              <span className="text-sm text-[#344054]">Billing</span>
+            </button>
+            <button
+              onClick={() => signOut({ callbackUrl: '/auth/login' })}
+              className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-[#FFF1F0] transition-colors text-left"
+            >
+              <LogOut className="size-4 text-[#D42620]" />
+              <span className="text-sm text-[#D42620]">Log out</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Nav links bar (all screens) ── */}
+      <section className="flex items-center justify-center bg-black gap-6 sm:gap-10 text-white text-sm font-semibold h-[50px] overflow-x-auto">
         {navItems.map((item, index) =>
           item.name === 'Categories' ? (
             <HoverCardTemplate
               key={index}
               trigger={
-                <span className='cursor-pointer hover:underline'>{item.name}</span>
+                <span className='cursor-pointer hover:underline' onClick={() => router.push('/bidder/categories')}>{item.name}</span>
               }
               contentClassName=" w-full p-0 overflow-hidden rounded-xl flex-row mt-6"
               content={
-                <div className='flex p-3 px-3 bg-white'  >
-                  <div className="flex-2 grid grid-cols-2 gap-x-0  gap-y-0  ">
+                <div className='flex p-3 px-3 bg-white'>
+                  <div className="flex-2 grid grid-cols-2 gap-x-0 gap-y-0">
                     {categoriesHoverItems.map((cat, index) => {
                       const Icon = cat.icon
                       return (
@@ -173,7 +319,7 @@ export default function TopNav({ onSearch, initialSearchValue }: { onSearch?: (q
                           className="flex items-start gap-3 rounded-sm p-3 cursor-pointer hover:bg-[#F0F2F5] transition-colors"
                           onMouseEnter={() => setHoveredCategoryIndex(index)}
                         >
-                          <div className="flex size-6 shrink-0 items-center justify-center  bg-white border rounded-xs p-1">
+                          <div className="flex size-6 shrink-0 items-center justify-center bg-white border rounded-xs p-1">
                             <Icon className="size-5 text-[#000000]" strokeWidth={1.5} />
                           </div>
                           <div className="min-w-0">
@@ -184,16 +330,14 @@ export default function TopNav({ onSearch, initialSearchValue }: { onSearch?: (q
                       )
                     })}
                   </div>
-                  <div className="bg-[#252525] rounded-xl p-8 ml-4 flex flex-col  gap-4 w-[220px] ">
+                  <div className="bg-[#252525] rounded-xl p-8 ml-4 flex flex-col gap-4 w-[220px]">
                     <Image
-
                       height={105}
                       src={categoriesHoverItems[hoveredCategoryIndex].image}
                       alt={categoriesHoverItems[hoveredCategoryIndex].title}
-                      className="object-cover w-full h-[105px] ] object-center transition-opacity duration-200"
+                      className="object-cover w-full h-[105px] object-center transition-opacity duration-200"
                     />
                   </div>
-
                 </div>
               }
             />

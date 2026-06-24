@@ -21,8 +21,10 @@ function VerifyContent() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center">
-      <OtpForm phone={phone} accountType={accountType} onChangePage={handleSuccess} />
+    <main className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-sm">
+        <OtpForm phone={phone} accountType={accountType} onChangePage={handleSuccess} />
+      </div>
     </main>
   )
 }

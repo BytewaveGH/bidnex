@@ -54,7 +54,7 @@ export default function FAQs() {
                     </h2>
                     
                     {/* Still Have Questions Card */}
-                    <div className="bg-[#252525] rounded-2xl p-8 flex flex-col  gap-4 w-max ">
+                    <div className="bg-[#252525] rounded-2xl p-8 flex flex-col gap-4 w-full">
                         <h3 className="text-white text-xl font-semibold">
                             Still Have Questions?
                         </h3>

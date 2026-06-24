@@ -165,7 +165,7 @@ export default function Checkout() {
   }
 
   return (
-    <div className="flex flex-col xl:flex-row gap-8 items-start">
+    <div className="flex flex-col xl:flex-row gap-4 xl:gap-8 items-start">
       {/* ── Left column ── */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between mb-4">
@@ -223,7 +223,7 @@ export default function Checkout() {
       </div>
 
       {/* ── Right column ── */}
-      <div className="w-full xl:w-[340px] shrink-0 xl:sticky xl:top-[130px]">
+      <div className="w-full xl:w-[340px] shrink-0 xl:sticky xl:top-[90px]">
         <h2 className="text-xs font-semibold uppercase tracking-widest text-[#657688] mb-4">
           Order Summary
         </h2>

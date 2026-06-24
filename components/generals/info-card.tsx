@@ -15,8 +15,8 @@ export default function InfoCard() {
             {/* <div className="absolute top-0 right-0 w-56 h-56 bg-[#D9D9D9] rounded-full translate-x-1/4 -translate-y-1/4"></div> */}
             
             {/* Left Content Area */}
-            <div className="flex-1 p-12 lg:p-16 flex flex-col justify-center relative z-10">
-              <h2 className="text-white text-5xl  font-semibold mb-6 leading-tight">
+            <div className="flex-1 p-6 sm:p-10 lg:p-16 flex flex-col justify-center relative z-10">
+              <h2 className="text-white text-3xl sm:text-4xl md:text-5xl font-semibold mb-6 leading-tight">
                 Delivery Right To<br /> Your Doorstep
               </h2>
               <p className="text-white text-base font-normal mb-8 leading-relaxed opacity-90 max-w-lg">
@@ -30,7 +30,7 @@ export default function InfoCard() {
           </div>
           
           {/* Right Image Area - Positioned absolutely to overlay on the banner */}
-          <div className="absolute bottom-9 right-0 w-1/2 h-full z-20 overflow-visible">
+          <div className="hidden md:block absolute bottom-9 right-0 w-1/2 h-full z-20 overflow-visible">
             <div className="absolute bottom-0 right-0 w-full h-[110%] flex items-end justify-end">
               <div className="w-full h-full rounded-r-[24px] overflow-hidden flex justify-end">
                 <Image src={person} alt="person" className="h-full w-auto object-contain" />

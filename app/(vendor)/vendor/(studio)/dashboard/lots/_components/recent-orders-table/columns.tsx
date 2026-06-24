@@ -145,10 +145,9 @@ export function getRecentOrdersColumns({
   },
   {
     accessorKey: "title",
-    size: 244,
-    header: () => <div className="w-52">Product</div>,
+    header: () => <div>Product</div>,
     cell: ({ row }) => (
-      <div className="flex w-52 max-w-52 gap-3">
+      <div className="flex min-w-0 gap-3">
         <ProductThumbnail
           url={row.original.primaryImageUrl}
           mediaType={row.original.primaryMediaType}
