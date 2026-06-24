@@ -62,7 +62,7 @@ import {
 import { type LotFilter, type LotRow, lotFilters } from "./recent-orders-table/schema";
 
 export function RecentOrders({ refreshToken = 0 }: { refreshToken?: number }) {
-  const [columnPinning] = React.useState<ColumnPinningState>({ left: ["select", "title"], right: ["actions"] });
+  const [columnPinning] = React.useState<ColumnPinningState>({ left: ["select"], right: ["actions"] });
   const [rowSelection, setRowSelection] = React.useState({});
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [reviewStatusFilter, setReviewStatusFilter] = React.useState<LotFilter>("all");

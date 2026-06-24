@@ -31,7 +31,7 @@ export default function Login() {
 
     return (
         <main className="min-h-screen">
-            <section className="flex min-h-screen gap-40">
+            <section className="flex min-h-screen md:gap-40">
                 <div className="hidden md:block md:w-1/2 relative">
                     <div className="h-svh py-4 mr-8 relative">
                         <div className="h-full w-full relative mx-4 rounded-xl overflow-hidden">

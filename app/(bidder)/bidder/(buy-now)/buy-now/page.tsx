@@ -11,11 +11,11 @@ const BuyNowPage = () => {
         <main className="min-h-screen w-full">
             <TopNav />
             <CategoryBanner name="Buy Now" bannerImage={banner} />
-            <section className="p-20 py-10">
-            <FilterBar />
+            <section className="page-container py-10">
+                <FilterBar />
             </section>
-            <section className="p-20 py-0">
-            <BuyNow />
+            <section className="page-container pb-10">
+                <BuyNow />
             </section>
         </main>
     )

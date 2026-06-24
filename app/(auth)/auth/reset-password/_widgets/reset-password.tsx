@@ -44,7 +44,7 @@ export default function ResetPassword(
               Kindly set your new password.
             </p>
 
-            <div className='w-[450px] flex flex-col  mb-4 gap-6'>
+            <div className='w-full flex flex-col mb-4 gap-6'>
                 <InputTemplate 
                     label='New Password'
                     placeholder='Enter your new password'

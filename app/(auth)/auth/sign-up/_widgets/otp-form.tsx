@@ -24,7 +24,7 @@ export default function OtpForm({
     } = useOtp(phone, onChangePage, accountType)
 
     return (
-        <div className="px-6 py-12">
+        <div className="w-full px-6 py-10 md:py-12">
             <div className="mb-4">
                 <h1 className="text-3xl font-semibold text-gray-900 mb-2">
                     Enter Verification Code
@@ -37,7 +37,7 @@ export default function OtpForm({
                 </p>
             </div>
 
-            <div className='w-[550px]'>
+            <div className='w-full max-w-[550px]'>
                 <div className='mb-4'>
                     <InputTemplate
                         placeholder="-"

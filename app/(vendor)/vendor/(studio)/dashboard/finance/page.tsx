@@ -6,7 +6,7 @@ import { IncomeBreakdown } from "./_components/income-breakdown";
 import { OverviewKpis } from "./_components/overview-kpis";
 import { QuickActions } from "./_components/quick-actions";
 import { TransactionsOverviewCard } from "./_components/transactions-overview-card";
-import { TransactionsTable } from "./_components/transactions-table";
+import { PayoutsTable } from "./_components/payouts-table";
 import { UpcomingTransactions } from "./_components/upcoming-transactions";
 import { Wallet } from "./_components/wallet";
 
@@ -51,7 +51,7 @@ export default function Page() {
         </div>
       </div>
 
-      <TransactionsTable />
+      <PayoutsTable />
     </div>
   );
 }
