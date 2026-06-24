@@ -26,7 +26,7 @@ export default function LoginForm() {
   const [rememberMe, setRememberMe] = useState(false);
 
   return (
-    <div className=" px-6 py-12">
+    <div className="w-full px-6 py-10 md:py-12">
       {/* Welcome Section */}
       <div className="mb-8">
         <h1 className="text-3xl font-semibold text-gray-900 mb-2">
@@ -44,7 +44,7 @@ export default function LoginForm() {
       </div>
 
       {/* Form */}
-      <form className="w-[550px]" onSubmit={(e) => { e.preventDefault(); handleLogin(); }}>
+      <form className="w-full max-w-[550px]" onSubmit={(e) => { e.preventDefault(); handleLogin(); }}>
         {/* Login as radio */}
         <div className="flex gap-6 mb-6">
           {(["bidder", "vendor"] as const).map((role) => (

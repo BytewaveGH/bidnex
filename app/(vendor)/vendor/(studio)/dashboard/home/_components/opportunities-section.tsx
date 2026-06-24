@@ -108,9 +108,9 @@ export function OpportunitiesSection() {
             Track your submitted lots, current bids, and auction status in real time.
           </CardDescription>
           <CardAction>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <Input
-                className="h-7 w-44 md:w-52"
+                className="h-7 w-full sm:w-44 md:w-52"
                 placeholder="Search lots..."
                 value={searchQuery}
                 onChange={(event) => {
@@ -218,7 +218,7 @@ export function OpportunitiesSection() {
               </TableBody>
             </Table>
           </div>
-          <div className="flex items-center justify-between gap-4 px-4 pb-1">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4 px-4 pb-1">
             <p className="text-muted-foreground text-sm">
               Viewing {visibleOpportunityCount} out of {filteredOpportunityCount.toLocaleString()} lots
             </p>

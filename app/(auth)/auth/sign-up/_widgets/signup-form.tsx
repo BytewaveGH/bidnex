@@ -28,7 +28,7 @@ export default function SignupForm({
     } = useSignup(onChangePage, accountType)
 
     return (
-        <div className="px-6 py-12">
+        <div className="w-full px-6 py-10 md:py-12">
             <div className="mb-8">
                 <h1 className="text-3xl font-semibold text-gray-900 mb-2">
                     Let&apos;s Get You Started!
@@ -41,7 +41,7 @@ export default function SignupForm({
                 </p>
             </div>
 
-            <form className='w-[550px]' onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
+            <form className='w-full max-w-[550px]' onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
                 {/* Account type toggle */}
                 <div className="flex rounded-lg border border-gray-200 overflow-hidden mb-6">
                     {(['bidder', 'vendor'] as AccountType[]).map((type) => (

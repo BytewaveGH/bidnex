@@ -14,7 +14,7 @@ export default function ForgotPassword(
   return (
     <main className="min-h-screen bg-gray-50">
     {/* Header */}
-    <header className="w-full px-8 py-6 flex items-center justify-between">
+    <header className="w-full px-4 sm:px-8 py-5 sm:py-6 flex items-center justify-between gap-4">
         <Logo className="text-3xl font-bold text-gray-900" />
         <p className="text-base text-[#657688] font-normal">
             Don't have an account?{' '}
@@ -37,7 +37,7 @@ export default function ForgotPassword(
                 Enter the email address you registered<br />your account with.
             </p>
 
-            <div className='w-[450px] flex flex-col gap-6 mb-4 '>
+            <div className='w-full flex flex-col gap-6 mb-4'>
                 <div className=' '>
                     <InputTemplate
                         label='Email Address / Phone Number'

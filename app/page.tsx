@@ -25,35 +25,35 @@ export default function Home() {
             background: 'linear-gradient(to bottom, #66666600, #2C2C2C91, #000000)',
           }}
         >
-          <div className="flex flex-col items-start justify-end h-full pb-20">
-            <p className="text-white text-4xl font-bold mb-4">Discover Amazing Deals & Bid<br />Smart, Win Big, & Shop With<br />Confidence.</p>
+          <div className="flex flex-col items-start justify-end h-full pb-10 md:pb-20">
+            <p className="text-white text-2xl sm:text-3xl md:text-4xl font-bold mb-4">Discover Amazing Deals & Bid<br />Smart, Win Big, & Shop With<br />Confidence.</p>
             <ButtonTemplate title="Start Bidding" className="bg-white text-black hover:bg-white w-40" />
           </div>
         </div>
       </section>
-      <section className="page-container py-20">
+      <section className="page-container py-10 md:py-20">
         <FeaturedItems />
       </section>
       <section className="bg-black">
-        <div className="page-container py-20">
+        <div className="page-container py-10 md:py-20">
           <HowItWorks />
         </div>
       </section>
-      <section className="page-container py-20">
+      <section className="page-container py-10 md:py-20">
         <LiveAuctions />
       </section>
-      <section className="page-container py-20">
+      <section className="page-container py-10 md:py-20">
         <InfoCard />
       </section>
-      <section className="page-container py-20">
+      <section className="page-container py-10 md:py-20">
         <Categories />
       </section>
       <section className="bg-[#F6F6F6]">
-        <div className="page-container py-20">
+        <div className="page-container py-10 md:py-20">
           <FAQs />
         </div>
       </section>
-      <section className="page-container pt-20">
+      <section className="page-container pt-10 md:pt-20">
         <Footer />
       </section>
     </main>

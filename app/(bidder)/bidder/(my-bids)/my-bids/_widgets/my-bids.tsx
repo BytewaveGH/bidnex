@@ -85,7 +85,7 @@ export default function MyBids({ page, onPageChange, onTotalPagesChange }: MyBid
     if (isLoading && !data) {
         return (
             <div className="w-full px-4">
-                <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-4 w-full">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-4 w-full">
                     {Array.from({ length: PAGE_SIZE }).map((_, i) => (
                         <div key={i} className="h-[480px] rounded-[16px] bg-[#F0F2F5] animate-pulse" />
                     ))}
@@ -113,7 +113,7 @@ export default function MyBids({ page, onPageChange, onTotalPagesChange }: MyBid
     return (
         <div className="w-full flex flex-col items-center mb-20">
             <div className="w-full px-4">
-                <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-4 w-full">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-4 w-full">
                     {realtimeLots.map((lot) => (
                         <div key={lot.id} className="w-full">
                             <LotCardItem lot={lot} />

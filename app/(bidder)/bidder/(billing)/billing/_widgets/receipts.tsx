@@ -18,7 +18,7 @@ function ReceiptCard({ receipt }: { receipt: Receipt }) {
       <button
         type="button"
         onClick={() => setExpanded((v) => !v)}
-        className="w-full flex items-center justify-between px-5 py-4 hover:bg-[#F9FAFB] transition-colors"
+        className="w-full flex items-center justify-between px-4 sm:px-5 py-3 sm:py-4 hover:bg-[#F9FAFB] transition-colors"
       >
         <div className="flex items-center gap-3 min-w-0">
           <div className="flex size-9 shrink-0 items-center justify-center rounded-[8px] bg-[#F0F2F5]">
@@ -29,7 +29,10 @@ function ReceiptCard({ receipt }: { receipt: Receipt }) {
               {formatGHS(receipt.total)}
             </span>
             <span className="text-xs text-[#657688]">
-              {format(parseISO(receipt.paidAt), "d MMM yyyy, h:mm a")} · Ref: {receipt.reference}
+              {format(parseISO(receipt.paidAt), "d MMM yyyy, h:mm a")}
+            </span>
+            <span className="text-xs text-[#657688] truncate max-w-full">
+              Ref: {receipt.reference}
             </span>
           </div>
         </div>
@@ -45,7 +48,7 @@ function ReceiptCard({ receipt }: { receipt: Receipt }) {
 
       {expanded && (
         <div className="border-t border-[#F0F2F5]">
-          <div className="px-5 divide-y divide-[#F0F2F5]">
+          <div className="px-4 sm:px-5 divide-y divide-[#F0F2F5]">
             {receipt.lots.map((lot) => (
               <div key={lot.id} className="flex items-start justify-between gap-4 py-3">
                 <p className="text-sm text-[#344054] line-clamp-2 flex-1">{lot.title}</p>
@@ -56,7 +59,7 @@ function ReceiptCard({ receipt }: { receipt: Receipt }) {
               </div>
             ))}
           </div>
-          <div className="px-5 py-3 bg-[#F9FAFB] border-t border-[#F0F2F5] flex flex-col gap-1.5">
+          <div className="px-4 sm:px-5 py-3 bg-[#F9FAFB] border-t border-[#F0F2F5] flex flex-col gap-1.5">
             <div className="flex justify-between text-xs text-[#657688]">
               <span>Subtotal</span>
               <span>{formatGHS(receipt.subtotal)}</span>
