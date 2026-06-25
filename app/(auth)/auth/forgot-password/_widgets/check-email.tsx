@@ -16,7 +16,7 @@ export default function CheckEmail(
     <header className="w-full px-4 sm:px-8 py-5 sm:py-6 flex items-center justify-between gap-4">
         <Logo className="text-3xl font-bold text-gray-900" />
         <p className="text-base text-[#657688] font-normal">
-            Don't have an account?{' '}
+            Don't?{' '}
             <Link href="/auth/signup" className="text-base text-black underline hover:cursor-pointer font-normal">
                 Sign Up
             </Link>
