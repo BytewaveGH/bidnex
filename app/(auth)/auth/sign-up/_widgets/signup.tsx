@@ -102,8 +102,6 @@ export default function Signup({ initialType = 'bidder' }: { initialType?: Accou
                     {page === 'signup' ? (
                         <SignupForm
                             onChangePage={handleSignupSuccess}
-                            accountType={accountType}
-                            onAccountTypeChange={setAccountType}
                         />
                     ) : (
                         <OtpForm

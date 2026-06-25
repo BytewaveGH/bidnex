@@ -74,27 +74,31 @@ export default function FilterBar({
   return (
     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
       <div className="grid grid-cols-2 sm:flex sm:gap-4 gap-2">
-        <MultiSelectTemplate
-          options={categoryOptions}
-          onValueChange={(values) => {
-            const id = values[0] ? parseInt(values[0], 10) : undefined
-            onCategoryChange?.(isNaN(id as number) ? undefined : id)
-          }}
-          defaultValue={defaultCategory}
-          placeholder="Category"
-        />
-        <MultiSelectTemplate
-          options={[
-            { label: 'New / Like New', value: 'new' },
-            { label: 'Good Condition', value: 'used' },
-            { label: 'AS IS', value: 'as_is' },
-          ]}
-          onValueChange={(values) => {
-            onConditionChange?.(values[0] ?? undefined)
-          }}
-          defaultValue={defaultCondition}
-          placeholder="Condition"
-        />
+        <div className="sm:w-[200px]">
+          <MultiSelectTemplate
+            options={categoryOptions}
+            onValueChange={(values) => {
+              const id = values[0] ? parseInt(values[0], 10) : undefined
+              onCategoryChange?.(isNaN(id as number) ? undefined : id)
+            }}
+            defaultValue={defaultCategory}
+            placeholder="Category"
+          />
+        </div>
+        <div className="sm:w-[200px]">
+          <MultiSelectTemplate
+            options={[
+              { label: 'New / Like New', value: 'new' },
+              { label: 'Good Condition', value: 'used' },
+              { label: 'AS IS', value: 'as_is' },
+            ]}
+            onValueChange={(values) => {
+              onConditionChange?.(values[0] ?? undefined)
+            }}
+            defaultValue={defaultCondition}
+            placeholder="Condition"
+          />
+        </div>
         <div className="col-span-2 sm:col-span-1 sm:w-[200px]">
           <PriceSelectTemplate
             options={[

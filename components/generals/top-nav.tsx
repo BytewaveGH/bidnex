@@ -112,7 +112,7 @@ export default function TopNav({ onSearch, initialSearchValue }: { onSearch?: (q
                     <TooltipTrigger asChild>
                       <DropdownMenuTrigger asChild>
                         <Avatar className="size-8 rounded-lg cursor-pointer">
-                          <AvatarFallback>{session?.user?.name?.[0]?.toUpperCase() ?? '?'}</AvatarFallback>
+                          <AvatarFallback>{session?.user?.username?.[0]?.toUpperCase() ?? '?'}</AvatarFallback>
                         </Avatar>
                       </DropdownMenuTrigger>
                     </TooltipTrigger>
@@ -121,10 +121,10 @@ export default function TopNav({ onSearch, initialSearchValue }: { onSearch?: (q
                       <DropdownMenuItem className={cn("p-0", "bg-accent/50")}>
                         <div className="flex w-full items-center gap-2 px-1 py-1.5">
                           <Avatar className="size-9 rounded-lg">
-                            <AvatarFallback>{session?.user?.name?.[0]?.toUpperCase() ?? '?'}</AvatarFallback>
+                            <AvatarFallback>{session?.user?.username?.[0]?.toUpperCase() ?? '?'}</AvatarFallback>
                           </Avatar>
                           <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
-                            <span className="truncate font-semibold">{session?.user?.name}</span>
+                            <span className="truncate font-semibold">{session?.user?.username}</span>
                             <span className="truncate text-xs ">{session?.user?.email}</span>
                           </div>
                           <span className="mr-1 flex size-5 items-center justify-center rounded-full text-primary opacity-100">
@@ -273,10 +273,10 @@ export default function TopNav({ onSearch, initialSearchValue }: { onSearch?: (q
           <div className="px-2 py-2">
             <div className="flex items-center gap-3 px-3 py-3">
               <Avatar className="size-8 rounded-lg">
-                <AvatarFallback>{session?.user?.name?.[0]?.toUpperCase() ?? '?'}</AvatarFallback>
+                <AvatarFallback>{session?.user?.username?.[0]?.toUpperCase() ?? '?'}</AvatarFallback>
               </Avatar>
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-[#344054] truncate">{session?.user?.name}</p>
+                <p className="text-sm font-semibold text-[#344054] truncate">{session?.user?.username}</p>
                 <p className="text-xs text-[#657688] truncate">{session?.user?.email}</p>
               </div>
             </div>
