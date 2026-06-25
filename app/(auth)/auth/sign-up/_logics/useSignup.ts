@@ -11,7 +11,7 @@ interface SignupFormData {
     confirmPassword: string
 }
 
-export function useSignup(onSuccess: (phone: string) => void, accountType: 'bidder' | 'vendor') {
+export function useSignup(onSuccess: (phone: string) => void) {
     const callApi = useUnauthenticatedAxios()
 
     const [formData, setFormData] = useState<SignupFormData>({
@@ -60,12 +60,13 @@ export function useSignup(onSuccess: (phone: string) => void, accountType: 'bidd
             const response: any = await callApi({
                 method: 'POST',
                 url: '/auth/register',
+                params: { type: 'bidder' },
                 data: {
                     username: formData.username,
                     email: formData.email,
                     phone: formData.phone,
                     password: formData.password,
-                    accountType,
+                    confirmPassword: formData.confirmPassword,
                 },
             })
 

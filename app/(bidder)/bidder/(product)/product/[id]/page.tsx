@@ -238,7 +238,7 @@ export default function ProductDetails({ params }: { params: Promise<{ id: strin
   return (
     <section>
       <TopNav />
-      <div className='page-container py-10'>
+      <div className='page-container py-6 md:py-10'>
         {/* Breadcrumb */}
         <div className='flex items-center gap-2 text-[13px]'>
           <ButtonTemplate
@@ -251,16 +251,16 @@ export default function ProductDetails({ params }: { params: Promise<{ id: strin
           <span className='font-semibold line-clamp-1'>{lot.title}</span>
         </div>
 
-        <div className='py-10 flex gap-10'>
+        <div className='py-6 md:py-10 flex flex-col md:flex-row gap-6 md:gap-10'>
           {/* Image gallery */}
-          <div className='flex flex-col gap-4 w-1/2 shrink-0 items-center'>
-            <div className={`bg-[#F9FAFB] w-[539px] h-[539px] relative overflow-hidden rounded-[16px] border ${isClosed ? 'opacity-60' : ''}`}>
+          <div className='flex flex-col gap-4 w-full md:w-1/2 md:shrink-0 items-center'>
+            <div className={`bg-[#F9FAFB] w-full max-w-[539px] aspect-square relative overflow-hidden rounded-[16px] border ${isClosed ? 'opacity-60' : ''}`}>
               <div className='absolute inset-0 flex items-center justify-center'>
                 <LotImage
                   src={currentImageUrl}
                   alt={lot.title}
                   className='object-cover rounded-[16px]'
-                  sizes='539px'
+                  sizes='(max-width: 768px) 100vw, 539px'
                 />
               </div>
 
@@ -306,7 +306,7 @@ export default function ProductDetails({ params }: { params: Promise<{ id: strin
             </div>
 
             {galleryImages.length > 1 && (
-              <div className='flex gap-2 w-[539px]'>
+              <div className='flex gap-2 w-full max-w-[539px] overflow-x-auto'>
                 {galleryImages.map((img, index) => (
                   <button
                     key={index}
@@ -331,8 +331,8 @@ export default function ProductDetails({ params }: { params: Promise<{ id: strin
           </div>
 
           {/* Product info */}
-          <div className='flex flex-col gap-4 w-1/2 min-w-0'>
-            <h1 className='text-3xl font-bold'>{lot.title}</h1>
+          <div className='flex flex-col gap-4 w-full md:w-1/2 min-w-0'>
+            <h1 className='text-2xl md:text-3xl font-bold'>{lot.title}</h1>
 
             <div className='flex items-center gap-2 flex-wrap'>
               <div className={`w-fit px-2 py-2.5 rounded-[8px] text-white text-xs font-semibold ${conditionColor}`}>

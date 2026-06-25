@@ -1,5 +1,6 @@
 import type { NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import Google from "next-auth/providers/google";
 
 const roleRedirects: Record<string, string> = {
   admin: "/admin/programs",
@@ -12,6 +13,7 @@ const roleRedirects: Record<string, string> = {
 
 export const authConfig: NextAuthConfig = {
   providers: [
+    Google({}),
     Credentials({
       async authorize(credentials) {
         const controller = new AbortController();
@@ -71,8 +73,64 @@ export const authConfig: NextAuthConfig = {
     error: "/auth/login",
   },
   callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
+    async jwt({ token, user, account }) {
+      // ── Social OAuth sign-in (Google, etc.) ────────────────────────────────
+      if (account?.provider && account.provider !== "credentials") {
+        // Edge runtime only needs to know the user is authenticated
+        if (process.env.NEXT_RUNTIME === "edge") return token;
+
+        // Read the role the user selected before clicking "Continue with Google"
+        let socialRole = "bidder";
+        try {
+          const { cookies } = await import("next/headers");
+          const cookieStore = await cookies();
+          socialRole = cookieStore.get("social_auth_role")?.value ?? "bidder";
+        } catch {}
+
+        try {
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 10000);
+          const response = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/auth/social-login`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                provider: account.provider,
+                idToken: account.id_token,
+                loginAs: socialRole,
+              }),
+              signal: controller.signal,
+            },
+          );
+          clearTimeout(timeout);
+
+          const json = await response.json();
+          if (json.data) {
+            const d = json.data;
+            const accountType = (d.user.accountType ?? socialRole) as "vendor" | "bidder";
+            token.userId = String(d.user.id);
+            token.username = d.user.username;
+            token.avatar = d.user.avatar ?? "";
+            token.phone = d.user.phone ?? "";
+            token.isVerified = d.user.isVerified ?? false;
+            token.userType = accountType;
+            token.permission = [];
+            token.tenant = accountType;
+            token.accessToken = d.accessToken;
+            token.refreshToken = d.refreshToken;
+            token.accessTokenExpiry = d.accessTokenExpiry * 1000;
+            token.refreshTokenExpiry = d.refreshTokenExpiry * 1000;
+            token.onboarding = false;
+            token.organizationId = "";
+          }
+        } catch {}
+
+        return token;
+      }
+
+      // ── Credentials sign-in ────────────────────────────────────────────────
+      if (user && account?.provider === "credentials") {
         token.userId = user.userId;
         token.username = user.username;
         token.avatar = user.avatar;
