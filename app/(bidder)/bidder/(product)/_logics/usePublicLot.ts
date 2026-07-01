@@ -32,6 +32,7 @@ export type PublicLotDetail = {
   bidIncrement: number;
   bidCount: number;
   reservePrice: number;
+  msrp: number;
   buyNowPrice: number;
   status: string;
   reviewStatus: string;

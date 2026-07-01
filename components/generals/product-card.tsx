@@ -218,16 +218,35 @@ export default function ProductCard({
 
                 {!isWon && isLoggedIn && (
                     <div onClick={(e) => e.stopPropagation()}>
-                        <ButtonTemplate
-                            title={
-                                isBidding
+                        <div className="relative h-10 mt-3 rounded-[6px] overflow-hidden">
+                            <button
+                                type="button"
+                                onClick={handleBid}
+                                disabled={isBidding || isClosed || isWinning || timeEnded}
+                                className="absolute inset-y-0 left-0 flex items-center justify-center text-white text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none"
+                                style={{
+                                    width: product.buyNowPrice ? '72%' : '100%',
+                                    backgroundColor: isWinning ? '#099137' : '#000',
+                                    clipPath: product.buyNowPrice ? 'polygon(0 0, 100% 0, calc(100% - 16px) 100%, 0 100%)' : undefined,
+                                }}
+                            >
+                                {isBidding
                                     ? <Loader2 className="w-4 h-4 animate-spin" />
-                                    : `Bid GHS ${effectiveSuggestedBid.toFixed(2)}`
-                            }
-                            className={`w-full h-10 mt-3 ${isWinning ? 'bg-[#099137] hover:bg-[#099137]' : 'bg-black hover:bg-black'} text-white disabled:opacity-50`}
-                            disabled={isBidding || isClosed || isWinning || timeEnded}
-                            onClick={handleBid}
-                        />
+                                    : `Bid GHS ${effectiveSuggestedBid.toFixed(2)}`}
+                            </button>
+
+                            {!!product.buyNowPrice && (
+                                <button
+                                    type="button"
+                                    onClick={() => router.push(`/bidder/product/${product.id}`)}
+                                    className="absolute inset-y-0 right-0 flex flex-col items-center justify-center bg-[#003C71] text-white text-[10px] leading-tight font-semibold hover:brightness-110 transition-[filter] px-1"
+                                    style={{ width: 'calc(28% + 14px)', clipPath: 'polygon(16px 0, 100% 0, 100% 100%, 0 100%)' }}
+                                >
+                                    <span>Buy Now</span>
+                                    <span>GHS {product.buyNowPrice.toFixed(2)}</span>
+                                </button>
+                            )}
+                        </div>
 
                         {bidError && (
                             <p

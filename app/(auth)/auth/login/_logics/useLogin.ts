@@ -46,10 +46,16 @@ export function useLogin() {
         return;
       }
 
-      showToast("success", "Login successful");
-
       const session = await getSession();
       const userType = session?.user?.userType as string | undefined;
+
+      if (!session?.user?.isVerified) {
+        const phone = session?.user?.phone ?? "";
+        window.location.href = `/auth/verify?phone=${encodeURIComponent(phone)}&accountType=${userType ?? "bidder"}`;
+        return;
+      }
+
+      showToast("success", "Login successful");
       const destination = userType ? (roleRedirects[userType] ?? "/") : "/";
       window.location.href = destination;
     } catch (error: unknown) {

@@ -210,7 +210,7 @@ export default function ProductDetails({ params }: { params: Promise<{ id: strin
   const conditionFormatted = formatLotCondition(lot.condition)
   const conditionColor =
     lot.condition === 'new' || lot.condition === 'like_new' ? 'bg-[#099137]'
-      : lot.condition === 'good' ? 'bg-[#003C71]'
+      : lot.condition === 'good_condition' ? 'bg-[#003C71]'
         : 'bg-[#D42620]'
 
   const currentImageUrl = galleryImages[selectedImageIndex] ?? ''
@@ -352,22 +352,40 @@ export default function ProductDetails({ params }: { params: Promise<{ id: strin
                 CURRENT BID: <span className='font-semibold text-lg'>GHS {currentBid.toFixed(2)}</span>
               </p>
               <p className='text-sm text-[#657688]'>
-                MKT PR: <span className='text-lg font-semibold'>GHS {lot.buyNowPrice.toFixed(2)}</span>
+                MKT PR: <span className='text-lg font-semibold'>GHS {lot.msrp.toFixed(2)}</span>
               </p>
             </div>
 
             {!isWon && (
               <>
-                <ButtonTemplate
-                  title={
-                    isBidding
+                <div className='relative h-[48px] mt-4 rounded-[6px] overflow-hidden'>
+                  <button
+                    type='button'
+                    onClick={() => handleBid(suggestedBid)}
+                    disabled={isBidding || isWinning || isClosed || isTimeEnded}
+                    className='absolute inset-y-0 left-0 flex items-center justify-center text-white text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none'
+                    style={{
+                      width: lot.buyNowPrice ? '70%' : '100%',
+                      backgroundColor: isWinning ? '#099137' : '#000',
+                      clipPath: lot.buyNowPrice ? 'polygon(0 0, 100% 0, calc(100% - 20px) 100%, 0 100%)' : undefined,
+                    }}
+                  >
+                    {isBidding
                       ? <Loader2 className='w-4 h-4 animate-spin' />
-                      : `Bid GHS ${suggestedBid.toFixed(2)}`
-                  }
-                  className={`w-full h-[48px] mt-4 ${isWinning ? 'bg-[#099137] hover:bg-[#099137]' : 'bg-black hover:bg-black'} text-white disabled:opacity-50`}
-                  disabled={isBidding || isWinning || isClosed || isTimeEnded}
-                  onClick={() => handleBid(suggestedBid)}
-                />
+                      : `Bid GHS ${suggestedBid.toFixed(2)}`}
+                  </button>
+
+                  {!!lot.buyNowPrice && (
+                    <button
+                      type='button'
+                      className='absolute inset-y-0 right-0 flex flex-col md:flex-row md:gap-1 items-center justify-center bg-[#003C71] text-white text-[11px] md:text-sm leading-tight font-semibold hover:brightness-110 transition-[filter] px-1'
+                      style={{ width: 'calc(30% + 18px)', clipPath: 'polygon(20px 0, 100% 0, 100% 100%, 0 100%)' }}
+                    >
+                      <span>Buy Now</span>
+                      <span>GHS {lot.buyNowPrice.toFixed(2)}</span>
+                    </button>
+                  )}
+                </div>
 
                 {bidError && (
                   <p className='text-[#D42620] text-sm -mt-2 cursor-pointer' onClick={() => setBidError(null)}>

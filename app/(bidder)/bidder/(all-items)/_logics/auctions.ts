@@ -33,6 +33,7 @@ export type AuctionLot = {
   winnerId?: number | null;
   bidderIds: number[];
   reservePrice: number;
+  msrp: number;
   buyNowPrice: number;
   status: LotStatus;
   reviewStatus: LotReviewStatus;
@@ -173,8 +174,9 @@ export function mapLotToProductCard(lot: AuctionLot) {
     bidEndTime: lot.bidEndTime,
     bidders: lot.bidCount,
     productName: lot.title,
-    marketPrice: `GHS ${lot.buyNowPrice.toFixed(2)}`,
+    marketPrice: `GHS ${lot.msrp.toFixed(2)}`,
     currentBid: lot.currentBid,
     increment: lot.bidIncrement,
+    buyNowPrice: lot.buyNowPrice,
   };
 }
