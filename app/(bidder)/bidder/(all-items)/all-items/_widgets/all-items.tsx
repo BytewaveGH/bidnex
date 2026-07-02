@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/pagination'
 import { usePublicLots } from '../../_logics/usePublicLots'
 import { useLotRealtime } from '../../_logics/useLotRealtime'
+import { useResyncOnReconnect } from '@/components/generals/providers/websocket-provider'
 import type { LotsOrderBy } from '../../_logics/auctions'
 
 const PAGE_SIZE = 12
@@ -30,9 +31,10 @@ type AllItemsProps = {
 }
 
 export default function AllItems({ condition, minPrice, maxPrice, categoryId, search, orderBy, page, onPageChange, onTotalPagesChange }: AllItemsProps) {
-    const { data, isLoading, error } = usePublicLots({ page, limit: PAGE_SIZE, condition, minPrice, maxPrice, categoryId, search, orderBy })
+    const { data, isLoading, error, refetch } = usePublicLots({ page, limit: PAGE_SIZE, condition, minPrice, maxPrice, categoryId, search, orderBy })
     const baseLots = useMemo(() => data?.data ?? [], [data])
     const realtimeLots = useLotRealtime(baseLots)
+    useResyncOnReconnect(refetch)
 
     const [expiredIds, setExpiredIds] = useState<Set<number>>(new Set())
     // Reset expired set when page/filters change

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useAxios } from "@/hooks/use-axios";
 import {
   buildLotsParams,
@@ -15,6 +15,8 @@ export function usePublicLots(params: LotsQueryParams) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const hasLoadedRef = useRef(false);
+  const [resyncToken, setResyncToken] = useState(0);
+  const refetch = useCallback(() => setResyncToken(t => t + 1), []);
 
   useEffect(() => {
     let cancelled = false;
@@ -76,7 +78,8 @@ export function usePublicLots(params: LotsQueryParams) {
     params.categoryId,
     params.auctionId,
     params.orderBy,
+    resyncToken,
   ]);
 
-  return { data, isLoading, error };
+  return { data, isLoading, error, refetch };
 }

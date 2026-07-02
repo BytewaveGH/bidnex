@@ -43,9 +43,11 @@ export function NewProductSheet({ onSuccess }: NewProductSheetProps) {
   const { categories, isLoading: isCategoriesLoading, error: categoriesError } = usePublicCategories(open);
   const isSubmitting = submitPhase !== "idle";
 
+  const imagesRef = useRef(images);
+  imagesRef.current = images;
   useEffect(() => {
-    return () => images.forEach((img) => URL.revokeObjectURL(img.preview));
-  }, [images]);
+    return () => imagesRef.current.forEach((img) => URL.revokeObjectURL(img.preview));
+  }, []);
 
   function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []);
@@ -347,7 +349,7 @@ export function NewProductSheet({ onSuccess }: NewProductSheetProps) {
   );
 }
 
-function FieldTooltip({ hint }: { hint: string }) {
+export function FieldTooltip({ hint }: { hint: string }) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
@@ -358,7 +360,7 @@ function FieldTooltip({ hint }: { hint: string }) {
   );
 }
 
-function Field({
+export function Field({
   label,
   hint,
   error,

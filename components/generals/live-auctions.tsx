@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import { LotCardItem } from "./lot-card-item";
 import { usePublicLots } from "@/app/(bidder)/bidder/(all-items)/_logics/usePublicLots";
 import { useLotRealtime } from "@/app/(bidder)/bidder/(all-items)/_logics/useLotRealtime";
+import { useResyncOnReconnect } from "@/components/generals/providers/websocket-provider";
 
 export default function LiveAuctions() {
   const router = useRouter();
@@ -13,7 +14,8 @@ export default function LiveAuctions() {
   const isLoggedIn = session?.user?.userType === "bidder";
   const [expiredIds, setExpiredIds] = useState<Set<number>>(new Set());
 
-  const { data, isLoading } = usePublicLots({ orderBy: "ending_soon", limit: 5 });
+  const { data, isLoading, refetch } = usePublicLots({ orderBy: "ending_soon", limit: 5 });
+  useResyncOnReconnect(refetch);
 
   const baseLots = useMemo(() => data?.data ?? [], [data]);
   const realtimeLots = useLotRealtime(baseLots);

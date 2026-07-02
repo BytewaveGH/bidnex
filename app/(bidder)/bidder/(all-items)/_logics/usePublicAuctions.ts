@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { useAxios } from "@/hooks/use-axios";
 
@@ -16,6 +16,8 @@ export function usePublicAuctions(params: AuctionsQueryParams, refreshToken = 0)
   const [data, setData] = useState<AuctionsPage | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [resyncToken, setResyncToken] = useState(0);
+  const refetch = useCallback(() => setResyncToken(t => t + 1), []);
 
   useEffect(() => {
     let cancelled = false;
@@ -60,7 +62,7 @@ export function usePublicAuctions(params: AuctionsQueryParams, refreshToken = 0)
     return () => {
       cancelled = true;
     };
-  }, [params.limit, params.page, params.search, params.status, params.featured, refreshToken]);
+  }, [params.limit, params.page, params.search, params.status, params.featured, refreshToken, resyncToken]);
 
-  return { data, isLoading, error };
+  return { data, isLoading, error, refetch };
 }

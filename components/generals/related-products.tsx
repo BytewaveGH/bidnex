@@ -6,6 +6,7 @@ import ButtonTemplate from "../templates/button-template";
 import { LotCardItem } from "./lot-card-item";
 import { usePublicLots } from "@/app/(bidder)/bidder/(all-items)/_logics/usePublicLots";
 import { useLotRealtime } from "@/app/(bidder)/bidder/(all-items)/_logics/useLotRealtime";
+import { useResyncOnReconnect } from "@/components/generals/providers/websocket-provider";
 
 const RELATED_LIMIT = 5;
 
@@ -19,10 +20,11 @@ export default function RelatedProducts({ categoryId, excludeLotId }: RelatedPro
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
 
-  const { data, isLoading, error } = usePublicLots({
+  const { data, isLoading, error, refetch } = usePublicLots({
     categoryId,
     limit: RELATED_LIMIT,
   });
+  useResyncOnReconnect(refetch);
   const baseLots = useMemo(
     () => (data?.data ?? []).filter((lot) => lot.id !== excludeLotId),
     [data, excludeLotId],

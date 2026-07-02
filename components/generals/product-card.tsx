@@ -6,7 +6,16 @@ import eyeIcon from '@/assets/svgs/eye.svg'
 import type { ProductCardType } from '@/lib/interfaces'
 import InputTemplate from '../templates/input-template'
 import { useRouter } from 'next/navigation'
-import AlertDialogTemplate from '../templates/alert-dialog-template'
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '../ui/alert-dialog'
 import { LotImage } from './lot-image'
 
 function CardCountdown({ endTime, fallback, onExpired }: { endTime: string; fallback: string; onExpired?: () => void }) {
@@ -58,6 +67,10 @@ type ProductCardProps = {
     antiSniped?: boolean
     onBid?: (amount: number) => Promise<boolean>
     onClearBidError?: () => void
+    isSettingMaxBid?: boolean
+    maxBidError?: string | null
+    onSetMaxBid?: (amount: number) => Promise<boolean>
+    onClearMaxBidError?: () => void
     onExpired?: () => void
 }
 
@@ -77,10 +90,16 @@ export default function ProductCard({
     antiSniped,
     onBid,
     onClearBidError,
+    isSettingMaxBid,
+    maxBidError,
+    onSetMaxBid,
+    onClearMaxBidError,
     onExpired,
 }: ProductCardProps) {
     const router = useRouter()
     const [timeEnded, setTimeEnded] = useState(false)
+    const [maxBidInput, setMaxBidInput] = useState('')
+    const [confirmMaxBidOpen, setConfirmMaxBidOpen] = useState(false)
     const handleExpired = useCallback(() => {
         setTimeEnded(true)
         onExpired?.()
@@ -90,10 +109,19 @@ export default function ProductCard({
         typeof product.image === 'string'
             ? product.image
             : product.image?.src ?? ''
+    const parsedMaxBid = Number(maxBidInput)
+    const isMaxBidValid = maxBidInput.trim() !== '' && Number.isFinite(parsedMaxBid) && parsedMaxBid > 0
 
     async function handleBid() {
         if (!onBid) return
         await onBid(effectiveSuggestedBid)
+    }
+
+    async function handleConfirmMaxBid() {
+        if (!onSetMaxBid) return
+        setConfirmMaxBidOpen(false)
+        const success = await onSetMaxBid(parsedMaxBid)
+        if (success) setMaxBidInput('')
     }
 
     return (
@@ -218,16 +246,35 @@ export default function ProductCard({
 
                 {!isWon && isLoggedIn && (
                     <div onClick={(e) => e.stopPropagation()}>
-                        <ButtonTemplate
-                            title={
-                                isBidding
+                        <div className="relative h-10 mt-3 rounded-[6px] overflow-hidden">
+                            <button
+                                type="button"
+                                onClick={handleBid}
+                                disabled={isBidding || isClosed || isWinning || timeEnded}
+                                className="absolute inset-y-0 left-0 flex items-center justify-center text-white text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none"
+                                style={{
+                                    width: product.buyNowPrice ? '72%' : '100%',
+                                    backgroundColor: isWinning ? '#099137' : '#000',
+                                    clipPath: product.buyNowPrice ? 'polygon(0 0, 100% 0, calc(100% - 16px) 100%, 0 100%)' : undefined,
+                                }}
+                            >
+                                {isBidding
                                     ? <Loader2 className="w-4 h-4 animate-spin" />
-                                    : `Bid GHS ${effectiveSuggestedBid.toFixed(2)}`
-                            }
-                            className={`w-full h-10 mt-3 ${isWinning ? 'bg-[#099137] hover:bg-[#099137]' : 'bg-black hover:bg-black'} text-white disabled:opacity-50`}
-                            disabled={isBidding || isClosed || isWinning || timeEnded}
-                            onClick={handleBid}
-                        />
+                                    : `Bid GHS ${effectiveSuggestedBid.toFixed(2)}`}
+                            </button>
+
+                            {!!product.buyNowPrice && (
+                                <button
+                                    type="button"
+                                    onClick={() => router.push(`/bidder/product/${product.id}`)}
+                                    className="absolute inset-y-0 right-0 flex flex-col items-center justify-center bg-[#003C71] text-white text-[10px] leading-tight font-semibold hover:brightness-110 transition-[filter] px-1"
+                                    style={{ width: 'calc(28% + 14px)', clipPath: 'polygon(16px 0, 100% 0, 100% 100%, 0 100%)' }}
+                                >
+                                    <span>Buy Now</span>
+                                    <span>GHS {product.buyNowPrice.toFixed(2)}</span>
+                                </button>
+                            )}
+                        </div>
 
                         {bidError && (
                             <p
@@ -238,14 +285,54 @@ export default function ProductCard({
                             </p>
                         )}
 
+                        {maxBidError && (
+                            <p
+                                className="text-[#D42620] text-xs mt-1 cursor-pointer capitalize"
+                                onClick={(e) => { e.stopPropagation(); onClearMaxBidError?.() }}
+                            >
+                                {maxBidError}
+                            </p>
+                        )}
+
                         <div className='flex items-center mt-2 gap-2'>
                             <div className='flex-1 min-w-0'>
-                                <InputTemplate placeholder={'GHS0.00'} className='h-9 shadow-none w-full' inputAlign="center" />
+                                <InputTemplate
+                                    placeholder={'GHS0.00'}
+                                    className='h-9 shadow-none w-full'
+                                    inputAlign="center"
+                                    type="number"
+                                    value={maxBidInput}
+                                    onChange={(e) => setMaxBidInput(e.target.value)}
+                                />
                             </div>
                             <div className='flex-1 min-w-0'>
-                                <AlertDialogTemplate trigger={<ButtonTemplate title="Set Max Bid" className="bg-[#FFCC00] text-black hover:bg-[#FFCC00] h-9 w-full" />} />
+                                <ButtonTemplate
+                                    title={isSettingMaxBid ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : "Set Max Bid"}
+                                    className="bg-[#FFCC00] text-black hover:bg-[#FFCC00] h-9 w-full"
+                                    disabled={!isMaxBidValid || isSettingMaxBid || isClosed || timeEnded}
+                                    onClick={() => setConfirmMaxBidOpen(true)}
+                                />
                             </div>
                         </div>
+
+                        <AlertDialog open={confirmMaxBidOpen} onOpenChange={setConfirmMaxBidOpen}>
+                            <AlertDialogContent size="sm">
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Set max bid?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        We&apos;ll automatically bid on your behalf up to{' '}
+                                        <span className="font-medium text-foreground">
+                                            GHS {Number.isFinite(parsedMaxBid) ? parsedMaxBid.toFixed(2) : '0.00'}
+                                        </span>{' '}
+                                        as others bid on this item.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={handleConfirmMaxBid}>Confirm</AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
                     </div>
                 )}
             </section>
