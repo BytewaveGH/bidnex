@@ -1,5 +1,5 @@
 export type AuctionStatus = "draft" | "active" | "ended" | "cancelled";
-export type LotStatus = "pending" | "active" | "ended" | "cancelled";
+export type LotStatus = "pending" | "active" | "ended" | "sold" | "unsold" | "cancelled";
 export type LotReviewStatus = "draft" | "submitted" | "approved" | "rejected";
 
 export type AuctionLotCategory = {

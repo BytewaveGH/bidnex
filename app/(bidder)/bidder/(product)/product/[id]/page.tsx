@@ -6,18 +6,31 @@ import { AlarmClock, ChevronRight, Loader2, MoveLeft, UsersRound } from 'lucide-
 import Image from 'next/image'
 import { use, useState, useEffect } from 'react'
 import InputTemplate from '@/components/templates/input-template'
-import AlertDialogTemplate from '@/components/templates/alert-dialog-template'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { showToast } from '@/components/templates/toast-template'
 import favoriteIcon from '@/assets/svgs/eye.svg'
 import { Separator } from '@/components/ui/separator'
 import AccordionTemplate from '@/components/templates/accordion-template'
 import RelatedProducts from '@/components/generals/related-products'
 import { usePublicLot } from '../../_logics/usePublicLot'
+import { useMaxBid } from '../../_logics/useMaxBid'
+import { useBuyNow } from '../../_logics/useBuyNow'
 import { useWatchlistIds } from '@/app/(bidder)/bidder/(all-items)/_logics/useWatchlistIds'
-import { useWebSocket } from '@/components/generals/providers/websocket-provider'
+import { useResyncOnReconnect } from '@/components/generals/providers/websocket-provider'
 import { useNavCounts } from '@/components/generals/providers/nav-counts-provider'
 import { useAxios } from '@/hooks/use-axios'
 import { useSession } from 'next-auth/react'
 import { resolveLotMediaUrl, formatLotCondition } from '@/app/(bidder)/bidder/(all-items)/_logics/auctions'
+import { useLotRealtimeWithActions } from '@/app/(bidder)/bidder/(all-items)/_logics/useLotRealtime'
 import { LotImage } from '@/components/generals/lot-image'
 
 function Countdown({ endTime }: { endTime: string }) {
@@ -43,31 +56,33 @@ function Countdown({ endTime }: { endTime: string }) {
 
 export default function ProductDetails({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
-  const { data: lot, isLoading, error } = usePublicLot(id)
+  const { data: lot, isLoading, error, refetch } = usePublicLot(id)
   const { watchlistIds, pendingIds, toggleWatchlist } = useWatchlistIds()
-  const { send, subscribe, isConnected } = useWebSocket()
   const { incrementMyBidsCount } = useNavCounts()
   const callApi = useAxios()
   const { data: session } = useSession()
   const currentUserId = Number((session?.user as any)?.userId)
 
+  const { setMaxBid, isLoading: isSettingMaxBid } = useMaxBid()
+  const { buyNow, isLoading: isBuyingNow } = useBuyNow()
+
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
   const [isBidding, setIsBidding] = useState(false)
   const [bidError, setBidError] = useState<string | null>(null)
+  const [maxBidInput, setMaxBidInput] = useState('')
+  const [confirmMaxBidOpen, setConfirmMaxBidOpen] = useState(false)
+  const [confirmBuyNowOpen, setConfirmBuyNowOpen] = useState(false)
 
-  // Real-time overrides from WebSocket — merged with REST data below
-  const [rt, setRt] = useState<{
-    currentBid?: number
-    bidCount?: number
-    bidEndTime?: string
-    isWinning?: boolean
-    isOutbid?: boolean
-    isClosed?: boolean
-  }>({})
+  // Real-time overrides from WebSocket — same hook every grid/list view uses, so
+  // this page gets room-joining, resync-on-reconnect, and outbid/winning handling
+  // for free instead of a hand-duplicated copy of that logic.
+  const { lots: [realtime], applyOptimisticBid } = useLotRealtimeWithActions(lot ? [lot] : [])
+
+  useResyncOnReconnect(refetch)
 
   // Must be declared before early returns to obey Rules of Hooks
   const [isTimeEnded, setIsTimeEnded] = useState(false)
-  const bidEndTimeForTimer = rt.bidEndTime ?? lot?.bidEndTime ?? ''
+  const bidEndTimeForTimer = realtime?.bidEndTime ?? lot?.bidEndTime ?? ''
   useEffect(() => {
     if (!bidEndTimeForTimer) return
     setIsTimeEnded(false)
@@ -76,53 +91,6 @@ export default function ProductDetails({ params }: { params: Promise<{ id: strin
     const t = setTimeout(() => setIsTimeEnded(true), diff)
     return () => clearTimeout(t)
   }, [bidEndTimeForTimer])
-
-  // Join auction room once lot is loaded and WS is connected
-  useEffect(() => {
-    if (!lot || !isConnected) return
-    const auctionId = String(lot.auction.id)
-    send({ type: 'join_auction', auctionId })
-    return () => { send({ type: 'leave_auction', auctionId }) }
-  }, [lot?.id, isConnected])
-
-  // Subscribe to real-time bid events
-  useEffect(() => {
-    return subscribe((msg) => {
-      if (!lot) return
-
-      if (
-        msg.type === 'auction_update' &&
-        Number(msg.data?.lotId) === Number(lot.id) &&
-        msg.data?.currentBid !== undefined
-      ) {
-        const { currentBid, bidCount, endTime, bidderId } = msg.data
-        setRt(prev => {
-          const hadBid = prev.isWinning || prev.isOutbid || lot.bidderIds.includes(currentUserId)
-          const nowWinning = Number(bidderId) === currentUserId
-          return {
-            ...prev,
-            currentBid,
-            ...(bidCount != null && { bidCount }),
-            ...(endTime != null && { bidEndTime: endTime }),
-            isWinning: nowWinning,
-            isOutbid: hadBid && !nowWinning,
-          }
-        })
-      }
-
-      if (msg.type === 'user_event' && msg.event === 'bidder_outbid' && msg.data?.lotId === lot.id) {
-        setRt(prev => ({ ...prev, isOutbid: true, isWinning: false }))
-      }
-
-      // Auction/lot closed
-      if (msg.type === 'auction_update' && msg.data?.auctionId !== undefined && msg.data?.status !== undefined) {
-        const closed = msg.data.status === 'ended' || msg.data.status === 'cancelled'
-        if (closed && String(msg.data.auctionId) === String(lot.auction.id)) {
-          setRt(prev => ({ ...prev, isClosed: true }))
-        }
-      }
-    })
-  }, [subscribe, lot?.id, currentUserId])
 
   const galleryImages = lot
     ? lot.images
@@ -138,14 +106,13 @@ export default function ProductDetails({ params }: { params: Promise<{ id: strin
     try {
       const res = await callApi({ method: 'POST', url: `/bidder/lots/${lot.id}/bids`, data: { amount } }) as any
       if (res.status === 201 || res.status === 200) {
-        const isFirstBid = !rt.isWinning && !rt.isOutbid && !lot.bidderIds.includes(currentUserId)
-        setRt(prev => ({
-          ...prev,
+        const isFirstBid = !realtime?.isWinning && !realtime?.isOutbid && !lot.bidderIds.includes(currentUserId)
+        applyOptimisticBid(lot.id, {
           isWinning: true,
           isOutbid: false,
           currentBid: amount,
-          bidCount: (prev.bidCount ?? lot.bidCount) + 1,
-        }))
+          bidCount: (realtime?.bidCount ?? lot.bidCount) + 1,
+        })
         if (isFirstBid) incrementMyBidsCount()
       } else {
         setBidError(res.data?.error ?? res.data?.message ?? 'Failed to place bid.')
@@ -154,6 +121,34 @@ export default function ProductDetails({ params }: { params: Promise<{ id: strin
       setBidError('Network error. Please try again.')
     } finally {
       setIsBidding(false)
+    }
+  }
+
+  async function handleConfirmMaxBid() {
+    if (!lot) return
+    const amount = Number(maxBidInput)
+    setConfirmMaxBidOpen(false)
+    try {
+      await setMaxBid(lot.id, amount)
+      showToast('success', `Max bid of GHS ${amount.toFixed(2)} set.`)
+      setMaxBidInput('')
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to set max bid.'
+      showToast('failure', message)
+    }
+  }
+
+  async function handleConfirmBuyNow() {
+    if (!lot) return
+    setConfirmBuyNowOpen(false)
+    try {
+      await buyNow(lot.id)
+      applyOptimisticBid(lot.id, { isClosed: true, isWon: true, isWinning: true })
+      incrementMyBidsCount()
+      showToast('success', 'Purchase successful! This item is yours.')
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to complete purchase.'
+      showToast('failure', message)
     }
   }
 
@@ -216,14 +211,16 @@ export default function ProductDetails({ params }: { params: Promise<{ id: strin
   const currentImageUrl = galleryImages[selectedImageIndex] ?? ''
 
   // Merge REST data with real-time overrides
-  const currentBid = rt.currentBid ?? lot.currentBid
-  const bidCount = rt.bidCount ?? lot.bidCount
-  const bidEndTime = rt.bidEndTime ?? lot.bidEndTime
-  const isWon = lot.status === 'sold' && lot.winnerId === currentUserId
-  const isWinning = !isWon && (rt.isWinning ?? (lot.winnerId === currentUserId))
-  const isOutbid = !isWon && (rt.isOutbid ?? (lot.bidderIds.includes(currentUserId) && lot.winnerId !== currentUserId))
-  const isClosed = !isWon && (rt.isClosed || lot.status === 'ended' || lot.status === 'cancelled' || lot.auction.status === 'ended' || lot.auction.status === 'cancelled')
+  const currentBid = realtime?.currentBid ?? lot.currentBid
+  const bidCount = realtime?.bidCount ?? lot.bidCount
+  const bidEndTime = realtime?.bidEndTime ?? lot.bidEndTime
+  const isWon = realtime?.isWon ?? (lot.status === 'sold' && lot.winnerId === currentUserId)
+  const isWinning = !isWon && (realtime?.isWinning ?? (lot.winnerId === currentUserId))
+  const isOutbid = !isWon && (realtime?.isOutbid ?? (lot.bidderIds.includes(currentUserId) && lot.winnerId !== currentUserId))
+  const isClosed = !isWon && (realtime?.isClosed || lot.status === 'ended' || lot.status === 'cancelled' || lot.auction.status === 'ended' || lot.auction.status === 'cancelled')
   const suggestedBid = bidCount === 0 ? lot.startingBid : currentBid + lot.bidIncrement
+  const parsedMaxBid = Number(maxBidInput)
+  const isMaxBidValid = maxBidInput.trim() !== '' && Number.isFinite(parsedMaxBid) && parsedMaxBid > 0
 
   const deliveryContent = (
     <ul className='list-disc list-inside space-y-1 text-sm'>
@@ -378,11 +375,19 @@ export default function ProductDetails({ params }: { params: Promise<{ id: strin
                   {!!lot.buyNowPrice && (
                     <button
                       type='button'
-                      className='absolute inset-y-0 right-0 flex flex-col md:flex-row md:gap-1 items-center justify-center bg-[#003C71] text-white text-[11px] md:text-sm leading-tight font-semibold hover:brightness-110 transition-[filter] px-1'
+                      onClick={() => setConfirmBuyNowOpen(true)}
+                      disabled={isBuyingNow || isClosed || isTimeEnded}
+                      className='absolute inset-y-0 right-0 flex flex-col md:flex-row md:gap-1 items-center justify-center bg-[#003C71] text-white text-[11px] md:text-sm leading-tight font-semibold hover:brightness-110 transition-[filter] px-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none'
                       style={{ width: 'calc(30% + 18px)', clipPath: 'polygon(20px 0, 100% 0, 100% 100%, 0 100%)' }}
                     >
-                      <span>Buy Now</span>
-                      <span>GHS {lot.buyNowPrice.toFixed(2)}</span>
+                      {isBuyingNow ? (
+                        <Loader2 className='w-4 h-4 animate-spin' />
+                      ) : (
+                        <>
+                          <span>Buy Now</span>
+                          <span>GHS {lot.buyNowPrice.toFixed(2)}</span>
+                        </>
+                      )}
                     </button>
                   )}
                 </div>
@@ -395,11 +400,21 @@ export default function ProductDetails({ params }: { params: Promise<{ id: strin
 
                 <div className='flex items-center my-2 gap-4'>
                   <div className='flex-1 min-w-0'>
-                    <InputTemplate placeholder='GHS 0.00' className='h-11 shadow-none w-full' inputAlign='center' />
+                    <InputTemplate
+                      placeholder='GHS 0.00'
+                      className='h-11 shadow-none w-full'
+                      inputAlign='center'
+                      type='number'
+                      value={maxBidInput}
+                      onChange={(e) => setMaxBidInput(e.target.value)}
+                    />
                   </div>
                   <div className='flex-1 min-w-0'>
-                    <AlertDialogTemplate
-                      trigger={<ButtonTemplate title='Set Max Bid' className='bg-[#FFCC00] text-black hover:bg-[#FFCC00] h-11 w-full' />}
+                    <ButtonTemplate
+                      title={isSettingMaxBid ? <Loader2 className='w-4 h-4 animate-spin mx-auto' /> : 'Set Max Bid'}
+                      className='bg-[#FFCC00] text-black hover:bg-[#FFCC00] h-11 w-full'
+                      disabled={!isMaxBidValid || isSettingMaxBid || isClosed || isTimeEnded}
+                      onClick={() => setConfirmMaxBidOpen(true)}
                     />
                   </div>
                 </div>
@@ -458,6 +473,41 @@ export default function ProductDetails({ params }: { params: Promise<{ id: strin
 
         <RelatedProducts categoryId={lot.category?.id} excludeLotId={lot.id} />
       </div>
+
+      <AlertDialog open={confirmMaxBidOpen} onOpenChange={setConfirmMaxBidOpen}>
+        <AlertDialogContent size='sm'>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Set max bid?</AlertDialogTitle>
+            <AlertDialogDescription>
+              We&apos;ll automatically bid on your behalf up to{' '}
+              <span className='font-medium text-foreground'>
+                GHS {Number.isFinite(parsedMaxBid) ? parsedMaxBid.toFixed(2) : '0.00'}
+              </span>{' '}
+              as others bid on this item.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmMaxBid}>Confirm</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={confirmBuyNowOpen} onOpenChange={setConfirmBuyNowOpen}>
+        <AlertDialogContent size='sm'>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Buy this item now?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You&apos;ll purchase <span className='font-medium text-foreground'>{lot.title}</span> immediately for{' '}
+              <span className='font-medium text-foreground'>GHS {lot.buyNowPrice.toFixed(2)}</span>, ending the auction.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmBuyNow}>Buy Now</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </section>
   )
 }

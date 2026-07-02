@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useAxios } from "@/hooks/use-axios";
 import { type AuctionLot } from "../../(all-items)/_logics/auctions";
 import { showToast } from "@/components/templates/toast-template";
@@ -30,6 +30,8 @@ export function useWatchlist(params: { page?: number; limit?: number } = {}) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [removingIds, setRemovingIds] = useState<Set<number>>(new Set());
+  const [resyncToken, setResyncToken] = useState(0);
+  const refetch = useCallback(() => setResyncToken(t => t + 1), []);
 
   useEffect(() => {
     let cancelled = false;
@@ -78,7 +80,7 @@ export function useWatchlist(params: { page?: number; limit?: number } = {}) {
     return () => {
       cancelled = true;
     };
-  }, [params.page, params.limit]);
+  }, [params.page, params.limit, resyncToken]);
 
   async function removeFromWatchlist(lotId: number) {
     setRemovingIds(prev => new Set(prev).add(lotId));
@@ -100,5 +102,5 @@ export function useWatchlist(params: { page?: number; limit?: number } = {}) {
     }
   }
 
-  return { data, isLoading, error, removeFromWatchlist, removingIds };
+  return { data, isLoading, error, removeFromWatchlist, removingIds, refetch };
 }

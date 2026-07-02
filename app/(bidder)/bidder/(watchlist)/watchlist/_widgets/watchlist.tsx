@@ -5,9 +5,10 @@ import { LotCardItem } from '@/components/generals/lot-card-item'
 import { useWatchlist } from '../../_logics/useWatchlist'
 import { useWatchlistIds } from '@/app/(bidder)/bidder/(all-items)/_logics/useWatchlistIds'
 import { useLotRealtime } from '@/app/(bidder)/bidder/(all-items)/_logics/useLotRealtime'
+import { useResyncOnReconnect } from '@/components/generals/providers/websocket-provider'
 
 export default function Watchlist() {
-    const { data, isLoading, error } = useWatchlist({ page: 1, limit: 20 })
+    const { data, isLoading, error, refetch } = useWatchlist({ page: 1, limit: 20 })
     const { watchlistIds } = useWatchlistIds()
 
     const lots = useMemo(() => {
@@ -18,6 +19,7 @@ export default function Watchlist() {
     }, [data, watchlistIds])
 
     const realtimeLots = useLotRealtime(lots)
+    useResyncOnReconnect(refetch)
 
     if (isLoading) {
         return (

@@ -9,6 +9,7 @@ type ConnectionState = 'idle' | 'connecting' | 'connected' | 'reconnecting'
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL ?? 'ws://localhost:8001/api/websocket/connect'
 const HEARTBEAT_INTERVAL_MS = 30_000
+const HEARTBEAT_ACK_TIMEOUT_MS = 10_000
 const MAX_RECONNECT_DELAY_MS = 30_000
 const CLOSE_SETTLE_MS = 300
 
@@ -34,6 +35,8 @@ export class WebSocketClient {
   private reconnectAttempt = 0
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null
   private heartbeatTimer: ReturnType<typeof setInterval> | null = null
+  private heartbeatAckTimer: ReturnType<typeof setTimeout> | null = null
+  private heartbeatAckSupported = false
   private tokenRefresher: TokenRefresher | null = null
   private refreshInFlight = false
   private wasKicked = false
@@ -42,6 +45,7 @@ export class WebSocketClient {
   private tabRelay: TabRelay | null = null
   private isLeader = false
   private initialized = false
+  private auctionRoomRefs = new Map<string, number>()
 
   init(options: { onTokenRefresh: TokenRefresher }) {
     if (this.initialized) return
@@ -94,7 +98,15 @@ export class WebSocketClient {
 
   private onVisibilityChange = () => {
     if (document.visibilityState !== 'visible' || !this.isLeader) return
-    if (this.state === 'connected') return
+
+    if (this.state === 'connected') {
+      // The socket may be a "zombie" — readyState still OPEN but the underlying
+      // connection silently died while the tab was backgrounded/asleep. Probe
+      // immediately instead of waiting up to HEARTBEAT_INTERVAL_MS for the next tick.
+      this.sendHeartbeatProbe()
+      return
+    }
+
     this.wasKicked = false
     void this.ensureConnected()
   }
@@ -142,6 +154,33 @@ export class WebSocketClient {
       return
     }
     this.tabRelay?.requestSend(msg)
+  }
+
+  /** Ref-counted auction room membership — safe to call from multiple hook instances
+   *  wanting the same auctionId at once. Returns a leave function. */
+  joinAuction(auctionId: string): () => void {
+    const count = this.auctionRoomRefs.get(auctionId) ?? 0
+    this.auctionRoomRefs.set(auctionId, count + 1)
+    if (count === 0) this.send({ type: 'join_auction', auctionId })
+
+    let left = false
+    return () => {
+      if (left) return
+      left = true
+      const remaining = (this.auctionRoomRefs.get(auctionId) ?? 1) - 1
+      if (remaining <= 0) {
+        this.auctionRoomRefs.delete(auctionId)
+        this.send({ type: 'leave_auction', auctionId })
+      } else {
+        this.auctionRoomRefs.set(auctionId, remaining)
+      }
+    }
+  }
+
+  private replayAuctionRooms() {
+    for (const auctionId of this.auctionRoomRefs.keys()) {
+      this.sendRaw({ type: 'join_auction', auctionId })
+    }
   }
 
   private sendRaw(msg: WsMessage) {
@@ -225,6 +264,13 @@ export class WebSocketClient {
       this.wasKicked = false
       this.setState('connected')
       this.startHeartbeat(gen)
+      this.replayAuctionRooms()
+      return
+    }
+
+    if (msg.type === 'heartbeat_ack') {
+      this.heartbeatAckSupported = true
+      this.clearHeartbeatAckTimer()
       return
     }
 
@@ -242,6 +288,8 @@ export class WebSocketClient {
         await this.refreshTokenAndReauth(gen)
         return
       }
+      // Not a transient/idle condition (bad credentials) — don't auto-reconnect
+      // with the same doomed token, unlike connection_timeout below.
       this.stopHeartbeat()
       this.setState('idle')
       this.closeSocket()
@@ -249,9 +297,11 @@ export class WebSocketClient {
     }
 
     if (msg.type === 'connection_timeout') {
-      this.stopHeartbeat()
-      this.setState('idle')
+      // Server-initiated idle close — this is recoverable, unlike auth_error, so
+      // route it through the same path as a dropped connection instead of just
+      // going idle forever.
       this.closeSocket()
+      this.onConnectionLost()
       return
     }
 
@@ -278,6 +328,13 @@ export class WebSocketClient {
   }
 
   private handleClose() {
+    this.onConnectionLost()
+  }
+
+  /** Shared teardown for "the connection is gone" — whether we learned that from
+   *  the socket's own close event, or detected it ourselves (zombie connection,
+   *  server-side idle timeout notice). */
+  private onConnectionLost() {
     if (this.ws) this.ws = null
     this.stopHeartbeat()
     this.setState('idle')
@@ -309,11 +366,7 @@ export class WebSocketClient {
 
   private startHeartbeat(gen: number) {
     this.stopHeartbeat()
-    this.heartbeatTimer = setInterval(() => {
-      if (gen !== this.generation || this.state !== 'connected') return
-      if (this.ws?.readyState !== WebSocket.OPEN) return
-      this.sendRaw({ type: 'heartbeat' })
-    }, HEARTBEAT_INTERVAL_MS)
+    this.heartbeatTimer = setInterval(() => this.tickHeartbeat(gen), HEARTBEAT_INTERVAL_MS)
   }
 
   private stopHeartbeat() {
@@ -321,6 +374,57 @@ export class WebSocketClient {
       clearInterval(this.heartbeatTimer)
       this.heartbeatTimer = null
     }
+    this.clearHeartbeatAckTimer()
+  }
+
+  private clearHeartbeatAckTimer() {
+    if (this.heartbeatAckTimer !== null) {
+      clearTimeout(this.heartbeatAckTimer)
+      this.heartbeatAckTimer = null
+    }
+  }
+
+  /** Fires an out-of-band heartbeat immediately (e.g. on tab visibility regain)
+   *  instead of waiting for the next scheduled interval tick. */
+  private sendHeartbeatProbe() {
+    this.tickHeartbeat(this.generation)
+  }
+
+  private tickHeartbeat(gen: number) {
+    if (gen !== this.generation || this.state !== 'connected') return
+    if (this.ws?.readyState !== WebSocket.OPEN) return
+
+    this.sendRaw({ type: 'heartbeat', ts: Date.now() })
+
+    this.clearHeartbeatAckTimer()
+    this.heartbeatAckTimer = setTimeout(() => {
+      // Only enforce once we've seen the backend actually reply at least once —
+      // until then this is a no-op so behavior is unchanged against a backend
+      // that doesn't yet implement heartbeat_ack.
+      if (!this.heartbeatAckSupported) return
+      if (gen !== this.generation) return
+      this.handleZombieConnection(gen)
+    }, HEARTBEAT_ACK_TIMEOUT_MS)
+  }
+
+  /** The socket's readyState still reports OPEN and no close/error event has fired,
+   *  but the server hasn't acked a heartbeat within the timeout — treat it as dead
+   *  rather than waiting indefinitely for a close event that may never arrive. */
+  private handleZombieConnection(gen: number) {
+    if (gen !== this.generation) return
+    this.generation++
+
+    const ws = this.ws
+    this.ws = null
+    if (ws) {
+      ws.onopen = null
+      ws.onmessage = null
+      ws.onclose = null
+      ws.onerror = null
+      try { ws.close() } catch { /* best-effort only */ }
+    }
+
+    this.onConnectionLost()
   }
 
   private closeSocket() {
