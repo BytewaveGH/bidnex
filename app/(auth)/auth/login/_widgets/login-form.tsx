@@ -43,7 +43,7 @@ export default function LoginForm() {
   const handleGoogleSignIn = async () => {
     setIsSocialLoading(true);
     document.cookie = `social_auth_role=${loginAs}; path=/; max-age=300; SameSite=Lax`;
-    await signIn("google", { redirectTo: "/auth/social-callback" });
+    await signIn("google", { callbackUrl: "/auth/social-callback" });
   };
 
   return (

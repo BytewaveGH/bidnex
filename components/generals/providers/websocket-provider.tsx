@@ -9,6 +9,7 @@ type Unsubscribe = () => void
 type WebSocketContextType = {
   subscribe: (handler: (msg: WsMessage) => void) => Unsubscribe
   send: (msg: WsMessage) => void
+  joinAuction: (auctionId: string) => Unsubscribe
   isConnected: boolean
 }
 
@@ -55,8 +56,12 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
     clientRef.current.send(msg)
   }, [])
 
+  const joinAuction = useCallback((auctionId: string) => {
+    return clientRef.current.joinAuction(auctionId)
+  }, [])
+
   return (
-    <WebSocketContext.Provider value={{ subscribe, send, isConnected }}>
+    <WebSocketContext.Provider value={{ subscribe, send, joinAuction, isConnected }}>
       {children}
     </WebSocketContext.Provider>
   )
@@ -66,4 +71,24 @@ export function useWebSocket() {
   const ctx = useContext(WebSocketContext)
   if (!ctx) throw new Error('useWebSocket must be used inside WebSocketProvider')
   return ctx
+}
+
+/**
+ * Fires `onReconnect` on every isConnected false->true transition, skipping the
+ * very first connect since that data is already fresh from the initial fetch.
+ * Used to resync REST state after a dropped connection comes back.
+ */
+export function useResyncOnReconnect(onReconnect: () => void) {
+  const { isConnected } = useWebSocket()
+  const hasConnectedOnceRef = useRef(false)
+  const onReconnectRef = useRef(onReconnect)
+
+  useEffect(() => {
+    onReconnectRef.current = onReconnect
+  })
+
+  useEffect(() => {
+    if (isConnected && hasConnectedOnceRef.current) onReconnectRef.current()
+    if (isConnected) hasConnectedOnceRef.current = true
+  }, [isConnected])
 }

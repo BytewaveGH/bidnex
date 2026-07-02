@@ -12,6 +12,7 @@ export interface ProductCardType {
     marketPrice: string
     currentBid: number
     increment: number
+    buyNowPrice?: number
 }
 
 export interface CategoryType {

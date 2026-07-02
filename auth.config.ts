@@ -106,6 +106,8 @@ export const authConfig: NextAuthConfig = {
           clearTimeout(timeout);
 
           const json = await response.json();
+          console.log("loginAs:", socialRole);
+          console.log("SOCIAL LOGIN RESPONSE:", json);
           if (json.data) {
             const d = json.data;
             const accountType = (d.user.accountType ?? socialRole) as "vendor" | "bidder";

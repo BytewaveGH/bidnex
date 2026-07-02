@@ -7,6 +7,7 @@ import ButtonTemplate from "../templates/button-template";
 import { LotCardItem } from "./lot-card-item";
 import { usePublicAuctions } from "@/app/(bidder)/bidder/(all-items)/_logics/usePublicAuctions";
 import { useLotRealtime } from "@/app/(bidder)/bidder/(all-items)/_logics/useLotRealtime";
+import { useResyncOnReconnect } from "@/components/generals/providers/websocket-provider";
 
 export default function FeaturedItems() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -17,7 +18,8 @@ export default function FeaturedItems() {
   const { data: session } = useSession();
   const isLoggedIn = session?.user?.userType === "bidder";
 
-  const { data, isLoading } = usePublicAuctions({ featured: true, limit: 10 });
+  const { data, isLoading, refetch } = usePublicAuctions({ featured: true, limit: 10 });
+  useResyncOnReconnect(refetch);
 
   const baseLots = useMemo(() => {
     if (!data) return [];

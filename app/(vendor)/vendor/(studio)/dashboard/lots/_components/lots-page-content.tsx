@@ -7,6 +7,7 @@ import { Inventory } from "./inventory";
 import { KpiStrip } from "./kpi-strip";
 import { NewProductSheet } from "./new-product-sheet";
 import { RecentOrders } from "./recent-orders";
+import { StatusCreateLot } from "./status-create-lot";
 import { TopProducts } from "./top-products";
 
 type LotsPageContentProps = {
@@ -25,6 +26,7 @@ export function LotsPageContent({ formattedDate }: LotsPageContentProps) {
         </div>
 
         <div className="flex flex-wrap items-end justify-end gap-2 lg:w-fit">
+          <StatusCreateLot onSuccess={() => setRefreshToken((token) => token + 1)} />
           <NewProductSheet onSuccess={() => setRefreshToken((token) => token + 1)} />
         </div>
       </div>
