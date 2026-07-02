@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/pagination'
 import { useMyBids } from '../../_logics/useMyBids'
 import { useLotRealtime } from '@/app/(bidder)/bidder/(all-items)/_logics/useLotRealtime'
+import { useResyncOnReconnect } from '@/components/generals/providers/websocket-provider'
 
 const PAGE_SIZE = 12
 
@@ -23,9 +24,10 @@ type MyBidsProps = {
 }
 
 export default function MyBids({ page, onPageChange, onTotalPagesChange }: MyBidsProps) {
-    const { data, lots, isLoading, error } = useMyBids({ page, limit: PAGE_SIZE })
+    const { data, lots, isLoading, error, refetch } = useMyBids({ page, limit: PAGE_SIZE })
     const baseLots = useMemo(() => lots, [lots])
     const realtimeLots = useLotRealtime(baseLots)
+    useResyncOnReconnect(refetch)
 
     const totalPages = data ? Math.max(1, Math.ceil(data.count / PAGE_SIZE)) : 1
 

@@ -4,6 +4,7 @@ import { memo, useCallback, useMemo } from 'react'
 import ProductCard from './product-card'
 import { mapLotToProductCard } from '@/app/(bidder)/bidder/(all-items)/_logics/auctions'
 import { useBidding } from '@/app/(bidder)/bidder/(all-items)/_logics/useBidding'
+import { useMaxBidding } from '@/app/(bidder)/bidder/(all-items)/_logics/useMaxBidding'
 import { useWatchlistIds } from '@/app/(bidder)/bidder/(all-items)/_logics/useWatchlistIds'
 import { useNavCounts } from './providers/nav-counts-provider'
 import type { RealtimeLot } from '@/app/(bidder)/bidder/(all-items)/_logics/useLotRealtime'
@@ -17,8 +18,10 @@ type LotCardItemProps = {
 function LotCardItemComponent({ lot, isLoggedIn = true, onExpired }: LotCardItemProps) {
   const { watchlistIds, pendingIds, toggleWatchlist } = useWatchlistIds()
   const { placeBid, getState, clearError } = useBidding()
+  const { setMaxBid, getState: getMaxBidState, clearError: clearMaxBidError } = useMaxBidding()
   const { incrementMyBidsCount } = useNavCounts()
   const bidState = getState(lot.id)
+  const maxBidState = getMaxBidState(lot.id)
   const product = useMemo(() => mapLotToProductCard(lot), [lot])
 
   const onWatchlistToggle = useCallback(() => {
@@ -38,6 +41,15 @@ function LotCardItemComponent({ lot, isLoggedIn = true, onExpired }: LotCardItem
   const onClearBidError = useCallback(() => {
     clearError(lot.id)
   }, [lot.id, clearError])
+
+  const onSetMaxBid = useCallback(
+    async (amount: number) => setMaxBid(lot.id, amount),
+    [lot.id, setMaxBid],
+  )
+
+  const onClearMaxBidError = useCallback(() => {
+    clearMaxBidError(lot.id)
+  }, [lot.id, clearMaxBidError])
 
   const handleExpired = useCallback(() => {
     onExpired?.(lot.id)
@@ -59,6 +71,10 @@ function LotCardItemComponent({ lot, isLoggedIn = true, onExpired }: LotCardItem
       bidError={bidState.error}
       onBid={onBid}
       onClearBidError={onClearBidError}
+      isSettingMaxBid={maxBidState.loading}
+      maxBidError={maxBidState.error}
+      onSetMaxBid={onSetMaxBid}
+      onClearMaxBidError={onClearMaxBidError}
       onExpired={handleExpired}
     />
   )

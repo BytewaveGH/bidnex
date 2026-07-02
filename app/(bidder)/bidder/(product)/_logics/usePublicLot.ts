@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useAxios } from "@/hooks/use-axios";
-import { type AuctionLotImage, type AuctionLotCategory } from "../../(all-items)/_logics/auctions";
+import { type AuctionLotImage, type AuctionLotCategory, type LotStatus, type LotReviewStatus } from "../../(all-items)/_logics/auctions";
 
 export type PublicLotAuction = {
   id: number;
@@ -32,9 +32,10 @@ export type PublicLotDetail = {
   bidIncrement: number;
   bidCount: number;
   reservePrice: number;
+  msrp: number;
   buyNowPrice: number;
-  status: string;
-  reviewStatus: string;
+  status: LotStatus;
+  reviewStatus: LotReviewStatus;
   reviewRejectReason: string;
   lotOrder: number;
   bidStartTime: string;
@@ -63,6 +64,8 @@ export function usePublicLot(id: string) {
   const [data, setData] = useState<PublicLotDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [resyncToken, setResyncToken] = useState(0);
+  const refetch = useCallback(() => setResyncToken(t => t + 1), []);
 
   useEffect(() => {
     if (!id) return;
@@ -107,7 +110,7 @@ export function usePublicLot(id: string) {
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [id, resyncToken]);
 
-  return { data, isLoading, error };
+  return { data, isLoading, error, refetch };
 }

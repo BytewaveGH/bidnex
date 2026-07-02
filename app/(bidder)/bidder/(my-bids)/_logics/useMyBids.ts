@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useAxios } from "@/hooks/use-axios";
 import { type AuctionLot } from "../../(all-items)/_logics/auctions";
@@ -60,6 +60,8 @@ export function useMyBids(params: MyBidsQueryParams = {}) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const hasLoadedRef = useRef(false);
+  const [resyncToken, setResyncToken] = useState(0);
+  const refetch = useCallback(() => setResyncToken(t => t + 1), []);
 
   useEffect(() => {
     if (!session?.user) {
@@ -117,13 +119,13 @@ export function useMyBids(params: MyBidsQueryParams = {}) {
     return () => {
       cancelled = true;
     };
-  }, [session?.user, params.page, params.limit]);
+  }, [session?.user, params.page, params.limit, resyncToken]);
 
   const lots = data?.data && currentUserId
     ? normalizeMyBidLots(data.data, currentUserId)
     : [];
 
-  return { data, lots, isLoading, error };
+  return { data, lots, isLoading, error, refetch };
 }
 
 export function useMyBidsCount() {
