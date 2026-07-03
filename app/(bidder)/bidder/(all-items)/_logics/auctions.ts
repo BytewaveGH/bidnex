@@ -7,6 +7,7 @@ export type AuctionLotCategory = {
   name: string;
   slug: string;
   description: string;
+  iconUrl?: string;
   createdAt: string;
 };
 
@@ -32,9 +33,9 @@ export type AuctionLot = {
   bidCount: number;
   winnerId?: number | null;
   bidderIds: number[];
-  reservePrice: number;
-  msrp: number;
-  buyNowPrice: number;
+  reservePrice?: number;
+  msrp?: number;
+  buyNowPrice?: number;
   status: LotStatus;
   reviewStatus: LotReviewStatus;
   reviewRejectReason: string;
@@ -44,6 +45,7 @@ export type AuctionLot = {
   sku: string;
   pickupAvailable: boolean;
   shippingAvailable: boolean;
+  isFeatured?: boolean;
   category?: AuctionLotCategory | null;
   primaryImage: string;
   images: AuctionLotImage[];
@@ -61,7 +63,7 @@ export type Auction = {
   vendorId: number;
   isFeatured: boolean;
   locationName: string;
-  locationAddress: string;
+  locationAddress?: string;
   lotCount: number;
   lotInterval: number;
   createdAt: string;
@@ -110,6 +112,7 @@ export type LotsQueryParams = {
   page?: number;
   limit?: number;
   orderBy?: LotsOrderBy;
+  buyNow?: boolean;
 };
 
 export type LotsPage = {
@@ -124,8 +127,8 @@ export type LotsApiResponse = {
   status: boolean;
 };
 
-export function buildLotsParams(params: LotsQueryParams): Record<string, string | number> {
-  const query: Record<string, string | number> = {};
+export function buildLotsParams(params: LotsQueryParams): Record<string, string | number | boolean> {
+  const query: Record<string, string | number | boolean> = {};
   if (params.page !== undefined) query.page = params.page;
   if (params.limit !== undefined) query.limit = params.limit;
   if (params.search) query.search = params.search;
@@ -135,6 +138,7 @@ export function buildLotsParams(params: LotsQueryParams): Record<string, string 
   if (params.maxPrice !== undefined) query.maxPrice = params.maxPrice;
   if (params.auctionId !== undefined) query.auctionId = params.auctionId;
   if (params.orderBy) query.orderBy = params.orderBy;
+  if (params.buyNow !== undefined) query.buyNow = params.buyNow;
   return query;
 }
 
@@ -174,9 +178,9 @@ export function mapLotToProductCard(lot: AuctionLot) {
     bidEndTime: lot.bidEndTime,
     bidders: lot.bidCount,
     productName: lot.title,
-    marketPrice: `GHS ${lot.msrp.toFixed(2)}`,
-    currentBid: lot.currentBid,
-    increment: lot.bidIncrement,
+    marketPrice: `GHS ${(lot.msrp ?? 0).toFixed(2)}`,
+    currentBid: lot.currentBid ?? 0,
+    increment: lot.bidIncrement ?? 0,
     buyNowPrice: lot.buyNowPrice,
   };
 }

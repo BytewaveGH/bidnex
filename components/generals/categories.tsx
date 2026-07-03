@@ -15,45 +15,45 @@ const mockProducts: CategoryType[] = [
     {
         id: 1,
         image: electronics,
-        description: <p>Bid on TVs, gadgets, and<br />everyday electronics at<br />competitive prices.</p>,
+        description: 'Bid on TVs, gadgets, and everyday electronics at competitive prices.',
         name: 'Electronics',
         },
     {
         id: 2,
         image: clothing,
-        description:  <p>Find quality clothing<br />and fashion items you<br />can bid on and save<br />more</p>,
+        description: 'Find quality clothing and fashion items you can bid on and save more',
         name: 'Clothing',
-        
+
     },
     {
         id: 3,
         image: utensils,
-        description:  <p>Discover household<br/>and kitchen items that<br/>make everyday living<br/>easier.</p>,
+        description: 'Discover household and kitchen items that make everyday living easier.',
         name: 'Home / Kitchen',
-        
+
     },
     {
         id: 4,
         image: office,
-        description:  <p>Bid on office supplies and<br/>equipment for work or<br/>business use.</p>,
+        description: 'Bid on office supplies and equipment for work or business use.',
         name: 'Office Products',
-        
+
     },
     {
         id: 5,
         image: phoneAccessories,
-        description:  <p>Get smartphones, chargers,<br/>and accessories through<br/>fair bidding.</p>,
-        name: <p>Phones &<br />Accessories</p>,
-        
+        description: 'Get smartphones, chargers, and accessories through fair bidding.',
+        name: 'Phones & Accessories',
+
     },
     {
         id: 6,
         image: car,
-        description:  <p>Find vehicle parts and<br/>accessories to keep<br/>your car in good<br/>shape.</p>,
+        description: 'Find vehicle parts and accessories to keep your car in good shape.',
         name: 'Car Parts',
-        
+
     },
-    
+
 ]
 
 export default function Categories() {

@@ -12,13 +12,24 @@ import {
 import { Label } from "@/components/ui/label"
 
 export function CheckboxTemplate(
-    { label, description }: { label: string, description?: string }
+    { label, description, id = "terms-checkbox", checked, onCheckedChange }: {
+      label: string
+      description?: string
+      id?: string
+      checked?: boolean
+      onCheckedChange?: (checked: boolean) => void
+    }
 ) {
   return (
     <FieldGroup className="max-w-sm">
       <Field orientation="horizontal" className="flex items-center gap-2">
-        <Checkbox id="terms-checkbox" name="terms-checkbox" />
-        <Label htmlFor="terms-checkbox" className="text-xs font-normal">{label}</Label>
+        <Checkbox
+          id={id}
+          name={id}
+          checked={checked}
+          onCheckedChange={(value) => onCheckedChange?.(value === true)}
+        />
+        <Label htmlFor={id} className="text-xs font-normal">{label}</Label>
       </Field>
       {description && <FieldDescription>{description}</FieldDescription>}
     </FieldGroup>

@@ -1,6 +1,18 @@
 import type { NextAuthConfig } from "next-auth";
+import { CredentialsSignin } from "next-auth";
+import { encode as defaultEncode } from "next-auth/jwt";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
+
+class LoginError extends CredentialsSignin {
+  constructor(message: string) {
+    super();
+    this.code = message;
+  }
+}
+
+const REMEMBERED_MAX_AGE = 30 * 24 * 60 * 60; // 30 days
+const DEFAULT_MAX_AGE = 24 * 60 * 60; // 1 day
 
 const roleRedirects: Record<string, string> = {
   admin: "/admin/programs",
@@ -35,7 +47,9 @@ export const authConfig: NextAuthConfig = {
           );
 
           const json = await response.json();
-          if (!json.data) return null;
+          if (!json.data) {
+            throw new LoginError(json.message ?? json.error ?? "Invalid credentials");
+          }
 
           const d = json.data;
           const accountType = d.user.accountType as "vendor" | "bidder";
@@ -58,16 +72,26 @@ export const authConfig: NextAuthConfig = {
             refreshTokenExpiry: d.refreshTokenExpiry * 1000,
             onboarding: false,
             organizationId: "",
+            rememberMe: credentials?.rememberMe === "true",
           };
-        } catch {
-          return null;
+        } catch (err) {
+          if (err instanceof LoginError) throw err;
+          throw new LoginError("Network error. Please try again.");
         } finally {
           clearTimeout(timeout);
         }
       },
     }),
   ],
-  session: { strategy: "jwt", maxAge: 30 * 24 * 60 * 60 },
+  session: { strategy: "jwt", maxAge: REMEMBERED_MAX_AGE },
+  jwt: {
+    async encode(params) {
+      const rememberMe = (params.token as { rememberMe?: boolean } | undefined)
+        ?.rememberMe;
+      const maxAge = rememberMe === false ? DEFAULT_MAX_AGE : REMEMBERED_MAX_AGE;
+      return defaultEncode({ ...params, maxAge });
+    },
+  },
   pages: {
     signIn: "/auth/login",
     error: "/auth/login",
@@ -125,6 +149,7 @@ export const authConfig: NextAuthConfig = {
             token.refreshTokenExpiry = d.refreshTokenExpiry * 1000;
             token.onboarding = false;
             token.organizationId = "";
+            token.rememberMe = true;
           }
         } catch {}
 
@@ -147,6 +172,7 @@ export const authConfig: NextAuthConfig = {
         token.refreshTokenExpiry = user.refreshTokenExpiry;
         token.onboarding = user.onboarding;
         token.organizationId = user.organizationId;
+        token.rememberMe = user.rememberMe;
       }
 
       // Skip the network refresh in Edge Runtime (middleware). Middleware only

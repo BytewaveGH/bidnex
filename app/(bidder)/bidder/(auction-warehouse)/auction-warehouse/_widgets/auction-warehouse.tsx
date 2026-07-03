@@ -1,11 +1,8 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useSession } from 'next-auth/react'
-import { LotCardItem } from '@/components/generals/lot-card-item'
-import { usePublicLots } from '@/app/(bidder)/bidder/(all-items)/_logics/usePublicLots'
-import { useLotRealtime } from '@/app/(bidder)/bidder/(all-items)/_logics/useLotRealtime'
-import { useResyncOnReconnect } from '@/components/generals/providers/websocket-provider'
+import { useEffect, useMemo, useRef } from 'react'
+import AuctionCard from '@/components/generals/auction-card'
+import { usePublicAuctions } from '@/app/(bidder)/bidder/(all-items)/_logics/usePublicAuctions'
 import {
     Pagination,
     PaginationContent,
@@ -18,35 +15,16 @@ import {
 
 const PAGE_SIZE = 12
 
-type BuyNowProps = {
+type AuctionWarehouseProps = {
     page: number
     onPageChange: (page: number) => void
     onTotalPagesChange?: (total: number) => void
 }
 
-export default function BuyNow({ page, onPageChange, onTotalPagesChange }: BuyNowProps) {
-    const { data: session } = useSession()
-    const isLoggedIn = session?.user?.userType === 'bidder'
-
-    const { data, isLoading, error, refetch } = usePublicLots({ page, limit: PAGE_SIZE, buyNow: true })
-    const baseLots = useMemo(() => data?.data ?? [], [data])
-    const realtimeLots = useLotRealtime(baseLots)
-    useResyncOnReconnect(refetch)
-
-    const [expiredIds, setExpiredIds] = useState<Set<number>>(new Set())
-    useEffect(() => { setExpiredIds(new Set()) }, [page])
-    const handleExpired = useCallback((id: number) => {
-        setExpiredIds(prev => new Set(prev).add(id))
-    }, [])
-    const visibleLots = useMemo(() => realtimeLots.filter(l => !expiredIds.has(l.id)), [realtimeLots, expiredIds])
-
+export default function AuctionWarehouse({ page, onPageChange, onTotalPagesChange }: AuctionWarehouseProps) {
+    const { data, isLoading, error } = usePublicAuctions({ page, limit: PAGE_SIZE, status: 'active' })
+    const auctions = useMemo(() => data?.data ?? [], [data])
     const totalPages = data ? Math.max(1, Math.ceil(data.count / PAGE_SIZE)) : 1
-
-    const onTotalPagesChangeRef = useRef(onTotalPagesChange)
-    onTotalPagesChangeRef.current = onTotalPagesChange
-    useEffect(() => {
-        onTotalPagesChangeRef.current?.(totalPages)
-    }, [totalPages])
 
     const pageNumbers = useMemo(() => {
         if (totalPages <= 3) return Array.from({ length: totalPages }, (_, i) => i + 1)
@@ -55,11 +33,17 @@ export default function BuyNow({ page, onPageChange, onTotalPagesChange }: BuyNo
         return [page - 1, page, page + 1]
     }, [page, totalPages])
 
+    const onTotalPagesChangeRef = useRef(onTotalPagesChange)
+    onTotalPagesChangeRef.current = onTotalPagesChange
+    useEffect(() => {
+        onTotalPagesChangeRef.current?.(totalPages)
+    }, [totalPages])
+
     if (isLoading && !data) {
         return (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-4 w-full">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 w-full">
                 {Array.from({ length: PAGE_SIZE }).map((_, i) => (
-                    <div key={i} className="h-[380px] sm:h-[480px] rounded-[16px] bg-[#F0F2F5] animate-pulse" />
+                    <div key={i} className="h-[320px] rounded-2xl bg-[#F0F2F5] animate-pulse" />
                 ))}
             </div>
         )
@@ -73,21 +57,19 @@ export default function BuyNow({ page, onPageChange, onTotalPagesChange }: BuyNo
         )
     }
 
-    if (visibleLots.length === 0) {
+    if (auctions.length === 0) {
         return (
             <div className="w-full flex justify-center items-center py-20">
-                <p className="text-[#657688] text-sm">No buy now items available right now.</p>
+                <p className="text-[#657688] text-sm">No auctions available right now.</p>
             </div>
         )
     }
 
     return (
         <div className="w-full flex flex-col items-center mb-20">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-4 w-full">
-                {visibleLots.map((lot) => (
-                    <div key={lot.id} className="w-full">
-                        <LotCardItem lot={lot} isLoggedIn={isLoggedIn} onExpired={handleExpired} />
-                    </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 w-full">
+                {auctions.map((auction) => (
+                    <AuctionCard key={auction.id} auction={auction} />
                 ))}
             </div>
 

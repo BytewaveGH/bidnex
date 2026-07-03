@@ -5,8 +5,8 @@ export type CreateVendorLotPayload = {
   title: string;
   description: string;
   condition: string;
-  reservePrice: number;
-  buyNowPrice: number;
+  reservePrice?: number;
+  buyNowPrice?: number;
   categoryId: number;
   pickupAvailable: boolean;
   shippingAvailable: boolean;
@@ -63,8 +63,8 @@ export type VendorLot = {
   currentBid: number;
   bidIncrement: number;
   bidCount: number;
-  reservePrice: number;
-  buyNowPrice: number;
+  reservePrice?: number;
+  buyNowPrice?: number;
   status: LotRow["status"];
   reviewStatus: VendorLotReviewStatus;
   reviewRejectReason?: string;

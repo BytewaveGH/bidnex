@@ -12,10 +12,12 @@ const roleRedirects: Record<string, string> = {
   eso: "/eso/programs",
   participant: "/coach/onboarding",
 };
+
 export function useLogin() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loginAs, setLoginAs] = useState<"bidder" | "vendor">("bidder");
+  const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async () => {
@@ -36,13 +38,14 @@ export function useLogin() {
         username,
         password,
         loginAs,
+        rememberMe: rememberMe ? "true" : "false",
         redirect: false,
       });
 
       console.log("SIGNIN RESULT:", result);
 
       if (!result || result.error) {
-        showToast("failure", result?.error || "Login failed");
+        showToast("failure", result?.code || "Login failed");
         return;
       }
 
@@ -82,6 +85,8 @@ export function useLogin() {
     setPassword,
     loginAs,
     setLoginAs,
+    rememberMe,
+    setRememberMe,
     isLoading,
     handleLogin,
   };
