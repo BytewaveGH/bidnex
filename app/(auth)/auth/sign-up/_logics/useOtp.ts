@@ -57,7 +57,7 @@ export function useOtp(phone: string, onSuccess: () => void, accountType: 'bidde
                 method: 'POST',
                 url: '/auth/verify-otp',
                 headers: { 'X-Tenant-Domain': accountType },
-                params: { phone },
+                params: { username: phone, getToken: true },
                 data: { otp },
             })
             if (response.status >= 400) {

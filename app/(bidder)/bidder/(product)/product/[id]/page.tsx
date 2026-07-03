@@ -349,7 +349,7 @@ export default function ProductDetails({ params }: { params: Promise<{ id: strin
                 CURRENT BID: <span className='font-semibold text-lg'>GHS {currentBid.toFixed(2)}</span>
               </p>
               <p className='text-sm text-[#657688]'>
-                MKT PR: <span className='text-lg font-semibold'>GHS {lot.msrp.toFixed(2)}</span>
+                MKT PR: <span className='text-lg font-semibold'>GHS {(lot.msrp ?? 0).toFixed(2)}</span>
               </p>
             </div>
 
@@ -499,7 +499,7 @@ export default function ProductDetails({ params }: { params: Promise<{ id: strin
             <AlertDialogTitle>Buy this item now?</AlertDialogTitle>
             <AlertDialogDescription>
               You&apos;ll purchase <span className='font-medium text-foreground'>{lot.title}</span> immediately for{' '}
-              <span className='font-medium text-foreground'>GHS {lot.buyNowPrice.toFixed(2)}</span>, ending the auction.
+              <span className='font-medium text-foreground'>GHS {(lot.buyNowPrice ?? 0).toFixed(2)}</span>, ending the auction.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

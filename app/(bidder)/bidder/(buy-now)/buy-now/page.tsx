@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import TopNav from '@/components/generals/top-nav'
 import banner from '@/assets/images/buy-now.png'
 import CategoryBanner from '@/components/generals/category-banner'
@@ -7,6 +8,8 @@ import FilterBar from '@/components/generals/filter-bar'
 import BuyNow from './_widgets/buy-now'
 
 const BuyNowPage = () => {
+    const [page, setPage] = useState(1)
+
     return (
         <main className="min-h-screen w-full">
             <TopNav />
@@ -15,7 +18,7 @@ const BuyNowPage = () => {
                 <FilterBar />
             </section>
             <section className="page-container pb-10">
-                <BuyNow />
+                <BuyNow page={page} onPageChange={setPage} />
             </section>
         </main>
     )
