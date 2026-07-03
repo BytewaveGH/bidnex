@@ -240,7 +240,11 @@ export default function ProductCard({
 
                 {!isWon && !isLoggedIn && (
                     <div onClick={(e) => e.stopPropagation()}>
-                        <ButtonTemplate title="Login To Bid" className="bg-black text-white hover:bg-black w-full h-10 mt-3" />
+                        <ButtonTemplate
+                            title="Login to Bid"
+                            className="bg-black text-white hover:bg-black w-full h-10 mt-3"
+                            onClick={() => router.push('/auth/login')}
+                        />
                     </div>
                 )}
 

@@ -35,6 +35,7 @@ declare module "next-auth" {
     refreshTokenExpiry: number
     onboarding: boolean
     organizationId: string
+    rememberMe: boolean
   }
 }
 
@@ -54,5 +55,6 @@ declare module "next-auth/jwt" {
     refreshTokenExpiry: number
     onboarding: boolean
     organizationId: string
+    rememberMe: boolean
   }
 }

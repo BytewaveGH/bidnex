@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { EyeOff } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import InputTemplate from "@/components/templates/input-template";
@@ -32,12 +32,13 @@ export default function LoginForm() {
     setPassword,
     loginAs,
     setLoginAs,
+    rememberMe,
+    setRememberMe,
     isLoading,
     handleLogin,
   } = useLogin();
 
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
   const [isSocialLoading, setIsSocialLoading] = useState(false);
 
   const handleGoogleSignIn = async () => {
@@ -54,7 +55,7 @@ export default function LoginForm() {
           Welcome Back!
         </h1>
         <p className="text-base text-[#657688] font-normal">
-          Don't?{" "}
+          Don't have an account?{" "}
           <Link
             href="/auth/sign-up"
             className="text-base text-[#13161A] font-normal underline"
@@ -90,6 +91,8 @@ export default function LoginForm() {
             className="h-11"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
+            name="username"
+            autoComplete="username"
           />
           <InputTemplate
             label="Password"
@@ -98,13 +101,25 @@ export default function LoginForm() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             icon={
-              <EyeOff className="w-4 h-4 text-[#667185] hover:cursor-pointer" />
+              showPassword ? (
+                <Eye className="w-4 h-4 text-[#667185] hover:cursor-pointer" />
+              ) : (
+                <EyeOff className="w-4 h-4 text-[#667185] hover:cursor-pointer" />
+              )
             }
+            onIconClick={() => setShowPassword((prev) => !prev)}
             align="inline-end"
+            type={showPassword ? "text" : "password"}
+            name="password"
+            autoComplete="current-password"
           />
         </div>
         <div className="flex justify-between items-center mb-10">
-          <CheckboxTemplate label="Remember me" />
+          <CheckboxTemplate
+            label="Remember me"
+            checked={rememberMe}
+            onCheckedChange={setRememberMe}
+          />
           <div
             onClick={() => router.push("/auth/forgot-password")}
             className="text-sm text-[#475367] font-normal underline hover:cursor-pointer"

@@ -87,7 +87,7 @@ function PasswordStrengthIndicator({ password }: { password: string }) {
 }
 
 export default function InputTemplate(
-    { className, placeholder, label, icon, align, description, value, onChange, onKeyDown, type, showPasswordStrength, onIconClick, otpLength, inputAlign }: { className?: string, placeholder: string, label?: string, icon?: React.ReactNode, align?: 'inline-start' | 'inline-end' | 'block-start' | 'block-end', description?: string, value?: string, onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void, onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void, type?: string, showPasswordStrength?: boolean, onIconClick?: () => void, otpLength?: number, inputAlign?: 'left' | 'center' | 'right' }
+    { className, placeholder, label, icon, align, description, value, onChange, onKeyDown, type, showPasswordStrength, onIconClick, otpLength, inputAlign, name, autoComplete }: { className?: string, placeholder: string, label?: string, icon?: React.ReactNode, align?: 'inline-start' | 'inline-end' | 'block-start' | 'block-end', description?: string, value?: string, onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void, onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void, type?: string, showPasswordStrength?: boolean, onIconClick?: () => void, otpLength?: number, inputAlign?: 'left' | 'center' | 'right', name?: string, autoComplete?: string }
 ) {
   const hasValue = value && value.length > 0
   const showStrength = showPasswordStrength && hasValue
@@ -218,6 +218,8 @@ export default function InputTemplate(
           {...(isControlled ? { value: value ?? '', onChange } : {})}
           onKeyDown={onKeyDown}
           type={type}
+          name={name}
+          autoComplete={autoComplete}
           className={inputAlign === 'center' ? 'text-center' : inputAlign === 'right' ? 'text-right' : undefined}
         />
         <InputGroupAddon align={align}>

@@ -31,9 +31,9 @@ export type PublicLotDetail = {
   currentBid: number;
   bidIncrement: number;
   bidCount: number;
-  reservePrice: number;
-  msrp: number;
-  buyNowPrice: number;
+  reservePrice?: number;
+  msrp?: number;
+  buyNowPrice?: number;
   status: LotStatus;
   reviewStatus: LotReviewStatus;
   reviewRejectReason: string;

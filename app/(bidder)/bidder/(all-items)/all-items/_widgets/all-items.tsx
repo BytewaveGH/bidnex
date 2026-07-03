@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useSession } from 'next-auth/react'
 import { LotCardItem } from '@/components/generals/lot-card-item'
 import {
     Pagination,
@@ -31,6 +32,8 @@ type AllItemsProps = {
 }
 
 export default function AllItems({ condition, minPrice, maxPrice, categoryId, search, orderBy, page, onPageChange, onTotalPagesChange }: AllItemsProps) {
+    const { data: session } = useSession()
+    const isLoggedIn = session?.user?.userType === 'bidder'
     const { data, isLoading, error, refetch } = usePublicLots({ page, limit: PAGE_SIZE, condition, minPrice, maxPrice, categoryId, search, orderBy })
     const baseLots = useMemo(() => data?.data ?? [], [data])
     const realtimeLots = useLotRealtime(baseLots)
@@ -133,7 +136,7 @@ export default function AllItems({ condition, minPrice, maxPrice, categoryId, se
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-4 w-full">
                     {visibleLots.map((lot) => (
                         <div key={lot.id} className="w-full">
-                            <LotCardItem lot={lot} onExpired={handleExpired} />
+                            <LotCardItem lot={lot} isLoggedIn={isLoggedIn} onExpired={handleExpired} />
                         </div>
                     ))}
                 </div>
