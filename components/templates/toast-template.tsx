@@ -114,7 +114,7 @@ function Toast(props: ToastProps) {
         {/* Text Content */}
         <div className="flex-1 flex flex-col gap-0.5">
           <p className="text-sm font-bold text-gray-900">{title}</p>
-          <p className="text-xs text-gray-600">{description}</p>
+          <p className="text-xs text-gray-600 capitalize">{description}</p>
         </div>
         <div className='self-stretch w-[1.5px] bg-[#F0F2F5]' />
 

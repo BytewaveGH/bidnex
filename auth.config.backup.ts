@@ -55,6 +55,7 @@ export const authConfig: NextAuthConfig = {
             organizationId: "",
             phone: data.user.phone ?? "",
             isVerified: data.user.isVerified ?? false,
+            rememberMe: true,
           };
         } catch {
           return null;

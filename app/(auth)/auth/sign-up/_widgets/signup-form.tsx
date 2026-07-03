@@ -51,7 +51,7 @@ export default function SignupForm({
                     Let&apos;s Get You Started!
                 </h1>
                 <p className="text-base text-[#657688] font-normal">
-                    Already?{' '}
+                    Already have an account?{' '}
                     <Link href="/auth/login" className="text-base text-[#13161A] font-normal underline">
                         Sign In
                     </Link>

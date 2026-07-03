@@ -43,7 +43,7 @@ export default function TopNav({ onSearch, initialSearchValue }: { onSearch?: (q
   const isSignedIn = !!session?.user
   const [navItems] = useState<{ name: string, path: string }[]>([
     { name: 'All Items', path: '/bidder/all-items' },
-    { name: 'Categories', path: '/bidder/categories' },
+    { name: 'Auction Warehouse', path: '/bidder/auction-warehouse' },
     { name: 'Buy Now', path: '/bidder/buy-now' },
     { name: 'Popular', path: '/bidder/popular' },
   ])

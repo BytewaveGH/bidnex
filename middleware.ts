@@ -33,10 +33,18 @@ export default auth((req) => {
   // Redirect logged-in users away from auth pages (not from public browsing pages)
   const isAuthRoute = /\/auth\//.test(pathname)
   if (isLoggedIn && isAuthRoute) {
-    // Unverified users must be able to reach the verify page
+    // Unverified users must be redirected to (or kept on) the verify page,
+    // never allowed through to another auth page or the dashboard.
     const isVerified = (request.auth?.user as { isVerified?: boolean } | undefined)?.isVerified
-    if (pathname.startsWith('/auth/verify') && !isVerified) {
-      return NextResponse.next()
+    if (!isVerified) {
+      if (pathname.startsWith('/auth/verify')) {
+        return NextResponse.next()
+      }
+      const phone = (request.auth?.user as { phone?: string } | undefined)?.phone ?? ''
+      const verifyUrl = new URL('/auth/verify', request.url)
+      verifyUrl.searchParams.set('phone', phone)
+      verifyUrl.searchParams.set('accountType', userType ?? 'bidder')
+      return NextResponse.redirect(verifyUrl)
     }
     const destination = userType ? roleRedirects[userType] : undefined
     if (destination) {

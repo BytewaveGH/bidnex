@@ -2,6 +2,7 @@
 
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useMemo, useRef, useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import ButtonTemplate from "../templates/button-template";
 import { LotCardItem } from "./lot-card-item";
 import { usePublicLots } from "@/app/(bidder)/bidder/(all-items)/_logics/usePublicLots";
@@ -16,6 +17,8 @@ type RelatedProductsProps = {
 };
 
 export default function RelatedProducts({ categoryId, excludeLotId }: RelatedProductsProps) {
+  const { data: session } = useSession();
+  const isLoggedIn = session?.user?.userType === "bidder";
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
@@ -113,7 +116,7 @@ export default function RelatedProducts({ categoryId, excludeLotId }: RelatedPro
       >
         {realtimeLots.map((lot) => (
           <div key={lot.id} className="w-[340px] shrink-0">
-            <LotCardItem lot={lot} />
+            <LotCardItem lot={lot} isLoggedIn={isLoggedIn} />
           </div>
         ))}
       </div>
