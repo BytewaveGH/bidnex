@@ -2,7 +2,12 @@
   "permissions": {
     "allow": [
       "Bash(git stash *)",
-      "Bash(npx eslint *)"
+      "Bash(npx eslint *)",
+      "Bash(node -e \"const icons = require\\('/Users/m1pro/Desktop/PROJECTS/bytewave/bidnex/node_modules/lucide-react'\\); ['Gavel','TrendingUp','ShieldCheck','Truck','Users','Award','Sparkles','PackageCheck','Handshake','BadgeCheck','Rocket','Megaphone','Timer','Wallet','Star'].forEach\\(n => console.log\\(n, n in icons\\)\\)\")",
+      "Bash(mkdir -p \"/Users/m1pro/Desktop/PROJECTS/bytewave/bidnex/app/blog/_data\" \"/Users/m1pro/Desktop/PROJECTS/bytewave/bidnex/app/blog/_widgets\" \"/Users/m1pro/Desktop/PROJECTS/bytewave/bidnex/app/blog/[slug]/_widgets\")"
+    ],
+    "additionalDirectories": [
+      "/Users/m1pro/Desktop/PROJECTS/bytewave/bidnex/app/blog/[slug]"
     ]
   }
 }
