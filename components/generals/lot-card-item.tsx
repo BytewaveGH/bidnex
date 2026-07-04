@@ -6,7 +6,9 @@ import { mapLotToProductCard } from '@/app/(bidder)/bidder/(all-items)/_logics/a
 import { useBidding } from '@/app/(bidder)/bidder/(all-items)/_logics/useBidding'
 import { useMaxBidding } from '@/app/(bidder)/bidder/(all-items)/_logics/useMaxBidding'
 import { useWatchlistIds } from '@/app/(bidder)/bidder/(all-items)/_logics/useWatchlistIds'
+import { useBuyNow } from '@/app/(bidder)/bidder/(product)/_logics/useBuyNow'
 import { useNavCounts } from './providers/nav-counts-provider'
+import { showToast } from '@/components/templates/toast-template'
 import type { RealtimeLot } from '@/app/(bidder)/bidder/(all-items)/_logics/useLotRealtime'
 
 type LotCardItemProps = {
@@ -19,6 +21,7 @@ function LotCardItemComponent({ lot, isLoggedIn = true, onExpired }: LotCardItem
   const { watchlistIds, pendingIds, toggleWatchlist } = useWatchlistIds()
   const { placeBid, getState, clearError } = useBidding()
   const { setMaxBid, getState: getMaxBidState, clearError: clearMaxBidError } = useMaxBidding()
+  const { buyNow, isLoading: isBuyingNow } = useBuyNow()
   const { incrementMyBidsCount } = useNavCounts()
   const bidState = getState(lot.id)
   const maxBidState = getMaxBidState(lot.id)
@@ -51,6 +54,19 @@ function LotCardItemComponent({ lot, isLoggedIn = true, onExpired }: LotCardItem
     clearMaxBidError(lot.id)
   }, [lot.id, clearMaxBidError])
 
+  const onBuyNow = useCallback(async () => {
+    try {
+      await buyNow(lot.id)
+      incrementMyBidsCount()
+      showToast('success', 'Purchase successful! This item is yours.')
+      return true
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to complete purchase.'
+      showToast('failure', message)
+      return false
+    }
+  }, [lot.id, buyNow, incrementMyBidsCount])
+
   const handleExpired = useCallback(() => {
     onExpired?.(lot.id)
   }, [lot.id, onExpired])
@@ -65,6 +81,7 @@ function LotCardItemComponent({ lot, isLoggedIn = true, onExpired }: LotCardItem
       isWinning={lot.isWinning}
       isOutbid={lot.isOutbid}
       isClosed={lot.isClosed}
+      isWon={lot.isWon}
       antiSniped={lot.antiSniped}
       suggestedBid={lot.suggestedBid}
       isBidding={bidState.loading}
@@ -75,6 +92,8 @@ function LotCardItemComponent({ lot, isLoggedIn = true, onExpired }: LotCardItem
       maxBidError={maxBidState.error}
       onSetMaxBid={onSetMaxBid}
       onClearMaxBidError={onClearMaxBidError}
+      isBuyingNow={isBuyingNow}
+      onBuyNow={onBuyNow}
       onExpired={handleExpired}
     />
   )

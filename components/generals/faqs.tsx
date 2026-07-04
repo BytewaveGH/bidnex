@@ -1,7 +1,9 @@
 'use client'
 import React, { useState } from 'react'
+import Image from 'next/image'
 import { ChevronUp, ChevronDown } from 'lucide-react'
 import ButtonTemplate from '../templates/button-template'
+import whatsappIcon from '@/assets/svgs/whatsapp.svg'
 
 interface FAQItem {
     id: number
@@ -69,11 +71,16 @@ export default function FAQs() {
                             Still Have Questions?
                         </h3>
                         <p className="text-gray-300 text-sm leading-relaxed">
-                            Can't find an answer to your question? Send us an email and we'll<br/>get back to you as soon as possible
+                            Can't find an answer to your question? Send us an message and we'll<br/>get back to you as soon as possible
                         </p>
                         <div className="flex justify-start mt-2">
-                            <ButtonTemplate 
-                                title="Send Email" 
+                            <ButtonTemplate
+                                title={
+                                    <div className="flex items-center gap-2">
+                                        <Image src={whatsappIcon} alt="" className="w-5 h-5" />
+                                        <span onClick={() => window.open('https://chat.whatsapp.com/K7YL6Dr5qFiGtRzFxkphAO?mode=gi_t', '_blank')}>WhatsApp Us</span>
+                                    </div>
+                                }
                                 className="bg-white text-gray-900 hover:bg-white px-8 py-3 rounded-lg h-[40px]"
                             />
                         </div>

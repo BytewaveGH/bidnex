@@ -71,6 +71,8 @@ type ProductCardProps = {
     maxBidError?: string | null
     onSetMaxBid?: (amount: number) => Promise<boolean>
     onClearMaxBidError?: () => void
+    isBuyingNow?: boolean
+    onBuyNow?: () => Promise<boolean>
     onExpired?: () => void
 }
 
@@ -94,12 +96,15 @@ export default function ProductCard({
     maxBidError,
     onSetMaxBid,
     onClearMaxBidError,
+    isBuyingNow,
+    onBuyNow,
     onExpired,
 }: ProductCardProps) {
     const router = useRouter()
     const [timeEnded, setTimeEnded] = useState(false)
     const [maxBidInput, setMaxBidInput] = useState('')
     const [confirmMaxBidOpen, setConfirmMaxBidOpen] = useState(false)
+    const [confirmBuyNowOpen, setConfirmBuyNowOpen] = useState(false)
     const handleExpired = useCallback(() => {
         setTimeEnded(true)
         onExpired?.()
@@ -122,6 +127,12 @@ export default function ProductCard({
         setConfirmMaxBidOpen(false)
         const success = await onSetMaxBid(parsedMaxBid)
         if (success) setMaxBidInput('')
+    }
+
+    async function handleConfirmBuyNow() {
+        if (!onBuyNow) return
+        setConfirmBuyNowOpen(false)
+        await onBuyNow()
     }
 
     return (
@@ -270,12 +281,19 @@ export default function ProductCard({
                             {!!product.buyNowPrice && (
                                 <button
                                     type="button"
-                                    onClick={() => router.push(`/bidder/product/${product.id}`)}
-                                    className="absolute inset-y-0 right-0 flex flex-col items-center justify-center bg-[#003C71] text-white text-[10px] leading-tight font-semibold hover:brightness-110 transition-[filter] px-1"
+                                    onClick={() => setConfirmBuyNowOpen(true)}
+                                    disabled={isBuyingNow || isClosed || timeEnded}
+                                    className="absolute inset-y-0 right-0 flex flex-col items-center justify-center bg-[#003C71] text-white text-[10px] leading-tight font-semibold hover:brightness-110 transition-[filter] px-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none"
                                     style={{ width: 'calc(28% + 14px)', clipPath: 'polygon(16px 0, 100% 0, 100% 100%, 0 100%)' }}
                                 >
-                                    <span>Buy Now</span>
-                                    <span>GHS {product.buyNowPrice.toFixed(2)}</span>
+                                    {isBuyingNow ? (
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                        <>
+                                            <span>Buy Now</span>
+                                            <span>GHS {product.buyNowPrice.toFixed(2)}</span>
+                                        </>
+                                    )}
                                 </button>
                             )}
                         </div>
@@ -334,6 +352,22 @@ export default function ProductCard({
                                 <AlertDialogFooter>
                                     <AlertDialogCancel>Cancel</AlertDialogCancel>
                                     <AlertDialogAction onClick={handleConfirmMaxBid}>Confirm</AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+
+                        <AlertDialog open={confirmBuyNowOpen} onOpenChange={setConfirmBuyNowOpen}>
+                            <AlertDialogContent size="sm">
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Buy this item now?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        You&apos;ll purchase <span className="font-medium text-foreground">{product.productName}</span> immediately for{' '}
+                                        <span className="font-medium text-foreground">GHS {(product.buyNowPrice ?? 0).toFixed(2)}</span>, ending the auction.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={handleConfirmBuyNow}>Buy Now</AlertDialogAction>
                                 </AlertDialogFooter>
                             </AlertDialogContent>
                         </AlertDialog>
