@@ -1,6 +1,16 @@
 import React from 'react'
+import Link from 'next/link'
 import { Facebook, Instagram, Twitter, Linkedin, Youtube } from 'lucide-react'
 import Logo from '../templates/logo'
+
+const FOOTER_CATEGORIES = [
+    'Electronics',
+    'Clothing',
+    'Home / Kitchen',
+    'Office Products',
+    'Phones & Accessories',
+    'Car Parts',
+] as const
 
 export default function Footer() {
     return (
@@ -25,53 +35,51 @@ export default function Footer() {
 
                                 <div>
                                     <h3 className="text-base font-bold text-gray-900 ">Contact</h3>
-                                    <p className="text-sm text-[#515F6E] mb-1">+233244300000</p>
-                                    <p className="text-sm text-[#515F6E]">bidnex@gmail.com</p>
+                                    <a
+                                            href="https://chat.whatsapp.com/K7YL6Dr5qFiGtRzFxkphAO?mode=gi_t"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-sm text-[#515F6E] hover:text-gray-900 transition-colors"
+                                        >
+                                            WhatsApp
+                                        </a>
+                                    <a
+                                        href="mailto:bidnexhub@gmail.com"
+                                        className="block text-sm text-[#515F6E] hover:text-gray-900 transition-colors"
+                                    >
+                                        bidnexhub@gmail.com
+                                    </a>
                                 </div>
                             </div>
                             <div className="flex-1">
                                 <h3 className="text-base font-bold text-gray-900 ">Categories</h3>
                                 <ul className="">
-                                    <li>
-                                        <a href="#" className="text-sm text-[#515F6E] hover:text-gray-900 transition-colors">
-                                            Appliances
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a href="#" className="text-sm text-[#515F6E] hover:text-gray-900 transition-colors">
-                                            Electronics
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a href="#" className="text-sm text-[#515F6E] hover:text-gray-900 transition-colors">
-                                            Phone Accessories
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a href="#" className="text-sm text-[#515F6E] hover:text-gray-900 transition-colors">
-                                            Car Parts
-                                        </a>
-                                    </li>
+                                    {FOOTER_CATEGORIES.map((category) => (
+                                        <li key={category}>
+                                            <Link
+                                                href="/bidder/all-items"
+                                                className="text-sm text-[#515F6E] hover:text-gray-900 transition-colors"
+                                            >
+                                                {category}
+                                            </Link>
+                                        </li>
+                                    ))}
                                 </ul>
                             </div>
                             <div className="flex-1">
                                 <h3 className="text-base font-bold text-gray-900 ">Resources</h3>
                                 <ul className="">
                                     <li>
-                                        <a href="#" className="text-sm text-[#515F6E] hover:text-gray-900 transition-colors">
+                                        <Link href="/blog" className="text-sm text-[#515F6E] hover:text-gray-900 transition-colors">
                                             Blog
-                                        </a>
+                                        </Link>
                                     </li>
-                                    <li>
+                                    {/* <li>
                                         <a href="#" className="text-sm text-[#515F6E] hover:text-gray-900 transition-colors">
                                             Help Center
                                         </a>
-                                    </li>
-                                    <li>
-                                        <a href="#" className="text-sm text-[#515F6E] hover:text-gray-900 transition-colors">
-                                            Contact
-                                        </a>
-                                    </li>
+                                    </li> */}
+                                   
                                 </ul>
                             </div>
                         </div>
@@ -127,7 +135,7 @@ export default function Footer() {
 
                     {/* Copyright */}
                     <div className="text-sm text-gray-600">
-                        © Copyright 2026 BIDNEX
+                        © Copyright {new Date().getFullYear()} BIDNEX
                     </div>
                 </div>
             </div>
