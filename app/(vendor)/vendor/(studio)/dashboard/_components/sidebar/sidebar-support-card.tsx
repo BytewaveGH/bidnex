@@ -13,9 +13,9 @@ export function SidebarSupportCard() {
         <CardDescription>
           Open an issue or do reach out to us on&nbsp;
           <Link
-            href="https://x.com/arhamkhnz"
+            href="https://chat.whatsapp.com/K7YL6Dr5qFiGtRzFxkphAO?mode=gi_t"
             target="_blank"
-            rel="noreferrer"
+            rel="noopener noreferrer"
             aria-label="Reach out on WhatsApp"
             className="inline-flex items-center text-foreground"
           >

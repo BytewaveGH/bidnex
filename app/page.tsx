@@ -1,3 +1,5 @@
+'use client';
+
 import TopNav from "@/components/generals/top-nav";
 import ButtonTemplate from "@/components/templates/button-template";
 import Image from "next/image";
@@ -10,10 +12,12 @@ import InfoCard from "@/components/generals/info-card";
 import Categories from "@/components/generals/categories";
 import FAQs from "@/components/generals/faqs";
 import Footer from "@/components/generals/footer";
+import { useRouter } from "next/navigation";
 
 
 
 export default function Home() {
+  const router = useRouter();
   return (
     <main className="min-h-screen w-full">
       <TopNav />
@@ -27,7 +31,7 @@ export default function Home() {
         >
           <div className="flex flex-col items-start justify-end h-full pb-10 md:pb-20">
             <p className="text-white text-2xl sm:text-3xl md:text-4xl font-bold mb-4">Discover Amazing Deals & Bid<br />Smart, Win Big, & Shop With<br />Confidence.</p>
-            <ButtonTemplate title="Start Bidding" className="bg-white text-black hover:bg-white w-40" />
+            <ButtonTemplate onClick={() => router.push('/bidder/all-items')} title="Start Bidding" className="bg-white text-black hover:bg-white w-40" />
           </div>
         </div>
       </section>

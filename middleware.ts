@@ -6,6 +6,7 @@ const { auth } = NextAuth(authConfig)
 
 const PUBLIC_ROUTE_PATTERNS = [
   /^\/$/,
+  /^\/blog(?:\/|$)/,
   /\/auth\/login/,
   /\/auth\/forgot-password/,
   /\/auth\/reset-password/,
