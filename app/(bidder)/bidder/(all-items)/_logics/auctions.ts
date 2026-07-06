@@ -149,6 +149,16 @@ export function resolveLotMediaUrl(path: string | null | undefined): string | nu
   return `${base}/${path.replace(/^\//, "")}`;
 }
 
+/** Picks the image to show on a lot/product card — prefers an actual
+ * image from `images` (primary first) even when `primaryImage` itself
+ * points at a video, since cards show a static thumbnail, not a player. */
+export function resolveCardImage(lot: AuctionLot): string {
+  const images = lot.images?.filter((img) => img.mediaType === "image") ?? [];
+  const chosen = images.find((img) => img.isPrimary) ?? images[0];
+  if (chosen) return resolveLotMediaUrl(chosen.url) ?? "";
+  return resolveLotMediaUrl(lot.primaryImage) ?? "";
+}
+
 export function formatLotCondition(condition: string): string {
   return condition
     .split("_")
@@ -171,7 +181,7 @@ export function computeTimeRemaining(endTime: string): string {
 export function mapLotToProductCard(lot: AuctionLot) {
   return {
     id: lot.id,
-    image: resolveLotMediaUrl(lot.primaryImage) ?? "",
+    image: resolveCardImage(lot),
     condition: formatLotCondition(lot.condition),
     quantity: 1,
     timeRemaining: computeTimeRemaining(lot.bidEndTime),

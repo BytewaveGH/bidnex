@@ -4,7 +4,7 @@ import ButtonTemplate from '../templates/button-template'
 import InputTemplate from '../templates/input-template'
 import Logo from '../templates/logo'
 import { useRouter } from 'next/navigation'
-import { Armchair, CarFront, CookingPot, MonitorSmartphone, SearchIcon, Shirt, Smartphone, Menu, X } from 'lucide-react'
+import { Armchair, CarFront, CookingPot, MonitorSmartphone, SearchIcon, Shirt, Smartphone, Menu, X, Tv } from 'lucide-react'
 import legalHammer from '@/assets/svgs/legal-hammer.svg'
 import champion from '@/assets/svgs/champion.svg'
 import favoriteIcon from '@/assets/svgs/eye.svg'
@@ -46,6 +46,7 @@ export default function TopNav({ onSearch, initialSearchValue }: { onSearch?: (q
     { name: 'Auction Warehouse', path: '/bidder/auction-warehouse' },
     { name: 'Buy Now', path: '/bidder/buy-now' },
     { name: 'Popular', path: '/bidder/popular' },
+    { name: 'BidStream', path: '/bidder/bid-stream' },
   ])
   const [hoveredCategoryIndex, setHoveredCategoryIndex] = useState(0)
   const [searchQuery, setSearchQuery] = useState(initialSearchValue ?? '')
@@ -258,7 +259,7 @@ export default function TopNav({ onSearch, initialSearchValue }: { onSearch?: (q
 
           {/* Page nav links */}
           <div className="px-2 py-2 border-b border-[#F0F2F5]">
-            {navItems.map((item) => (
+            {navItems.filter((item) => item.name !== 'BidStream').map((item) => (
               <button
                 key={item.name}
                 onClick={() => handleNavAndClose(item.path)}
@@ -344,7 +345,10 @@ export default function TopNav({ onSearch, initialSearchValue }: { onSearch?: (q
           ) : (
             <span
               key={index}
-              className='cursor-pointer hover:underline'
+              className={cn(
+                'cursor-pointer hover:underline',
+                item.name === 'BidStream' && 'hidden sm:inline-block',
+              )}
               onClick={() => router.push(item.path)}
             >
               {item.name}
@@ -352,6 +356,17 @@ export default function TopNav({ onSearch, initialSearchValue }: { onSearch?: (q
           )
         )}
       </section>
+
+      {/* Bid Stream floating action button (mobile only) */}
+      <button
+        type="button"
+        onClick={() => router.push('/bidder/bid-stream')}
+        aria-label="Watch Bid Stream"
+        className="sm:hidden fixed bottom-6 right-4 z-40 flex items-center justify-center size-11 rounded-full bg-black text-white shadow-lg hover:brightness-110 transition-[filter] cursor-pointer"
+      >
+        <Tv className="size-5" />
+        <span className="absolute top-0.5 right-0.5 size-2 rounded-full bg-[#D42620] animate-pulse" />
+      </button>
     </div>
   )
 }
