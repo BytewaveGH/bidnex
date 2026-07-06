@@ -16,6 +16,7 @@ import {
   ReceiptText,
   ShoppingBag,
   SquareArrowUpRight,
+  Truck,
   Users,
 } from "lucide-react";
 
@@ -83,6 +84,11 @@ export const sidebarItems: NavGroup[] = [
         title: "Disputes",
         url: "/vendor/dashboard/disputes",
         icon: ListTodo,
+      },
+      {
+        title: "Deliveries",
+        url: "/vendor/dashboard/deliveries",
+        icon: Truck,
       },
       // {
       //   title: "Productivity",

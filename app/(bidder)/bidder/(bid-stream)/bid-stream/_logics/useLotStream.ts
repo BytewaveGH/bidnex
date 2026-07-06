@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useUnauthenticatedAxios } from '@/hooks/use-axios'
 import { buildStreamParams, type StreamApiResponse, type StreamFilters, type StreamLot } from './stream-types'
 
-const PAGE_SIZE = 2
+const PAGE_SIZE = 8
 
 export type StreamStatus = 'loading' | 'error' | 'ready'
 

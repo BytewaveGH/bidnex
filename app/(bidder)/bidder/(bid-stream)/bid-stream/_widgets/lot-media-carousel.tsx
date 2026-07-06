@@ -67,7 +67,7 @@ export default function LotMediaCarousel({ items, alt, isActive, isMuted, onActi
         ref={containerRef}
         onScroll={handleScroll}
         className="flex h-full w-full snap-x snap-mandatory overflow-x-auto [scrollbar-width:none]"
-        style={{ touchAction: 'pan-x' }}
+        style={{ touchAction: 'pan-x pan-y' }}
       >
         {items.map((item, i) => (
           <div key={item.id} className="relative h-full w-full shrink-0 snap-start snap-always overflow-hidden">
