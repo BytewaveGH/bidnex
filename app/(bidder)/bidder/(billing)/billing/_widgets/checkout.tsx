@@ -141,22 +141,14 @@ export default function Checkout() {
   async function handleConfirmAndPay() {
     if (selectedItems.length === 0) return;
     setIsPaying(true);
-    // Open the tab synchronously before any await so mobile browsers don't block it
-    const win = window.open("", "_blank", "noopener,noreferrer");
     try {
       const result = await generatePaymentLink(selectedItems.map((i) => i.id));
       if (result?.paymentUrl) {
-        if (win) {
-          win.location.href = result.paymentUrl;
-        } else {
-          window.location.href = result.paymentUrl;
-        }
+        window.location.href = result.paymentUrl;
       } else {
-        win?.close();
         showToast("failure", "No payment link returned. Please try again.");
       }
     } catch (err) {
-      win?.close();
       const message = err instanceof Error ? err.message : "Could not generate payment link.";
       showToast("failure", message);
     } finally {
