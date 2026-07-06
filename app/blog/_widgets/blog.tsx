@@ -17,7 +17,7 @@ export default function Blog() {
     return (
         <div className="w-full">
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-10 md:mb-14">
+            {/* <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-10 md:mb-14">
                 <div>
                     <span className="inline-block text-xs font-semibold tracking-wide text-black bg-[#FFCC00] rounded-full px-3 py-1.5 mb-4">
                         Blog
@@ -29,7 +29,7 @@ export default function Blog() {
                 <p className="text-[#657688] text-base leading-relaxed max-w-md md:text-right">
                     Tips for bidders, playbooks for vendors, and updates on how BIDNEX works.
                 </p>
-            </div>
+            </div> */}
 
             {/* Category tabs */}
             <div className="flex flex-wrap items-center gap-x-6 gap-y-2 border-b border-[#F0F2F5] mb-10">
