@@ -15,9 +15,9 @@ import type { StreamLot } from '../_logics/stream-types'
 import LotReelCard from './lot-reel-card'
 import StreamFilterBar from './stream-filter-bar'
 
-const RENDER_WINDOW_BEHIND = 1
-const RENDER_WINDOW_AHEAD = 2
-const PREFETCH_THRESHOLD = 3
+const RENDER_WINDOW_BEHIND = 3
+const RENDER_WINDOW_AHEAD = 3
+const PREFETCH_THRESHOLD = 4
 
 function subscribeToConnectivity(callback: () => void) {
   window.addEventListener('online', callback)
