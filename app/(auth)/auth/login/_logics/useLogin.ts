@@ -59,7 +59,13 @@ export function useLogin() {
       }
 
       showToast("success", "Login successful");
-      const destination = userType ? (roleRedirects[userType] ?? "/") : "/";
+      const redirectParam = new URLSearchParams(window.location.search).get("redirect");
+      const destination =
+        redirectParam && redirectParam.startsWith("/")
+          ? redirectParam
+          : userType
+            ? (roleRedirects[userType] ?? "/")
+            : "/";
       window.location.href = destination;
     } catch (error: unknown) {
       const message = (

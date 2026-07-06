@@ -2,7 +2,7 @@
 
 import TopNav from '@/components/generals/top-nav'
 import ButtonTemplate from '@/components/templates/button-template'
-import { AlarmClock, ChevronRight, Loader2, MoveLeft, UsersRound } from 'lucide-react'
+import { AlarmClock, ChevronRight, Loader2, MoveLeft, PlayCircle, UsersRound } from 'lucide-react'
 import Image from 'next/image'
 import { use, useState, useEffect } from 'react'
 import InputTemplate from '@/components/templates/input-template'
@@ -92,11 +92,10 @@ export default function ProductDetails({ params }: { params: Promise<{ id: strin
     return () => clearTimeout(t)
   }, [bidEndTimeForTimer])
 
-  const galleryImages = lot
+  const galleryMedia = lot
     ? lot.images
-      .filter((img) => img.mediaType === 'image')
-      .map((img) => resolveLotMediaUrl(img.url) ?? '')
-      .filter(Boolean)
+      .map((img) => ({ url: resolveLotMediaUrl(img.url) ?? '', mediaType: img.mediaType }))
+      .filter((media) => media.url)
     : []
 
   async function handleBid(amount: number) {
@@ -208,7 +207,7 @@ export default function ProductDetails({ params }: { params: Promise<{ id: strin
       : lot.condition === 'good_condition' ? 'bg-[#003C71]'
         : 'bg-[#D42620]'
 
-  const currentImageUrl = galleryImages[selectedImageIndex] ?? ''
+  const currentMedia = galleryMedia[selectedImageIndex] ?? { url: '', mediaType: 'image' as const }
 
   // Merge REST data with real-time overrides
   const currentBid = realtime?.currentBid ?? lot.currentBid
@@ -253,12 +252,22 @@ export default function ProductDetails({ params }: { params: Promise<{ id: strin
           <div className='flex flex-col gap-4 w-full md:w-1/2 md:shrink-0 items-center'>
             <div className={`bg-[#F9FAFB] w-full max-w-[539px] aspect-square relative overflow-hidden rounded-[16px] border ${isClosed ? 'opacity-60' : ''}`}>
               <div className='absolute inset-0 flex items-center justify-center'>
-                <LotImage
-                  src={currentImageUrl}
-                  alt={lot.title}
-                  className='object-cover rounded-[16px]'
-                  sizes='(max-width: 768px) 100vw, 539px'
-                />
+                {currentMedia.mediaType === 'video' ? (
+                  <video
+                    key={currentMedia.url}
+                    src={currentMedia.url}
+                    controls
+                    playsInline
+                    className='w-full h-full object-cover rounded-[16px]'
+                  />
+                ) : (
+                  <LotImage
+                    src={currentMedia.url}
+                    alt={lot.title}
+                    className='object-cover rounded-[16px]'
+                    sizes='(max-width: 768px) 100vw, 539px'
+                  />
+                )}
               </div>
 
               {isWinning && (
@@ -302,22 +311,31 @@ export default function ProductDetails({ params }: { params: Promise<{ id: strin
 
             </div>
 
-            {galleryImages.length > 1 && (
+            {galleryMedia.length > 1 && (
               <div className='flex gap-2 w-full max-w-[539px] overflow-x-auto'>
-                {galleryImages.map((img, index) => (
+                {galleryMedia.map((media, index) => (
                   <button
                     key={index}
                     type='button'
                     onClick={() => setSelectedImageIndex(index)}
                     className={`relative w-[83px] h-[83px] rounded-[8px] overflow-hidden bg-[#F9FAFB] shrink-0 focus:outline-none ${selectedImageIndex === index ? 'border border-[#0A0A0B]' : 'bg-[#F9FAFB] border'}`}
                   >
-                    {img ? (
-                      <LotImage
-                        src={img}
-                        alt={`View ${index + 1}`}
-                        className='object-cover'
-                        sizes='83px'
-                      />
+                    {media.url ? (
+                      media.mediaType === 'video' ? (
+                        <>
+                          <video src={media.url} muted playsInline preload='metadata' className='w-full h-full object-cover' />
+                          <div className='absolute inset-0 flex items-center justify-center bg-black/20'>
+                            <PlayCircle className='w-6 h-6 text-white' />
+                          </div>
+                        </>
+                      ) : (
+                        <LotImage
+                          src={media.url}
+                          alt={`View ${index + 1}`}
+                          className='object-cover'
+                          sizes='83px'
+                        />
+                      )
                     ) : (
                       <div className='w-full h-full bg-[#E4E7EC]' />
                     )}
