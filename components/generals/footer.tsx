@@ -17,13 +17,13 @@ export default function Footer() {
         <footer className=" relative overflow-hidden">
             {/* Background Watermark */}
             <div className="absolute -bottom-60 left-1/2 -translate-x-1/2 text-[400px] font-bold text-[#F7F9FC] select-none pointer-events-none ">
-                BIDNEX
+                BidChale
             </div>
 
             <div className="relative z-10 pb-80 py-16">
                 {/* Top Section - Main Footer Content */}
                 <div className="flex flex-col lg:flex-row gap-12 lg:gap-20 mb-12">
-                    {/* Left Column - BIDNEX Information */}
+                    {/* Left Column - BidChale Information */}
                     <div className="flex-1">
                         <Logo className="text-2xl font-bold text-gray-900 mb-6" />
                         <div className="flex gap-6">
@@ -44,10 +44,10 @@ export default function Footer() {
                                             WhatsApp
                                         </a>
                                     <a
-                                        href="mailto:bidnexhub@gmail.com"
+                                        href="mailto:BidChalehub@gmail.com"
                                         className="block text-sm text-[#515F6E] hover:text-gray-900 transition-colors"
                                     >
-                                        bidnexhub@gmail.com
+                                        BidChalehub@gmail.com
                                     </a>
                                 </div>
                             </div>
@@ -135,7 +135,7 @@ export default function Footer() {
 
                     {/* Copyright */}
                     <div className="text-sm text-gray-600">
-                        © Copyright {new Date().getFullYear()} BIDNEX
+                        © Copyright {new Date().getFullYear()} BidChale
                     </div>
                 </div>
             </div>

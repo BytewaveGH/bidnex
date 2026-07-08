@@ -5,6 +5,7 @@ import ButtonTemplate from '@/components/templates/button-template'
 import { AlarmClock, ChevronRight, Loader2, MoveLeft, PlayCircle, UsersRound } from 'lucide-react'
 import Image from 'next/image'
 import { use, useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import InputTemplate from '@/components/templates/input-template'
 import {
   AlertDialog,
@@ -56,12 +57,14 @@ function Countdown({ endTime }: { endTime: string }) {
 
 export default function ProductDetails({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
+  const router = useRouter()
   const { data: lot, isLoading, error, refetch } = usePublicLot(id)
   const { watchlistIds, pendingIds, toggleWatchlist } = useWatchlistIds()
   const { incrementMyBidsCount } = useNavCounts()
   const callApi = useAxios()
   const { data: session } = useSession()
   const currentUserId = Number((session?.user as any)?.userId)
+  const isLoggedIn = session?.user?.userType === 'bidder'
 
   const { setMaxBid, isLoading: isSettingMaxBid } = useMaxBid()
   const { buyNow, isLoading: isBuyingNow } = useBuyNow()
@@ -371,7 +374,15 @@ export default function ProductDetails({ params }: { params: Promise<{ id: strin
               </p>
             </div>
 
-            {!isWon && (
+            {!isWon && !isLoggedIn && (
+              <ButtonTemplate
+                title='Login to Bid'
+                className='bg-black text-white hover:bg-black w-full h-[48px] mt-4'
+                onClick={() => router.push('/auth/login')}
+              />
+            )}
+
+            {!isWon && isLoggedIn && (
               <>
                 <div className='relative h-[48px] mt-4 rounded-[6px] overflow-hidden'>
                   <button

@@ -186,35 +186,6 @@ export default function BidStream() {
     }
   }
 
-  if (status === 'loading' && lots.length === 0) {
-    return (
-      <CenteredMessage
-        icon={<Loader2 className="h-6 w-6 animate-spin text-white/70" />}
-        title="Loading the auction floor…"
-      />
-    )
-  }
-
-  if (status === 'error') {
-    return (
-      <button type="button" className="block w-full" onClick={() => restart()}>
-        <CenteredMessage
-          icon={<RefreshCw className="h-6 w-6 text-white/70" />}
-          title={`Could not load — tap to retry${streamError ? ` (${streamError})` : ''}`}
-        />
-      </button>
-    )
-  }
-
-  if (status === 'ready' && lots.length === 0) {
-    return (
-      <CenteredMessage
-        icon={<PackageSearch className="h-10 w-10 text-white/50" />}
-        title="No active lots right now. Check back soon."
-      />
-    )
-  }
-
   return (
     <div className="relative h-dvh w-full overflow-hidden bg-black">
       {!isOnline && (
@@ -244,58 +215,77 @@ export default function BidStream() {
         <StreamFilterBar filters={filters} onChange={setFilterValue} />
       </div>
 
-      <div
-        ref={containerRef}
-        onScroll={handleScroll}
-        className="h-dvh w-full snap-y snap-mandatory overflow-y-scroll scroll-smooth"
-      >
-        {lots.map((lot, i) => {
-          const inWindow = i >= currentIndex - RENDER_WINDOW_BEHIND && i <= currentIndex + RENDER_WINDOW_AHEAD
-          return (
-            <div key={lot.id} className="h-dvh w-full snap-start">
-              {inWindow ? (
-                <LotReelCard
-                  lot={lot}
-                  isActive={i === currentIndex}
-                  isLoggedIn={isLoggedIn}
-                  isMuted={isMuted}
-                  onToggleMute={() => setIsMuted((m) => !m)}
-                  isWatched={watchedIds.has(lot.id)}
-                  isWatchPending={actions.isWatchPending(lot.id)}
-                  onToggleWatch={() => handleToggleWatch(lot)}
-                  onBid={(amount) => handleBid(lot, amount)}
-                  bidState={actions.getBidState(lot.id)}
-                  onClearBidError={() => actions.clearBidError(lot.id)}
-                  onSetMaxBid={(amount) => handleSetMaxBid(lot, amount)}
-                  maxBidState={actions.getMaxBidState(lot.id)}
-                  onClearMaxBidError={() => actions.clearMaxBidError(lot.id)}
-                  onBuyNow={() => handleBuyNow(lot)}
-                  onRequireAuth={() => requireAuth(lot.id)}
-                  isBuyingNow={actions.getBuyNowState(lot.id).loading}
-                />
-              ) : null}
-            </div>
-          )
-        })}
+      {status === 'loading' && lots.length === 0 ? (
+        <CenteredMessage
+          icon={<Loader2 className="h-6 w-6 animate-spin text-white/70" />}
+          title="Loading the auction floor…"
+        />
+      ) : status === 'error' ? (
+        <button type="button" className="block h-dvh w-full" onClick={() => restart()}>
+          <CenteredMessage
+            icon={<RefreshCw className="h-6 w-6 text-white/70" />}
+            title={`Could not load — tap to retry${streamError ? ` (${streamError})` : ''}`}
+          />
+        </button>
+      ) : status === 'ready' && lots.length === 0 ? (
+        <CenteredMessage
+          icon={<PackageSearch className="h-10 w-10 text-white/50" />}
+          title="No active lots right now. Check back soon."
+        />
+      ) : (
+        <div
+          ref={containerRef}
+          onScroll={handleScroll}
+          className="h-dvh w-full snap-y snap-mandatory overflow-y-scroll scroll-smooth"
+        >
+          {lots.map((lot, i) => {
+            const inWindow = i >= currentIndex - RENDER_WINDOW_BEHIND && i <= currentIndex + RENDER_WINDOW_AHEAD
+            return (
+              <div key={lot.id} className="h-dvh w-full snap-start">
+                {inWindow ? (
+                  <LotReelCard
+                    lot={lot}
+                    isActive={i === currentIndex}
+                    isLoggedIn={isLoggedIn}
+                    isMuted={isMuted}
+                    onToggleMute={() => setIsMuted((m) => !m)}
+                    isWatched={watchedIds.has(lot.id)}
+                    isWatchPending={actions.isWatchPending(lot.id)}
+                    onToggleWatch={() => handleToggleWatch(lot)}
+                    onBid={(amount) => handleBid(lot, amount)}
+                    bidState={actions.getBidState(lot.id)}
+                    onClearBidError={() => actions.clearBidError(lot.id)}
+                    onSetMaxBid={(amount) => handleSetMaxBid(lot, amount)}
+                    maxBidState={actions.getMaxBidState(lot.id)}
+                    onClearMaxBidError={() => actions.clearMaxBidError(lot.id)}
+                    onBuyNow={() => handleBuyNow(lot)}
+                    onRequireAuth={() => requireAuth(lot.id)}
+                    isBuyingNow={actions.getBuyNowState(lot.id).loading}
+                  />
+                ) : null}
+              </div>
+            )
+          })}
 
-        {isExhausted && (
-          <div className="h-dvh w-full snap-start">
-            <CenteredMessage
-              icon={<RefreshCw className="h-6 w-6 text-white/70" />}
-              title="You've seen everything — pull to refresh."
-              action={
-                <button
-                  type="button"
-                  onClick={() => restart()}
-                  className="rounded-full bg-white px-5 py-2 text-xs font-semibold text-black"
-                >
-                  Refresh
-                </button>
-              }
-            />
-          </div>
-        )}
-      </div>
+          {isExhausted && (
+            <div className="h-dvh w-full snap-start">
+              <CenteredMessage
+                icon={<RefreshCw className="h-6 w-6 text-white/70" />}
+                title="You've seen everything — pull to refresh."
+                action={
+                  <button
+                    type="button"
+                    onClick={() => restart()}
+                    className="rounded-full bg-white px-5 py-2 text-xs font-semibold text-black"
+                  >
+                    Refresh
+                  </button>
+                }
+              />
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }
