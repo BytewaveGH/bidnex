@@ -14,18 +14,18 @@ interface FAQItem {
 const faqItems: FAQItem[] = [
     {
         id: 1,
-        question: 'What is BIDNEX?',
-        answer: 'BIDNEX is an online bidding and auction platform built for Ghana. It connects buyers (bidders) and sellers (vendors) in a transparent, real-time marketplace where you can bid on products and services from anywhere in the country. Whether you\'re looking for electronics, vehicles, real estate, or everyday goods, BIDNEX makes the process fast, fair, and secure.'
+        question: 'What is BidChale?',
+        answer: 'BidChale is an online bidding and auction platform built for Ghana. It connects buyers (bidders) and sellers (vendors) in a transparent, real-time marketplace where you can bid on products and services from anywhere in the country. Whether you\'re looking for electronics, vehicles, real estate, or everyday goods, BidChale makes the process fast, fair, and secure.'
     },
     {
         id: 2,
-        question: 'How do I get started on BIDNEX?',
+        question: 'How do I get started on BidChale?',
         answer: 'Getting started is simple. Sign up with your email or Google account, choose whether you\'re joining as a Bidder or a Vendor, verify your phone number, and you\'re ready to go. Bidders can immediately browse active auctions and place bids, while Vendors can list items for sale after completing a quick profile setup.'
     },
     {
         id: 3,
         question: 'What payment methods are accepted in Ghana?',
-        answer: 'BIDNEX supports the most popular payment methods used in Ghana, including MTN Mobile Money (MoMo), Vodafone Cash, AirtelTigo Money, and major bank transfers. All transactions are processed in Ghana Cedis (GHS). We are continuously working to add more local payment options to make bidding as convenient as possible.'
+        answer: 'BidChale supports the most popular payment methods used in Ghana, including MTN Mobile Money (MoMo), Vodafone Cash, AirtelTigo Money, and major bank transfers. All transactions are processed in Ghana Cedis (GHS). We are continuously working to add more local payment options to make bidding as convenient as possible.'
     },
     {
         id: 4,
@@ -39,13 +39,13 @@ const faqItems: FAQItem[] = [
     },
     {
         id: 6,
-        question: 'Is BIDNEX available across all regions in Ghana?',
-        answer: 'Yes. BIDNEX is accessible from anywhere in Ghana with an internet connection — Accra, Kumasi, Tamale, Takoradi, and beyond. Delivery availability depends on the vendor. Some vendors offer nationwide delivery while others may specify pickup-only from a particular location, so always check the item details before bidding.'
+        question: 'Is BidChale available across all regions in Ghana?',
+        answer: 'Yes. BidChale is accessible from anywhere in Ghana with an internet connection — Accra, Kumasi, Tamale, Takoradi, and beyond. Delivery availability depends on the vendor. Some vendors offer nationwide delivery while others may specify pickup-only from a particular location, so always check the item details before bidding.'
     },
     {
         id: 7,
         question: 'How is my money protected if a deal goes wrong?',
-        answer: 'BIDNEX holds payments in escrow until the buyer confirms receipt of the item. If a vendor fails to deliver or the item is significantly not as described, you can raise a dispute within 48 hours of the expected delivery date. Our support team will review the case and, where applicable, issue a refund. We strongly advise bidders to read item descriptions carefully and check vendor ratings before placing a bid.'
+        answer: 'BidChale holds payments in escrow until the buyer confirms receipt of the item. If a vendor fails to deliver or the item is significantly not as described, you can raise a dispute within 48 hours of the expected delivery date. Our support team will review the case and, where applicable, issue a refund. We strongly advise bidders to read item descriptions carefully and check vendor ratings before placing a bid.'
     }
 ]
 

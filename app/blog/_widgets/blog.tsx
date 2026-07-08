@@ -27,7 +27,7 @@ export default function Blog() {
                     </h1>
                 </div>
                 <p className="text-[#657688] text-base leading-relaxed max-w-md md:text-right">
-                    Tips for bidders, playbooks for vendors, and updates on how BIDNEX works.
+                    Tips for bidders, playbooks for vendors, and updates on how BidChale works.
                 </p>
             </div> */}
 

@@ -10,8 +10,8 @@ export default function Logo({ className }: { className?: string }) {
   return (
     <div
     onClick={() => router.push('/')}
-    className={cn("text-3xl font-semibold shrink-0 hover:cursor-pointer flex gap-1" , className)}>
-        <Image src={logo} alt="logo" width={33} height={33} />
+    className={cn("text-2xl font-semibold shrink-0 hover:cursor-pointer flex gap-1" , className)}>
+        <Image src={logo} alt="logo" width={30} height={22} />
       BIDCHALE</div>
   )
 }

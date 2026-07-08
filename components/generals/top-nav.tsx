@@ -135,7 +135,7 @@ export default function TopNav({ onSearch, initialSearchValue }: { onSearch?: (q
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuGroup>
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => router.push('/bidder/profile')}>
                           <BadgeCheck />
                           Account
                         </DropdownMenuItem>
@@ -282,6 +282,13 @@ export default function TopNav({ onSearch, initialSearchValue }: { onSearch?: (q
               </div>
             </div>
             <button
+              onClick={() => handleNavAndClose('/bidder/profile')}
+              className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-[#F9FAFB] transition-colors text-left"
+            >
+              <BadgeCheck className="size-4 text-[#657688]" />
+              <span className="text-sm text-[#344054]">Account</span>
+            </button>
+            <button
               onClick={() => handleNavAndClose('/bidder/billing')}
               className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-[#F9FAFB] transition-colors text-left"
             >
@@ -358,15 +365,18 @@ export default function TopNav({ onSearch, initialSearchValue }: { onSearch?: (q
       </section>
 
       {/* Bid Stream floating action button (mobile only) */}
-      <button
-        type="button"
-        onClick={() => router.push('/bidder/bid-stream')}
-        aria-label="Watch Bid Stream"
-        className="sm:hidden fixed bottom-6 right-4 z-40 flex items-center justify-center size-11 rounded-full bg-black text-white shadow-lg hover:brightness-110 transition-[filter] cursor-pointer"
-      >
-        <Tv className="size-5" />
-        <span className="absolute top-0.5 right-0.5 size-2 rounded-full bg-[#D42620] animate-pulse" />
-      </button>
+      <div className="sm:hidden fixed bottom-6 right-4 z-40">
+        <span className="absolute inset-0 rounded-full bg-[#FBCA08] opacity-60 animate-ping" />
+        <button
+          type="button"
+          onClick={() => router.push('/bidder/bid-stream')}
+          aria-label="Watch Bid Stream — Live Now"
+          className="relative flex items-center gap-1.5 h-11 pl-3 pr-4 rounded-full bg-[#FBCA08] text-black shadow-lg hover:brightness-105 transition-[filter] cursor-pointer"
+        >
+          <Tv className="size-4" />
+          <span className="text-xs font-bold tracking-wide">LIVE</span>
+        </button>
+      </div>
     </div>
   )
 }

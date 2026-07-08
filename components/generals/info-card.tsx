@@ -1,9 +1,13 @@
+'use client'
+
 import React from 'react'
+import { useRouter } from 'next/navigation'
 import ButtonTemplate from '../templates/button-template'
 import Image from 'next/image'
 import person from '@/assets/images/person.png'
 
 export default function InfoCard() {
+  const router = useRouter()
   return (
     <div className="w-full mx-auto relative">
           {/* Banner Container */}
@@ -23,6 +27,7 @@ export default function InfoCard() {
                 Experience the convenience of having your essentials brought directly to you, making life easier and more efficient.
               </p>
               <ButtonTemplate 
+                onClick={() => router.push('/bidder/all-items')}
                 title="Shop Now" 
                 className="bg-white text-black hover:bg-white border border-black w-fit px-8 py-3 rounded-lg font-semibold"
               />

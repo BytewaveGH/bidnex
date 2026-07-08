@@ -104,10 +104,13 @@ export function formatStreamCountdown(bidEndTime: string | null): { label: strin
   const minutes = Math.floor((totalSeconds % 3600) / 60)
   const seconds = totalSeconds % 60
 
+  const paddedMinutes = String(minutes).padStart(2, '0')
+  const paddedSeconds = String(seconds).padStart(2, '0')
+
   let label: string
-  if (hours > 0) label = `${hours}h ${minutes}m`
-  else if (minutes > 0) label = `${minutes}m ${seconds}s`
-  else label = `${seconds}s`
+  if (hours > 0) label = `${hours}h ${paddedMinutes}m ${paddedSeconds}s`
+  else if (minutes > 0) label = `${minutes}m ${paddedSeconds}s`
+  else label = `${paddedSeconds}s`
 
   return { label, urgent, ended: false }
 }
