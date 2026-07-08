@@ -166,7 +166,7 @@ export default function ProductCard({
                     </div>
                 </div>
 
-                {!isWon && (
+                {!isWon && isLoggedIn && (
                     <div className="absolute bottom-4 right-4 z-10" onClick={(e) => e.stopPropagation()}>
                         <ButtonTemplate
                             title={

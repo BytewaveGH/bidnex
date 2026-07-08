@@ -61,6 +61,35 @@ function AnimatedAmount({ value }: { value: number }) {
   return <span className="tabular-nums">{formatGHS(display)}</span>
 }
 
+function ReelCountdown({ endTime }: { endTime: string | null }) {
+  const [countdown, setCountdown] = useState(() => formatStreamCountdown(endTime))
+
+  useEffect(() => {
+    function tick() {
+      setCountdown(formatStreamCountdown(endTime))
+    }
+    tick()
+    const interval = setInterval(tick, 1000)
+    return () => clearInterval(interval)
+  }, [endTime])
+
+  if (countdown.ended) {
+    return <span className="rounded-full bg-white/15 px-3 py-1 text-xs font-semibold backdrop-blur-sm">Ended</span>
+  }
+  if (!countdown.label) return null
+  return (
+    <span
+      className={cn(
+        'flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium tabular-nums whitespace-nowrap',
+        countdown.urgent ? 'bg-[#D42620] text-white font-semibold' : 'border border-white/25 bg-white/15 text-white backdrop-blur-sm',
+      )}
+    >
+      <AlarmClock className="h-3.5 w-3.5" />
+      {countdown.label}
+    </span>
+  )
+}
+
 type ActionState = { loading: boolean; error: string | null }
 
 type LotReelCardProps = {
@@ -108,7 +137,6 @@ export default function LotReelCard({
   const [maxBidInput, setMaxBidInput] = useState('')
   const [activeImageIndex, setActiveImageIndex] = useState(0)
   const mediaItems = useMemo(() => streamMediaItems(lot), [lot])
-  const countdown = formatStreamCountdown(lot.bidEndTime)
   const isClosed = lot.status !== 'active' && lot.status !== 'pending'
   const suggestedBid = minNextBid(lot)
   const parsedMaxBid = Number(maxBidInput)
@@ -197,27 +225,16 @@ export default function LotReelCard({
           </div>
         )}
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 min-w-0">
           {lot.category?.name && (
-            <span className="rounded-full border border-white/30 bg-white/10 px-3 py-1 text-xs font-medium backdrop-blur-sm">
+            <span className="min-w-0 shrink truncate whitespace-nowrap rounded-full border border-white/25 bg-white/15 px-3 py-1 text-xs font-medium backdrop-blur-sm">
               {lot.category.name}
             </span>
           )}
-          {!countdown.ended && countdown.label && (
-            <span
-              className={cn(
-                'flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold',
-                countdown.urgent ? 'bg-[#D42620] text-white' : 'bg-white/15 text-white backdrop-blur-sm',
-              )}
-            >
-              <AlarmClock className="h-3.5 w-3.5" />
-              {countdown.label}
-            </span>
-          )}
-          {countdown.ended && (
-            <span className="rounded-full bg-white/15 px-3 py-1 text-xs font-semibold backdrop-blur-sm">Ended</span>
-          )}
-          <span className="flex items-center gap-1.5 rounded-full border border-white/25 px-3 py-1 text-xs font-medium">
+          <div className="shrink-0">
+            <ReelCountdown endTime={lot.bidEndTime} />
+          </div>
+          <span className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-white/25 bg-white/15 px-3 py-1 text-xs font-medium backdrop-blur-sm">
             <UsersRound className="h-3.5 w-3.5" />
             {lot.bidCount} bids
           </span>
@@ -266,91 +283,105 @@ export default function LotReelCard({
               >
                 <Share2 className="h-5 w-5" />
               </button>
-              <ButtonTemplate
-                title={
-                  isWatchPending ? (
-                    <Loader2 className="w-4 h-4 animate-spin text-[#344054]" />
-                  ) : (
-                    <Image
-                      src={eyeIcon}
-                      alt="watchlist"
-                      className="w-5 h-5"
-                      style={isWatched ? { filter: 'brightness(0) saturate(100%) invert(70%) sepia(100%) saturate(1475%) hue-rotate(1deg) brightness(110%)' } : undefined}
-                    />
-                  )
-                }
-                className="bg-white text-black hover:bg-white h-10 w-10 border border-[#F0F2F5] rounded-full p-0"
-                onClick={handleWatchClick}
-                disabled={isWatchPending}
-              />
-            </div>
-
-            <div className="relative h-12 rounded-[6px] overflow-hidden">
-              <button
-                type="button"
-                onClick={handleBidClick}
-                disabled={bidState.loading}
-                className="absolute inset-y-0 left-0 flex items-center justify-center text-white text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none"
-                style={{
-                  width: lot.buyNowPrice ? '72%' : '100%',
-                  backgroundColor: '#000',
-                  clipPath: lot.buyNowPrice ? 'polygon(0 0, 100% 0, calc(100% - 16px) 100%, 0 100%)' : undefined,
-                }}
-              >
-                {bidState.loading ? <Loader2 className="w-4 h-4 animate-spin" /> : `Bid ${formatGHS(suggestedBid)}`}
-              </button>
-
-              {!!lot.buyNowPrice && (
-                <button
-                  type="button"
-                  onClick={handleBuyNowClick}
-                  disabled={isBuyingNow}
-                  className="absolute inset-y-0 right-0 flex flex-col items-center justify-center bg-[#003C71] text-white text-[10px] leading-tight font-semibold hover:brightness-110 transition-[filter] px-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none"
-                  style={{ width: 'calc(28% + 14px)', clipPath: 'polygon(16px 0, 100% 0, 100% 100%, 0 100%)' }}
-                >
-                  {isBuyingNow ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <>
-                      <span>Buy Now</span>
-                      <span>{formatGHS(lot.buyNowPrice)}</span>
-                    </>
-                  )}
-                </button>
+              {isLoggedIn && (
+                <ButtonTemplate
+                  title={
+                    isWatchPending ? (
+                      <Loader2 className="w-4 h-4 animate-spin text-[#344054]" />
+                    ) : (
+                      <Image
+                        src={eyeIcon}
+                        alt="watchlist"
+                        className="w-5 h-5"
+                        style={isWatched ? { filter: 'brightness(0) saturate(100%) invert(70%) sepia(100%) saturate(1475%) hue-rotate(1deg) brightness(110%)' } : undefined}
+                      />
+                    )
+                  }
+                  className="bg-white text-black hover:bg-white h-10 w-10 border border-[#F0F2F5] rounded-full p-0"
+                  onClick={handleWatchClick}
+                  disabled={isWatchPending}
+                />
               )}
             </div>
 
-            {bidState.error && (
-              <p className="mt-1 cursor-pointer text-xs text-[#D42620]" onClick={onClearBidError}>
-                {bidState.error}
-              </p>
-            )}
-            {maxBidState.error && (
-              <p className="mt-1 cursor-pointer text-xs text-[#D42620]" onClick={onClearMaxBidError}>
-                {maxBidState.error}
-              </p>
+            {!isLoggedIn && (
+              <ButtonTemplate
+                title="Login to Bid"
+                className="bg-black text-white hover:bg-black w-full h-12"
+                onClick={onRequireAuth}
+              />
             )}
 
-            <div className="mt-2 flex items-center gap-2">
-              <div className="min-w-0 flex-1">
-                <InputTemplate
-                  placeholder="GHS0.00"
-                  className="h-9 w-full shadow-none"
-                  inputAlign="center"
-                  type="number"
-                  value={maxBidInput}
-                  onChange={(e) => setMaxBidInput(e.target.value)}
-                />
-              </div>
-              <div className="min-w-0 flex-1">
-                <ButtonTemplate
-                  title={maxBidState.loading ? <Loader2 className="mx-auto h-4 w-4 animate-spin" /> : 'Set Max Bid'}
-                  className="h-9 w-full bg-[#FFCC00] text-black hover:bg-[#FFCC00]"
-                  disabled={!isMaxBidValid || maxBidState.loading}
-                  onClick={handleSetMaxBidClick}
-                />
-              </div>
-            </div>
+            {isLoggedIn && (
+              <>
+                <div className="relative h-12 rounded-[6px] overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={handleBidClick}
+                    disabled={bidState.loading}
+                    className="absolute inset-y-0 left-0 flex items-center justify-center text-white text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none"
+                    style={{
+                      width: lot.buyNowPrice ? '72%' : '100%',
+                      backgroundColor: '#000',
+                      clipPath: lot.buyNowPrice ? 'polygon(0 0, 100% 0, calc(100% - 16px) 100%, 0 100%)' : undefined,
+                    }}
+                  >
+                    {bidState.loading ? <Loader2 className="w-4 h-4 animate-spin" /> : `Bid ${formatGHS(suggestedBid)}`}
+                  </button>
+
+                  {!!lot.buyNowPrice && (
+                    <button
+                      type="button"
+                      onClick={handleBuyNowClick}
+                      disabled={isBuyingNow}
+                      className="absolute inset-y-0 right-0 flex flex-col items-center justify-center bg-[#003C71] text-white text-[10px] leading-tight font-semibold hover:brightness-110 transition-[filter] px-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none"
+                      style={{ width: 'calc(28% + 14px)', clipPath: 'polygon(16px 0, 100% 0, 100% 100%, 0 100%)' }}
+                    >
+                      {isBuyingNow ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <>
+                          <span>Buy Now</span>
+                          <span>{formatGHS(lot.buyNowPrice)}</span>
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+
+                {bidState.error && (
+                  <p className="mt-1 cursor-pointer text-xs text-[#D42620]" onClick={onClearBidError}>
+                    {bidState.error}
+                  </p>
+                )}
+                {maxBidState.error && (
+                  <p className="mt-1 cursor-pointer text-xs text-[#D42620]" onClick={onClearMaxBidError}>
+                    {maxBidState.error}
+                  </p>
+                )}
+
+                <div className="mt-2 flex items-center gap-2">
+                  <div className="min-w-0 flex-1">
+                    <InputTemplate
+                      placeholder="GHS0.00"
+                      className="h-9 w-full shadow-none"
+                      inputAlign="center"
+                      type="number"
+                      value={maxBidInput}
+                      onChange={(e) => setMaxBidInput(e.target.value)}
+                    />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <ButtonTemplate
+                      title={maxBidState.loading ? <Loader2 className="mx-auto h-4 w-4 animate-spin" /> : 'Set Max Bid'}
+                      className="h-9 w-full bg-[#FFCC00] text-black hover:bg-[#FFCC00]"
+                      disabled={!isMaxBidValid || maxBidState.loading}
+                      onClick={handleSetMaxBidClick}
+                    />
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>

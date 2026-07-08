@@ -326,7 +326,7 @@ export default function Checkout() {
                 <div className="rounded-[10px] bg-[#F9FAFB] p-3 flex gap-2 text-xs text-[#657688]">
                   <MapPinned className="size-4 shrink-0 text-[#657688]" />
                   <p>
-                    Drop a pin for your delivery address. The vendor will personally arrange a Yango courier and
+                    Drop a pin for your delivery address. We will arrange a Yango courier and
                     reach out to confirm the exact delivery cost before dispatching — it&apos;s not an instant fixed price.
                   </p>
                 </div>
