@@ -44,7 +44,7 @@ export const blogPosts: BlogPost[] = [
         category: 'Bidding Tips',
         coverImage:
             'https://images.unsplash.com/photo-1556742502-ec7c0e9f34b1?auto=format&fit=crop&w=1400&q=80',
-        author: 'Kwame Owusu, Product Team',
+        author: 'BidChale Team',
         date: '2026-06-18',
         readTime: '4 min read',
         featured: true,
@@ -126,7 +126,7 @@ export const blogPosts: BlogPost[] = [
         category: 'Vendor Resources',
         coverImage:
             'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=1400&q=80',
-        author: 'Ama Boateng, Vendor Success',
+        author: 'BidChale Team',
         date: '2026-06-24',
         readTime: '5 min read',
         content: [
@@ -149,7 +149,7 @@ export const blogPosts: BlogPost[] = [
         category: 'Platform Updates',
         coverImage:
             'https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=1400&q=80',
-        author: 'Kwame Owusu, Product Team',
+        author: 'BidChale Team',
         date: '2026-06-27',
         readTime: '4 min read',
         content: [
@@ -185,7 +185,7 @@ export const blogPosts: BlogPost[] = [
         category: 'Success Stories',
         coverImage:
             'https://images.unsplash.com/photo-1556742111-a301076d9d18?auto=format&fit=crop&w=1400&q=80',
-        author: 'Ama Boateng, Vendor Success',
+        author: 'BidChale Team',
         date: '2026-07-02',
         readTime: '4 min read',
         content: [

@@ -7,7 +7,11 @@ import { usePublicFeaturedLots } from '@/app/(bidder)/bidder/(all-items)/_logics
 import { useLotRealtime } from '@/app/(bidder)/bidder/(all-items)/_logics/useLotRealtime'
 import { useResyncOnReconnect } from '@/components/generals/providers/websocket-provider'
 
-export default function Popular() {
+type PopularProps = {
+    search?: string
+}
+
+export default function Popular({ search }: PopularProps) {
     const { data: session } = useSession()
     const isLoggedIn = session?.user?.userType === 'bidder'
     const { data, isLoading, error, refetch } = usePublicFeaturedLots()
@@ -19,7 +23,14 @@ export default function Popular() {
     const handleExpired = useCallback((id: number) => {
         setExpiredIds(prev => new Set(prev).add(id))
     }, [])
-    const visibleLots = useMemo(() => realtimeLots.filter(l => !expiredIds.has(l.id)), [realtimeLots, expiredIds])
+    // The featured-lots endpoint has no search param, so filter the (already
+    // fully-loaded) list client-side instead of round-tripping to the API.
+    const visibleLots = useMemo(() => {
+        const notExpired = realtimeLots.filter(l => !expiredIds.has(l.id))
+        if (!search) return notExpired
+        const q = search.toLowerCase()
+        return notExpired.filter(l => l.title.toLowerCase().includes(q))
+    }, [realtimeLots, expiredIds, search])
 
     if (isLoading && !data) {
         return (
@@ -42,7 +53,9 @@ export default function Popular() {
     if (visibleLots.length === 0) {
         return (
             <div className="w-full flex justify-center items-center py-20">
-                <p className="text-[#657688] text-sm">No items available right now.</p>
+                <p className="text-[#657688] text-sm">
+                    {search ? 'No items match your search.' : 'No items available right now.'}
+                </p>
             </div>
         )
     }

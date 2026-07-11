@@ -61,6 +61,20 @@ export default function TopNav({ onSearch, initialSearchValue }: { onSearch?: (q
 
   const totalCount = (myBidsCount ?? 0) + (watchlistCount ?? 0) + (wonItemsCount ?? 0)
 
+  // Pages that care about search (all-items, buy-now, popular) pass their own
+  // onSearch to filter in place. Everywhere else — home, product details,
+  // auction warehouse — there's no local search to run, so send the query to
+  // All Items instead of silently dropping it.
+  function handleSearch(query: string) {
+    if (onSearch) {
+      onSearch(query)
+      return
+    }
+    const trimmed = query.trim()
+    if (!trimmed) return
+    router.push(`/bidder/all-items?search=${encodeURIComponent(trimmed)}`)
+  }
+
   function handleNavAndClose(path: string) {
     router.push(path)
     setIsMobileMenuOpen(false)
@@ -81,7 +95,7 @@ export default function TopNav({ onSearch, initialSearchValue }: { onSearch?: (q
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter') onSearch?.(searchQuery)
+                if (e.key === 'Enter') handleSearch(searchQuery)
               }}
             />
           </div>
@@ -226,7 +240,7 @@ export default function TopNav({ onSearch, initialSearchValue }: { onSearch?: (q
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
-                  onSearch?.(searchQuery)
+                  handleSearch(searchQuery)
                   setIsMobileMenuOpen(false)
                 }
               }}
