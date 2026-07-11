@@ -7,12 +7,18 @@ import { BLOG_CATEGORIES, blogPosts, type BlogCategory } from '../_data/posts'
 
 type Filter = BlogCategory | 'All'
 
-export default function Blog() {
+type BlogProps = {
+    search?: string
+}
+
+export default function Blog({ search }: BlogProps) {
     const [active, setActive] = useState<Filter>('All')
-    const filtered = useMemo(
-        () => (active === 'All' ? blogPosts : blogPosts.filter((post) => post.category === active)),
-        [active],
-    )
+    const filtered = useMemo(() => {
+        const byCategory = active === 'All' ? blogPosts : blogPosts.filter((post) => post.category === active)
+        if (!search) return byCategory
+        const q = search.toLowerCase()
+        return byCategory.filter((post) => post.title.toLowerCase().includes(q) || post.excerpt.toLowerCase().includes(q))
+    }, [active, search])
 
     return (
         <div className="w-full">
@@ -57,7 +63,9 @@ export default function Blog() {
                     ))}
                 </div>
             ) : (
-                <p className="text-center text-[#657688] py-10 mb-6">No posts in this category yet.</p>
+                <p className="text-center text-[#657688] py-10 mb-6">
+                    {search ? 'No posts match your search.' : 'No posts in this category yet.'}
+                </p>
             )}
 
             {/* WhatsApp CTA */}

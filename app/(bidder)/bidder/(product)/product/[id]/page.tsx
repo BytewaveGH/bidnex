@@ -30,7 +30,7 @@ import { useResyncOnReconnect } from '@/components/generals/providers/websocket-
 import { useNavCounts } from '@/components/generals/providers/nav-counts-provider'
 import { useAxios } from '@/hooks/use-axios'
 import { useSession } from 'next-auth/react'
-import { resolveLotMediaUrl, formatLotCondition } from '@/app/(bidder)/bidder/(all-items)/_logics/auctions'
+import { resolveLotMediaUrl, formatLotCondition, minNextBid } from '@/app/(bidder)/bidder/(all-items)/_logics/auctions'
 import { useLotRealtimeWithActions } from '@/app/(bidder)/bidder/(all-items)/_logics/useLotRealtime'
 import { LotImage } from '@/components/generals/lot-image'
 
@@ -220,9 +220,9 @@ export default function ProductDetails({ params }: { params: Promise<{ id: strin
   const isWinning = !isWon && (realtime?.isWinning ?? (lot.winnerId === currentUserId))
   const isOutbid = !isWon && (realtime?.isOutbid ?? (lot.bidderIds.includes(currentUserId) && lot.winnerId !== currentUserId))
   const isClosed = !isWon && (realtime?.isClosed || lot.status === 'ended' || lot.status === 'cancelled' || lot.auction.status === 'ended' || lot.auction.status === 'cancelled')
-  const suggestedBid = bidCount === 0 ? lot.startingBid : currentBid + lot.bidIncrement
+  const suggestedBid = minNextBid({ startingBid: lot.startingBid, currentBid, bidCount, bidIncrement: lot.bidIncrement })
   const parsedMaxBid = Number(maxBidInput)
-  const isMaxBidValid = maxBidInput.trim() !== '' && Number.isFinite(parsedMaxBid) && parsedMaxBid > 0
+  const isMaxBidValid = maxBidInput.trim() !== '' && Number.isFinite(parsedMaxBid) && parsedMaxBid >= suggestedBid
 
   const deliveryContent = (
     <ul className='list-disc list-inside space-y-1 text-sm'>

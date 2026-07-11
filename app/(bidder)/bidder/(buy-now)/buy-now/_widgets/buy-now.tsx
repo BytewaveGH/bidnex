@@ -22,13 +22,14 @@ type BuyNowProps = {
     page: number
     onPageChange: (page: number) => void
     onTotalPagesChange?: (total: number) => void
+    search?: string
 }
 
-export default function BuyNow({ page, onPageChange, onTotalPagesChange }: BuyNowProps) {
+export default function BuyNow({ page, onPageChange, onTotalPagesChange, search }: BuyNowProps) {
     const { data: session } = useSession()
     const isLoggedIn = session?.user?.userType === 'bidder'
 
-    const { data, isLoading, error, refetch } = usePublicLots({ page, limit: PAGE_SIZE, buyNow: true })
+    const { data, isLoading, error, refetch } = usePublicLots({ page, limit: PAGE_SIZE, buyNow: true, search })
     const baseLots = useMemo(() => data?.data ?? [], [data])
     const realtimeLots = useLotRealtime(baseLots)
     useResyncOnReconnect(refetch)
@@ -76,7 +77,9 @@ export default function BuyNow({ page, onPageChange, onTotalPagesChange }: BuyNo
     if (visibleLots.length === 0) {
         return (
             <div className="w-full flex justify-center items-center py-20">
-                <p className="text-[#657688] text-sm">No buy now items available right now.</p>
+                <p className="text-[#657688] text-sm">
+                    {search ? 'No buy now items match your search.' : 'No buy now items available right now.'}
+                </p>
             </div>
         )
     }

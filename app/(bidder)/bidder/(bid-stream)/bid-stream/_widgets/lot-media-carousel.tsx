@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { Play } from 'lucide-react'
 import type { StreamMediaItem } from '../_logics/stream-types'
 
 type LotMediaCarouselProps = {
@@ -13,13 +14,18 @@ type LotMediaCarouselProps = {
   isMuted: boolean
   /** Reports which image is centered, so the parent can render its own dot indicator. */
   onActiveImageIndexChange?: (index: number) => void
+  /** Fires on a tap anywhere on the media (image or video) that isn't a
+   * swipe — lets the parent toggle its own chrome (buttons, dot indicator)
+   * out of the way so the media can be seen unobstructed. */
+  onTapMedia?: () => void
 }
 
-export default function LotMediaCarousel({ items, alt, isActive, isMuted, onActiveImageIndexChange }: LotMediaCarouselProps) {
+export default function LotMediaCarousel({ items, alt, isActive, isMuted, onActiveImageIndexChange, onTapMedia }: LotMediaCarouselProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const videoRefs = useRef<Map<number, HTMLVideoElement>>(new Map())
   const rafRef = useRef<number | null>(null)
   const [activeImageIndex, setActiveImageIndex] = useState(0)
+  const [isManuallyPaused, setIsManuallyPaused] = useState(false)
 
   const handleScroll = useCallback(() => {
     if (rafRef.current !== null) return
@@ -36,10 +42,16 @@ export default function LotMediaCarousel({ items, alt, isActive, isMuted, onActi
     onActiveImageIndexChange?.(activeImageIndex)
   }, [activeImageIndex, onActiveImageIndexChange])
 
+  // A manual pause only ever applies to whichever video is currently active —
+  // swiping to a different image/video should always start from playing.
+  useEffect(() => {
+    setIsManuallyPaused(false)
+  }, [isActive, activeImageIndex])
+
   useEffect(() => {
     videoRefs.current.forEach((video, i) => {
       video.muted = isMuted
-      if (isActive && i === activeImageIndex) {
+      if (isActive && i === activeImageIndex && !isManuallyPaused) {
         video.play().catch(() => {
           // Some browsers still refuse unmuted autoplay without a fresh
           // gesture — fall back to muted playback rather than a frozen frame.
@@ -48,10 +60,15 @@ export default function LotMediaCarousel({ items, alt, isActive, isMuted, onActi
         })
       } else {
         video.pause()
-        video.currentTime = 0
+        if (!isActive || i !== activeImageIndex) video.currentTime = 0
       }
     })
-  }, [isActive, activeImageIndex, isMuted])
+  }, [isActive, activeImageIndex, isMuted, isManuallyPaused])
+
+  function handleTapMedia(item: StreamMediaItem) {
+    if (item.type === 'video') setIsManuallyPaused((v) => !v)
+    onTapMedia?.()
+  }
 
   if (items.length === 0) {
     return (
@@ -70,7 +87,18 @@ export default function LotMediaCarousel({ items, alt, isActive, isMuted, onActi
         style={{ touchAction: 'pan-x pan-y' }}
       >
         {items.map((item, i) => (
-          <div key={item.id} className="relative h-full w-full shrink-0 snap-start snap-always overflow-hidden">
+          <div
+            key={item.id}
+            className="relative h-full w-full shrink-0 snap-start snap-always overflow-hidden"
+            onClick={() => handleTapMedia(item)}
+          >
+            {item.type === 'video' && isManuallyPaused && isActive && i === activeImageIndex && (
+              <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-black/40">
+                  <Play className="h-7 w-7 translate-x-0.5 fill-white text-white" />
+                </div>
+              </div>
+            )}
             {item.type === 'video' ? (
               <video
                 ref={(el) => {
