@@ -109,13 +109,13 @@ export default function ProductCard({
         setTimeEnded(true)
         onExpired?.()
     }, [onExpired])
-    const effectiveSuggestedBid = suggestedBid ?? (product.currentBid + product.increment)
+    const effectiveSuggestedBid = suggestedBid ?? (product.currentBid + (product.increment > 0 ? product.increment : 1))
     const imageSrc =
         typeof product.image === 'string'
             ? product.image
             : product.image?.src ?? ''
     const parsedMaxBid = Number(maxBidInput)
-    const isMaxBidValid = maxBidInput.trim() !== '' && Number.isFinite(parsedMaxBid) && parsedMaxBid > 0
+    const isMaxBidValid = maxBidInput.trim() !== '' && Number.isFinite(parsedMaxBid) && parsedMaxBid >= effectiveSuggestedBid
 
     async function handleBid() {
         if (!onBid) return
