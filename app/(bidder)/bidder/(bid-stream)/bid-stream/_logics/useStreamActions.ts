@@ -43,7 +43,7 @@ export function useStreamActions() {
     async (lotId: number, amount: number): Promise<ActionResult> => {
       setBidStates(prev => new Map(prev).set(lotId, { loading: true, error: null }))
       try {
-        const res: any = await callApi({ method: 'POST', url: `/bidding/lots/${lotId}/bid`, data: { amount } })
+        const res: any = await callApi({ method: 'POST', url: `/bidder/lots/${lotId}/bids`, data: { amount } })
         if (res.status >= 400) {
           const error = extractError(res, 'Failed to place bid.')
           setBidStates(prev => new Map(prev).set(lotId, { loading: false, error }))
@@ -64,7 +64,7 @@ export function useStreamActions() {
     async (lotId: number): Promise<ActionResult> => {
       setBuyNowStates(prev => new Map(prev).set(lotId, { loading: true, error: null }))
       try {
-        const res: any = await callApi({ method: 'POST', url: `/bidding/lots/${lotId}/buy-now` })
+        const res: any = await callApi({ method: 'POST', url: `/bidder/lots/${lotId}/buy-now` })
         if (res.status >= 400) {
           const error = extractError(res, 'Failed to complete purchase.')
           setBuyNowStates(prev => new Map(prev).set(lotId, { loading: false, error }))
@@ -112,8 +112,8 @@ export function useStreamActions() {
       setWatchPending(prev => new Set(prev).add(lotId))
       try {
         const res: any = watch
-          ? await callApi({ method: 'POST', url: '/watchlist', data: { lotId } })
-          : await callApi({ method: 'DELETE', url: `/watchlist/${lotId}` })
+          ? await callApi({ method: 'POST', url: `/bidder/watchlist/${lotId}` })
+          : await callApi({ method: 'DELETE', url: `/bidder/watchlist/${lotId}` })
 
         if (res.status >= 400) {
           const error = extractError(res, watch ? 'Failed to add to watchlist.' : 'Failed to remove from watchlist.')

@@ -18,6 +18,7 @@ export type StreamLot = {
   title: string
   description: string
   condition: string
+  msrp?: number
   startingBid: number
   currentBid: number
   bidIncrement?: number
@@ -28,6 +29,7 @@ export type StreamLot = {
   primaryImage: string
   images: StreamLotImage[]
   category?: StreamLotCategory | null
+  winnerId?: number | null
   bidderIds: number[]
   auctionId?: number | null
 }
@@ -87,10 +89,44 @@ export function formatGHS(amount: number): string {
   return `GHS ${amount.toLocaleString('en-GH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
+export function deriveLotStanding(lot: StreamLot, currentUserId: number): { isWinning: boolean; isOutbid: boolean; isWon: boolean } {
+  const isWon = lot.status === 'sold' && lot.winnerId === currentUserId
+  const isWinning = !isWon && lot.winnerId === currentUserId
+  const isOutbid = !isWon && !isWinning && lot.bidderIds.includes(currentUserId)
+  return { isWinning, isOutbid, isWon }
+}
+
 export function minNextBid(lot: StreamLot): number {
-  if (lot.bidCount === 0) return lot.startingBid
   const increment = lot.bidIncrement && lot.bidIncrement > 0 ? lot.bidIncrement : 1
+  if (lot.bidCount === 0) return lot.startingBid && lot.startingBid > 0 ? lot.startingBid : increment
   return lot.currentBid + increment
+}
+
+/** Renders a duration escalating through seconds → minutes → hours → days →
+ * weeks → months, rather than letting the largest unit run away unbounded
+ * (e.g. "312h 14m" for a two-week auction) — each tier shows only its unit
+ * plus the next one down. */
+function formatDurationLabel(ms: number): string {
+  const pad = (n: number) => String(n).padStart(2, '0')
+  const totalSeconds = Math.floor(ms / 1000)
+
+  const seconds = totalSeconds % 60
+  const totalMinutes = Math.floor(totalSeconds / 60)
+  const minutes = totalMinutes % 60
+  const totalHours = Math.floor(totalMinutes / 60)
+  const hours = totalHours % 24
+  const totalDays = Math.floor(totalHours / 24)
+  const days = totalDays % 7
+  const totalWeeks = Math.floor(totalDays / 7)
+  const weeks = totalWeeks % 4
+  const months = Math.floor(totalWeeks / 4)
+
+  if (months > 0) return `${months}mo ${weeks}w`
+  if (totalWeeks > 0) return `${totalWeeks}w ${days}d`
+  if (totalDays > 0) return `${totalDays}d ${hours}h ${minutes}m`
+  if (totalHours > 0) return `${totalHours}h ${pad(minutes)}m ${pad(seconds)}s`
+  if (totalMinutes > 0) return `${totalMinutes}m ${pad(seconds)}s`
+  return `${seconds}s`
 }
 
 export function formatStreamCountdown(bidEndTime: string | null): { label: string; urgent: boolean; ended: boolean } {
@@ -99,20 +135,7 @@ export function formatStreamCountdown(bidEndTime: string | null): { label: strin
   if (diff <= 0) return { label: 'Ended', urgent: false, ended: true }
 
   const urgent = diff < 5 * 60 * 1000
-  const totalSeconds = Math.floor(diff / 1000)
-  const hours = Math.floor(totalSeconds / 3600)
-  const minutes = Math.floor((totalSeconds % 3600) / 60)
-  const seconds = totalSeconds % 60
-
-  const paddedMinutes = String(minutes).padStart(2, '0')
-  const paddedSeconds = String(seconds).padStart(2, '0')
-
-  let label: string
-  if (hours > 0) label = `${hours}h ${paddedMinutes}m ${paddedSeconds}s`
-  else if (minutes > 0) label = `${minutes}m ${paddedSeconds}s`
-  else label = `${paddedSeconds}s`
-
-  return { label, urgent, ended: false }
+  return { label: formatDurationLabel(diff), urgent, ended: false }
 }
 
 export function buildStreamParams(params: {

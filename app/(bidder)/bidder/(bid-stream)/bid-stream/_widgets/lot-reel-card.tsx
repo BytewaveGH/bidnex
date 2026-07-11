@@ -1,13 +1,10 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
-import Image from 'next/image'
+import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { AlarmClock, Loader2, Share2, UsersRound, Volume2, VolumeX } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import ButtonTemplate from '@/components/templates/button-template'
 import InputTemplate from '@/components/templates/input-template'
-import { showToast } from '@/components/templates/toast-template'
-import eyeIcon from '@/assets/svgs/eye.svg'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,74 +18,14 @@ import {
 import { cn } from '@/lib/utils'
 import {
   formatGHS,
-  formatStreamCountdown,
   minNextBid,
   streamMediaItems,
   type StreamLot,
 } from '../_logics/stream-types'
 import type { ActionResult } from '../_logics/useStreamActions'
 import LotMediaCarousel from './lot-media-carousel'
-
-function AnimatedAmount({ value }: { value: number }) {
-  const [display, setDisplay] = useState(value)
-  const fromRef = useRef(value)
-  const rafRef = useRef<number | null>(null)
-
-  useEffect(() => {
-    const from = fromRef.current
-    if (from === value) return
-    const start = performance.now()
-    const duration = 450
-
-    function tick(now: number) {
-      const t = Math.min(1, (now - start) / duration)
-      const eased = 1 - Math.pow(1 - t, 3)
-      setDisplay(from + (value - from) * eased)
-      if (t < 1) {
-        rafRef.current = requestAnimationFrame(tick)
-      } else {
-        fromRef.current = value
-      }
-    }
-
-    rafRef.current = requestAnimationFrame(tick)
-    return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current)
-      fromRef.current = value
-    }
-  }, [value])
-
-  return <span className="tabular-nums">{formatGHS(display)}</span>
-}
-
-function ReelCountdown({ endTime }: { endTime: string | null }) {
-  const [countdown, setCountdown] = useState(() => formatStreamCountdown(endTime))
-
-  useEffect(() => {
-    function tick() {
-      setCountdown(formatStreamCountdown(endTime))
-    }
-    tick()
-    const interval = setInterval(tick, 1000)
-    return () => clearInterval(interval)
-  }, [endTime])
-
-  if (countdown.ended) {
-    return <span className="rounded-full bg-white/15 px-3 py-1 text-xs font-semibold backdrop-blur-sm">Ended</span>
-  }
-  if (!countdown.label) return null
-  return (
-    <span
-      className={cn(
-        'flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium tabular-nums whitespace-nowrap',
-        countdown.urgent ? 'bg-[#D42620] text-white font-semibold' : 'border border-white/25 bg-white/15 text-white backdrop-blur-sm',
-      )}
-    >
-      <AlarmClock className="h-3.5 w-3.5" />
-      {countdown.label}
-    </span>
-  )
-}
+import ReelActionRail from './reel-action-rail'
+import ReelInfoPanel from './reel-info-panel'
 
 type ActionState = { loading: boolean; error: string | null }
 
@@ -96,6 +33,9 @@ type LotReelCardProps = {
   lot: StreamLot
   isActive: boolean
   isLoggedIn: boolean
+  isWinning: boolean
+  isOutbid: boolean
+  isWon: boolean
   isMuted: boolean
   onToggleMute: () => void
   isWatched: boolean
@@ -110,12 +50,16 @@ type LotReelCardProps = {
   onBuyNow: () => Promise<boolean>
   onRequireAuth: () => void
   isBuyingNow: boolean
+  className?: string
 }
 
 export default function LotReelCard({
   lot,
   isActive,
   isLoggedIn,
+  isWinning,
+  isOutbid,
+  isWon,
   isMuted,
   onToggleMute,
   isWatched,
@@ -130,17 +74,19 @@ export default function LotReelCard({
   onBuyNow,
   onRequireAuth,
   isBuyingNow,
+  className,
 }: LotReelCardProps) {
   const router = useRouter()
   const [confirmBuyNowOpen, setConfirmBuyNowOpen] = useState(false)
   const [confirmMaxBidOpen, setConfirmMaxBidOpen] = useState(false)
   const [maxBidInput, setMaxBidInput] = useState('')
   const [activeImageIndex, setActiveImageIndex] = useState(0)
+  const [showChrome, setShowChrome] = useState(true)
   const mediaItems = useMemo(() => streamMediaItems(lot), [lot])
   const isClosed = lot.status !== 'active' && lot.status !== 'pending'
   const suggestedBid = minNextBid(lot)
   const parsedMaxBid = Number(maxBidInput)
-  const isMaxBidValid = maxBidInput.trim() !== '' && Number.isFinite(parsedMaxBid) && parsedMaxBid > 0
+  const isMaxBidValid = maxBidInput.trim() !== '' && Number.isFinite(parsedMaxBid) && parsedMaxBid >= suggestedBid
 
   async function handleConfirmBuyNow() {
     setConfirmBuyNowOpen(false)
@@ -151,11 +97,6 @@ export default function LotReelCard({
     setConfirmMaxBidOpen(false)
     const result = await onSetMaxBid(parsedMaxBid)
     if (result.ok) setMaxBidInput('')
-  }
-
-  function handleWatchClick() {
-    if (!isLoggedIn) return onRequireAuth()
-    onToggleWatch()
   }
 
   function handleBuyNowClick() {
@@ -173,26 +114,8 @@ export default function LotReelCard({
     setConfirmMaxBidOpen(true)
   }
 
-  async function handleShare() {
-    const url = `${window.location.origin}/bidder/bid-stream?lot=${lot.id}`
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: lot.title, text: `Check out ${lot.title} on BidChale`, url })
-      } catch {
-        // user dismissed the native share sheet — nothing to do
-      }
-      return
-    }
-    try {
-      await navigator.clipboard.writeText(url)
-      showToast('success', 'Link copied to clipboard.')
-    } catch {
-      showToast('failure', 'Could not copy the link.')
-    }
-  }
-
   return (
-    <div className="relative h-full w-full snap-start snap-always overflow-hidden bg-black">
+    <div className={cn('relative h-full w-full snap-start snap-always overflow-hidden bg-black', className)}>
       <div className="absolute inset-0">
         <LotMediaCarousel
           items={mediaItems}
@@ -200,11 +123,12 @@ export default function LotReelCard({
           isActive={isActive}
           isMuted={isMuted}
           onActiveImageIndexChange={setActiveImageIndex}
+          onTapMedia={() => setShowChrome((v) => !v)}
         />
         <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/85 via-black/10 to-black/30" />
       </div>
 
-      {isClosed && (
+      {isClosed && !isWon && (
         <div className="absolute top-4 left-4 z-10 rounded-full bg-[#D96B6B] px-3 py-1.5 text-xs font-bold text-white">
           {lot.status.toUpperCase()}
         </div>
@@ -212,7 +136,12 @@ export default function LotReelCard({
 
       <div className="absolute inset-x-0 bottom-0 z-10 flex flex-col gap-3 p-4 pb-6 text-white">
         {mediaItems.length > 1 && (
-          <div className="flex justify-center gap-1.5">
+          <div
+            className={cn(
+              'flex justify-center gap-1.5 transition-opacity duration-200',
+              !showChrome && 'pointer-events-none opacity-0',
+            )}
+          >
             {mediaItems.map((item, i) => (
               <span
                 key={item.id}
@@ -225,84 +154,32 @@ export default function LotReelCard({
           </div>
         )}
 
-        <div className="flex items-center gap-2 min-w-0">
-          {lot.category?.name && (
-            <span className="min-w-0 shrink truncate whitespace-nowrap rounded-full border border-white/25 bg-white/15 px-3 py-1 text-xs font-medium backdrop-blur-sm">
-              {lot.category.name}
-            </span>
-          )}
-          <div className="shrink-0">
-            <ReelCountdown endTime={lot.bidEndTime} />
-          </div>
-          <span className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-white/25 bg-white/15 px-3 py-1 text-xs font-medium backdrop-blur-sm">
-            <UsersRound className="h-3.5 w-3.5" />
-            {lot.bidCount} bids
-          </span>
-        </div>
-
-        <h2
-          className="line-clamp-2 text-2xl font-bold cursor-pointer hover:underline"
-          onClick={(e) => {
-            e.stopPropagation()
-            router.push(`/bidder/product/${lot.id}`)
-          }}
-        >
-          {lot.title}
-        </h2>
-
-        <p className="text-sm text-white/70">Current bid</p>
-        <div className="relative -mt-2">
-          <p className="text-3xl font-bold">
-            <AnimatedAmount value={lot.currentBid} />
-          </p>
-
-         
-        </div>
+        <ReelInfoPanel
+          className="max-w-[75%] lg:hidden"
+          lot={lot}
+          onOpenProduct={() => router.push(`/bidder/product/${lot.id}`)}
+          isWon={isWon}
+          isWinning={isWinning}
+          isOutbid={isOutbid}
+        />
 
         {!isClosed && (
-          <div className="relative " onClick={(e) => e.stopPropagation()}>
-            <div
-              className="absolute right-0 bottom-full mb-4 z-20 flex flex-col items-center gap-4"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {mediaItems.some((item) => item.type === 'video') && (
-                <button
-                  type="button"
-                  onClick={onToggleMute}
-                  aria-label={isMuted ? 'Unmute' : 'Mute'}
-                  className="flex h-10 w-10 items-center justify-center rounded-full border border-[#F0F2F5] bg-white text-black"
-                >
-                  {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={handleShare}
-                aria-label="Share"
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-[#F0F2F5] bg-white text-black"
-              >
-                <Share2 className="h-5 w-5" />
-              </button>
-              {isLoggedIn && (
-                <ButtonTemplate
-                  title={
-                    isWatchPending ? (
-                      <Loader2 className="w-4 h-4 animate-spin text-[#344054]" />
-                    ) : (
-                      <Image
-                        src={eyeIcon}
-                        alt="watchlist"
-                        className="w-5 h-5"
-                        style={isWatched ? { filter: 'brightness(0) saturate(100%) invert(70%) sepia(100%) saturate(1475%) hue-rotate(1deg) brightness(110%)' } : undefined}
-                      />
-                    )
-                  }
-                  className="bg-white text-black hover:bg-white h-10 w-10 border border-[#F0F2F5] rounded-full p-0"
-                  onClick={handleWatchClick}
-                  disabled={isWatchPending}
-                />
-              )}
-            </div>
+          <div
+            className={cn('relative transition-opacity duration-200', !showChrome && 'pointer-events-none opacity-0')}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <ReelActionRail
+              className="absolute right-0 bottom-full z-20 mb-4 lg:hidden"
+              lot={lot}
+              hasVideo={mediaItems.some((item) => item.type === 'video')}
+              isMuted={isMuted}
+              onToggleMute={onToggleMute}
+              isLoggedIn={isLoggedIn}
+              isWatched={isWatched}
+              isWatchPending={isWatchPending}
+              onToggleWatch={onToggleWatch}
+              onRequireAuth={onRequireAuth}
+            />
 
             {!isLoggedIn && (
               <ButtonTemplate
@@ -318,11 +195,11 @@ export default function LotReelCard({
                   <button
                     type="button"
                     onClick={handleBidClick}
-                    disabled={bidState.loading}
+                    disabled={bidState.loading || isClosed || isWinning}
                     className="absolute inset-y-0 left-0 flex items-center justify-center text-white text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none"
                     style={{
                       width: lot.buyNowPrice ? '72%' : '100%',
-                      backgroundColor: '#000',
+                      backgroundColor: isWinning ? '#099137' : '#000',
                       clipPath: lot.buyNowPrice ? 'polygon(0 0, 100% 0, calc(100% - 16px) 100%, 0 100%)' : undefined,
                     }}
                   >
@@ -333,7 +210,7 @@ export default function LotReelCard({
                     <button
                       type="button"
                       onClick={handleBuyNowClick}
-                      disabled={isBuyingNow}
+                      disabled={isBuyingNow || isClosed}
                       className="absolute inset-y-0 right-0 flex flex-col items-center justify-center bg-[#003C71] text-white text-[10px] leading-tight font-semibold hover:brightness-110 transition-[filter] px-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none"
                       style={{ width: 'calc(28% + 14px)', clipPath: 'polygon(16px 0, 100% 0, 100% 100%, 0 100%)' }}
                     >
@@ -375,7 +252,7 @@ export default function LotReelCard({
                     <ButtonTemplate
                       title={maxBidState.loading ? <Loader2 className="mx-auto h-4 w-4 animate-spin" /> : 'Set Max Bid'}
                       className="h-9 w-full bg-[#FFCC00] text-black hover:bg-[#FFCC00]"
-                      disabled={!isMaxBidValid || maxBidState.loading}
+                      disabled={!isMaxBidValid || maxBidState.loading || isClosed}
                       onClick={handleSetMaxBidClick}
                     />
                   </div>

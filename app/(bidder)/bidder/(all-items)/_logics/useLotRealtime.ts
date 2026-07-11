@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useWebSocket, useResyncOnReconnect } from '@/components/generals/providers/websocket-provider'
-import type { AuctionLot } from './auctions'
+import { minNextBid, type AuctionLot } from './auctions'
 
 type RealtimeOverride = {
   currentBid?: number
@@ -214,7 +214,7 @@ function useLotRealtimeCore(lots: AuctionLot[]) {
       const isOutbid = rt?.isOutbid ?? (lot.bidderIds.includes(currentUserId) && winnerId !== currentUserId)
       const isWon = rt?.isWon ?? (lot.status === 'sold' && winnerId === currentUserId)
       const isClosed = rt?.isClosed || auctionClosed || ['sold', 'unsold', 'cancelled'].includes(lot.status)
-      const suggestedBid = bidCount === 0 ? lot.startingBid : currentBid + lot.bidIncrement
+      const suggestedBid = minNextBid({ startingBid: lot.startingBid, currentBid, bidCount, bidIncrement: lot.bidIncrement })
 
       const realtime: RealtimeLot = {
         ...lot,

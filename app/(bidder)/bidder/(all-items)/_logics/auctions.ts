@@ -159,6 +159,16 @@ export function resolveCardImage(lot: AuctionLot): string {
   return resolveLotMediaUrl(lot.primaryImage) ?? "";
 }
 
+/** Minimum amount a new bid must meet: the starting bid if nobody has bid yet,
+ * otherwise the current bid plus the increment. Falls back to the increment
+ * (itself defaulting to 1) whenever starting bid/increment is missing or 0,
+ * so a bid can never be placed at GHS 0.00. */
+export function minNextBid(lot: Pick<AuctionLot, "startingBid" | "currentBid" | "bidCount" | "bidIncrement">): number {
+  const increment = lot.bidIncrement && lot.bidIncrement > 0 ? lot.bidIncrement : 1;
+  if (lot.bidCount === 0) return lot.startingBid && lot.startingBid > 0 ? lot.startingBid : increment;
+  return lot.currentBid + increment;
+}
+
 export function formatLotCondition(condition: string): string {
   return condition
     .split("_")
