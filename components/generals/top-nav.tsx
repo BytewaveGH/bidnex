@@ -155,7 +155,7 @@ export default function TopNav({ onSearch, initialSearchValue }: { onSearch?: (q
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => router.push('/bidder/billing')}>
                           <CreditCard />
-                          Billing
+                          Orders & Returns
                         </DropdownMenuItem>
                         <DropdownMenuItem>
                           <Bell />
@@ -307,7 +307,7 @@ export default function TopNav({ onSearch, initialSearchValue }: { onSearch?: (q
               className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-[#F9FAFB] transition-colors text-left"
             >
               <CreditCard className="size-4 text-[#657688]" />
-              <span className="text-sm text-[#344054]">Billing</span>
+              <span className="text-sm text-[#344054]">Orders & Returns</span>
             </button>
             <button
               onClick={() => signOut({ callbackUrl: '/auth/login' })}
