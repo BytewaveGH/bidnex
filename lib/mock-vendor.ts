@@ -216,7 +216,14 @@ export const mockDisputes = [
     },
 ]
 
-export const mockDisputeMessages = [
+export const mockDisputeMessages: {
+    id: number;
+    disputeId: number;
+    senderId: number;
+    message: string;
+    attachments: string[];
+    createdAt: string;
+}[] = [
     {
         id: 1,
         disputeId: 1,
@@ -234,3 +241,44 @@ export const mockDisputeMessages = [
         createdAt: '2026-06-10T13:00:00Z',
     },
 ]
+
+/** Set to true only for local UI preview without APIs. */
+export const VENDOR_DISPUTES_USE_SAMPLE_DATA = false;
+
+export function getMockVendorDisputesPage(page: number, limit: number, status?: string) {
+    const filtered = status
+        ? mockDisputes.filter((d) => d.status === status)
+        : mockDisputes;
+    const start = (page - 1) * limit;
+    return {
+        count: filtered.length,
+        page,
+        limit,
+        data: filtered.slice(start, start + limit),
+    };
+}
+
+export function getMockVendorDisputeDetail(id: number) {
+    const dispute = mockDisputes.find((d) => d.id === id);
+    if (!dispute) return null;
+    const messages = mockDisputeMessages.filter((m) => m.disputeId === id);
+    return { ...dispute, messages };
+}
+
+export function addMockVendorDisputeMessage(
+    disputeId: number,
+    payload: { message: string; attachments: string[] },
+) {
+    const existing = getMockVendorDisputeDetail(disputeId);
+    if (!existing) return null;
+    const nextMessage = {
+        id: (existing.messages?.length ?? 0) + 1,
+        disputeId,
+        senderId: 5,
+        message: payload.message,
+        attachments: payload.attachments,
+        createdAt: new Date().toISOString(),
+    };
+    mockDisputeMessages.push(nextMessage);
+    return { ...existing, messages: [...(existing.messages ?? []), nextMessage] };
+}
