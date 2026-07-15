@@ -52,7 +52,7 @@ export default function Signup({ initialType = 'bidder' }: { initialType?: Accou
 
                             <div className="absolute inset-0 bg-linear-to-b from-transparent to-black/90 p-8 lg:p-8 z-10">
                                 <div className="flex flex-col items-start justify-between h-full">
-                                    <Logo className='text-white text-3xl font-semibold' />
+                                    <Logo variant="dark" className='text-white text-3xl font-semibold' />
 
                                     <div className="flex items-center justify-center w-full">
                                         <div className="bg-[#2C292A] w-full max-w-sm rounded-xl p-5 flex flex-col items-center gap-5">
