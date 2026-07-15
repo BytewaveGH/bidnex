@@ -23,6 +23,20 @@ const roboto = Roboto({
 export const metadata: Metadata = {
   title: "Bidchale",
   description: "Auction platform",
+  icons: {
+    icon: [
+      {
+        url: "/logo_icon_black.png",
+        media: "(prefers-color-scheme: light)",
+        type: "image/png",
+      },
+      {
+        url: "/logo_icon_white.png",
+        media: "(prefers-color-scheme: dark)",
+        type: "image/png",
+      },
+    ],
+  },
 };
 
 export default function RootLayout({
