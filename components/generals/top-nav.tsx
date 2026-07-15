@@ -84,7 +84,7 @@ export default function TopNav({ onSearch, initialSearchValue }: { onSearch?: (q
     <div className="sticky top-0 z-50 bg-white">
 
       {/* ── Desktop top bar ── */}
-      <section className="py-4 hidden sm:block">
+      <section className="py-3 hidden sm:block">
         <div className="page-container flex justify-between items-center gap-4 min-w-0">
           <Logo />
           <div className="flex-1 min-w-0 md:max-w-[600px] h-[40px] shadow-none rounded-[100px]">
