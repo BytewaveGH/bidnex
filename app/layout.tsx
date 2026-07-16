@@ -21,7 +21,7 @@ const roboto = Roboto({
 });
 
 export const metadata: Metadata = {
-  title: "Bidchale",
+  title: "BidChale",
   description: "Auction platform",
   icons: {
     icon: [

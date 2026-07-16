@@ -155,7 +155,7 @@ export default function LotReelCard({
         )}
 
         <ReelInfoPanel
-          className="max-w-[75%] lg:hidden"
+          className={cn('max-w-[75%] transition-opacity duration-200 lg:hidden', !showChrome && 'pointer-events-none opacity-0')}
           lot={lot}
           onOpenProduct={() => router.push(`/bidder/product/${lot.id}`)}
           isWon={isWon}
