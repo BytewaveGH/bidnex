@@ -236,7 +236,7 @@ export const mockDisputeMessages: {
         id: 2,
         disputeId: 1,
         senderId: 5,
-        message: 'Thank you for reaching out. The item was listed as "like new" and was inspected before shipping. Can you share photos of the damage?',
+        message: 'Thank you for reaching out. The item was listed as "like new" and was inspected before delivery. Can you share photos of the damage?',
         attachments: [],
         createdAt: '2026-06-10T13:00:00Z',
     },

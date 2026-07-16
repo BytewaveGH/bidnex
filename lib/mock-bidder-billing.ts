@@ -112,7 +112,7 @@ export const mockDisputeDetails: Record<number, DisputeDetail> = {
         disputeId: 1,
         senderId: 5,
         message:
-          "Thank you for reaching out. The item was listed as 'like new' and was inspected before shipping. Can you share more photos of the damage?",
+          "Thank you for reaching out. The item was listed as 'like new' and was inspected before delivery. Can you share more photos of the damage?",
         attachments: [],
         createdAt: "2026-07-06T14:00:00Z",
       },
