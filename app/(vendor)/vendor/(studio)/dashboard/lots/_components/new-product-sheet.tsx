@@ -310,8 +310,8 @@ export function NewProductSheet({ onSuccess }: NewProductSheetProps) {
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
-                    <Label htmlFor="shippingAvailable">Shipping Available</Label>
-                    <FieldTooltip hint="Offer delivery/shipping as a fulfilment option for buyers." />
+                    <Label htmlFor="shippingAvailable">Delivery Available</Label>
+                    <FieldTooltip hint="Offer delivery as a fulfilment option for buyers." />
                   </div>
                   <Controller
                     name="shippingAvailable"
