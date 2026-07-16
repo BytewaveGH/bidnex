@@ -114,7 +114,7 @@ export const blogPosts: BlogPost[] = [
         content: [
             "Start with the specification tab, not the title. Every electronics lot lists its condition, and where available, a full specification breakdown in the item details. A vague title like 'Smart TV — Great Deal' means nothing without confirming screen size, resolution, and whether it's actually smart-enabled — check before you bid, not after you've won.",
             "Compare the market price to what the same item sells for new elsewhere. BidChale shows an MKT PR reference on every card specifically so you're never bidding blind — if a lot's current bid is already close to that figure, factor in that you're paying near-retail for a used item, which only makes sense if the condition badge reads New/Like New.",
-            "Favor vendors and lots with pickup and shipping both marked available. It's a small detail, but it usually signals a vendor who's set up to actually fulfil the order smoothly, rather than one who listed opportunistically and may be slow to respond once you've won.",
+            "Favor vendors and lots with pickup and delivery both marked available. It's a small detail, but it usually signals a vendor who's set up to actually fulfil the order smoothly, rather than one who listed opportunistically and may be slow to respond once you've won.",
             "Remember that every purchase, whether won by bid or Buy Now, is protected by BidChale's escrow: your payment isn't released to the vendor until you confirm the item arrived as described. If something's materially wrong, you have 48 hours from the expected delivery date to raise a dispute — so a fair deal today is also a protected one.",
         ],
     },
