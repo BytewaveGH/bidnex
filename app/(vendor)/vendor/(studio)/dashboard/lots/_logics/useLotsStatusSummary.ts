@@ -20,7 +20,7 @@ type StatusSummaryResponse = {
 export function useLotsStatusSummary() {
   const result = useFetchData<StatusSummaryResponse>("/vendor/lots/status-summary");
 
-  const data: LotsStatusSummary | null = result.data
+  const data: LotsStatusSummary | null = Array.isArray(result.data?.data)
     ? result.data.data.reduce<LotsStatusSummary>(
         (summary, entry) => {
           if (entry.status in summary) summary[entry.status] += entry.count;

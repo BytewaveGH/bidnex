@@ -50,7 +50,7 @@ function ReelTitle({ title, onOpen, variant }: { title: string; onOpen: () => vo
   return (
     <h2
       className={cn(
-        'cursor-pointer text-base font-semibold hover:underline',
+        'line-clamp-2 cursor-pointer text-base font-semibold hover:underline',
         variant === 'light' && 'text-black',
       )}
       onClick={(e) => {
