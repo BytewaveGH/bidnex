@@ -227,7 +227,7 @@ export default function ProductDetails({ params }: { params: Promise<{ id: strin
   const deliveryContent = (
     <ul className='list-disc list-inside space-y-1 text-sm'>
       <li>{lot.pickupAvailable ? 'Pickup available' : 'Pickup not available'}</li>
-      <li>{lot.shippingAvailable ? 'Shipping available' : 'Shipping not available'}</li>
+      <li>{lot.shippingAvailable ? 'Delivery available' : 'Delivery not available'}</li>
       {lot.auction.locationName && (
         <li>Location: {lot.auction.locationName}{lot.auction.locationAddress ? `, ${lot.auction.locationAddress}` : ''}</li>
       )}
