@@ -27,7 +27,9 @@ export function LotsPageContent({ formattedDate }: LotsPageContentProps) {
 
         <div className="flex flex-wrap items-end justify-end gap-2 lg:w-fit">
           <StatusCreateLot onSuccess={() => setRefreshToken((token) => token + 1)} />
-          <NewProductSheet onSuccess={() => setRefreshToken((token) => token + 1)} />
+          <div className="hidden lg:block">
+            <NewProductSheet onSuccess={() => setRefreshToken((token) => token + 1)} />
+          </div>
         </div>
       </div>
 
