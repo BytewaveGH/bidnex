@@ -1,0 +1,164 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+
+type DragMode = "start" | "end" | "move";
+
+type VideoFilmstripTrimmerProps = {
+  videoRef: React.RefObject<HTMLVideoElement | null>;
+  duration: number;
+  range: [number, number];
+  onRangeChange: (range: [number, number]) => void;
+  disabled?: boolean;
+};
+
+const THUMBNAIL_COUNT = 10;
+const MIN_CLIP_SECONDS = 0.5;
+
+export function VideoFilmstripTrimmer({ videoRef, duration, range, onRangeChange, disabled }: VideoFilmstripTrimmerProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [thumbnails, setThumbnails] = useState<string[]>([]);
+  const dragRef = useRef<{ mode: DragMode; startClientX: number; startRange: [number, number] } | null>(null);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || duration <= 0) return;
+    let cancelled = false;
+
+    async function generate() {
+      const canvas = document.createElement("canvas");
+      const aspect = video!.videoWidth && video!.videoHeight ? video!.videoWidth / video!.videoHeight : 16 / 9;
+      canvas.height = 96;
+      canvas.width = Math.max(1, Math.round(96 * aspect));
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+
+      const originalTime = video!.currentTime;
+      if (!video!.paused) video!.pause();
+
+      const frames: string[] = [];
+      for (let i = 0; i < THUMBNAIL_COUNT; i++) {
+        if (cancelled) return;
+        const t = Math.min(duration - 0.05, Math.max(0, (duration * i) / THUMBNAIL_COUNT));
+        await seekTo(video!, t);
+        if (cancelled) return;
+        ctx.drawImage(video!, 0, 0, canvas.width, canvas.height);
+        frames.push(canvas.toDataURL("image/jpeg", 0.6));
+      }
+
+      if (!cancelled) {
+        video!.currentTime = originalTime;
+        setThumbnails(frames);
+      }
+    }
+
+    generate();
+    return () => {
+      cancelled = true;
+    };
+  }, [videoRef, duration]);
+
+  function timeFromClientX(clientX: number) {
+    const container = containerRef.current;
+    if (!container) return 0;
+    const rect = container.getBoundingClientRect();
+    const ratio = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+    return ratio * duration;
+  }
+
+  function handlePointerDown(mode: DragMode, e: React.PointerEvent) {
+    if (disabled) return;
+    e.preventDefault();
+    e.stopPropagation();
+    e.currentTarget.setPointerCapture(e.pointerId);
+    dragRef.current = { mode, startClientX: e.clientX, startRange: range };
+  }
+
+  function handlePointerMove(e: React.PointerEvent) {
+    const drag = dragRef.current;
+    const container = containerRef.current;
+    if (!drag || !container || duration <= 0) return;
+
+    if (drag.mode === "move") {
+      const rect = container.getBoundingClientRect();
+      const deltaTime = ((e.clientX - drag.startClientX) / rect.width) * duration;
+      const clipLength = drag.startRange[1] - drag.startRange[0];
+      const newStart = Math.min(Math.max(0, drag.startRange[0] + deltaTime), duration - clipLength);
+      onRangeChange([newStart, newStart + clipLength]);
+      return;
+    }
+
+    const time = timeFromClientX(e.clientX);
+    if (drag.mode === "start") {
+      const newStart = Math.min(time, range[1] - MIN_CLIP_SECONDS);
+      onRangeChange([Math.max(0, newStart), range[1]]);
+    } else {
+      const newEnd = Math.max(time, range[0] + MIN_CLIP_SECONDS);
+      onRangeChange([range[0], Math.min(duration, newEnd)]);
+    }
+  }
+
+  function handlePointerUp(e: React.PointerEvent) {
+    dragRef.current = null;
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    }
+  }
+
+  const startPct = duration > 0 ? (range[0] / duration) * 100 : 0;
+  const endPct = duration > 0 ? (range[1] / duration) * 100 : 100;
+
+  return (
+    <div
+      ref={containerRef}
+      className="relative h-16 w-full touch-none select-none overflow-hidden rounded-md bg-neutral-900"
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
+    >
+      <div className="flex h-full w-full">
+        {thumbnails.length > 0 && duration > 0 ? (
+          thumbnails.map((src, i) => (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img key={i} src={src} alt="" draggable={false} className="h-full min-w-0 flex-1 object-cover" />
+          ))
+        ) : (
+          <div className="flex h-full w-full items-center justify-center text-xs text-white/40">Loading preview...</div>
+        )}
+      </div>
+
+      <div className="pointer-events-none absolute inset-y-0 left-0 bg-black/70" style={{ width: `${startPct}%` }} />
+      <div className="pointer-events-none absolute inset-y-0 right-0 bg-black/70" style={{ width: `${100 - endPct}%` }} />
+
+      <div
+        className="absolute inset-y-0 cursor-grab touch-none border-y-2 border-yellow-400 active:cursor-grabbing"
+        style={{ left: `${startPct}%`, width: `${endPct - startPct}%` }}
+        onPointerDown={(e) => handlePointerDown("move", e)}
+      >
+        <div
+          onPointerDown={(e) => handlePointerDown("start", e)}
+          className="absolute inset-y-0 left-0 flex w-4 touch-none cursor-ew-resize items-center justify-center rounded-l bg-yellow-400"
+        >
+          <span className="h-6 w-0.5 rounded-full bg-black/60" />
+        </div>
+        <div
+          onPointerDown={(e) => handlePointerDown("end", e)}
+          className="absolute inset-y-0 right-0 flex w-4 touch-none cursor-ew-resize items-center justify-center rounded-r bg-yellow-400"
+        >
+          <span className="h-6 w-0.5 rounded-full bg-black/60" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function seekTo(video: HTMLVideoElement, time: number): Promise<void> {
+  return new Promise((resolve) => {
+    function onSeeked() {
+      video.removeEventListener("seeked", onSeeked);
+      resolve();
+    }
+    video.addEventListener("seeked", onSeeked);
+    video.currentTime = time;
+  });
+}

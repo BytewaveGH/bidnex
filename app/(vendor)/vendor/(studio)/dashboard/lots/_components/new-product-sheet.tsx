@@ -3,9 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ImageIcon, Info, Plus, ShoppingBag, X } from "lucide-react";
+import { ImageIcon, Info, Plus, Scissors, ShoppingBag, X } from "lucide-react";
 import { Controller, useFieldArray, useForm, type Resolver } from "react-hook-form";
 import { showToast } from "@/components/templates/toast-template";
+import { MAX_VIDEO_SIZE_BYTES, formatFileSize } from "./video-trim/constants";
+import { VideoTrimDialog } from "./video-trim/video-trim-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -37,6 +39,7 @@ export function NewProductSheet({ onSuccess }: NewProductSheetProps) {
   const [open, setOpen] = useState(false);
   const [images, setImages] = useState<Array<{ file: File; preview: string }>>([]);
   const [submitPhase, setSubmitPhase] = useState<"idle" | "creating" | "uploading">("idle");
+  const [trimIndex, setTrimIndex] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { createLot } = useCreateVendorLot();
   const { uploadLotImages } = useUploadVendorLotImages();
@@ -54,6 +57,15 @@ export function NewProductSheet({ onSuccess }: NewProductSheetProps) {
     const next = files.map((file) => ({ file, preview: URL.createObjectURL(file) }));
     setImages((prev) => [...prev, ...next]);
     e.target.value = "";
+
+    for (const file of files) {
+      if (file.type.startsWith("video/") && file.size > MAX_VIDEO_SIZE_BYTES) {
+        showToast(
+          "failure",
+          `"${file.name}" is ${formatFileSize(file.size)}, over the 25MB limit. Trim it before saving.`,
+        );
+      }
+    }
   }
 
   function removeImage(index: number) {
@@ -61,6 +73,17 @@ export function NewProductSheet({ onSuccess }: NewProductSheetProps) {
       URL.revokeObjectURL(prev[index].preview);
       return prev.filter((_, i) => i !== index);
     });
+  }
+
+  function handleTrimConfirm(trimmedFile: File) {
+    setImages((prev) => {
+      if (trimIndex === null) return prev;
+      URL.revokeObjectURL(prev[trimIndex].preview);
+      const next = [...prev];
+      next[trimIndex] = { file: trimmedFile, preview: URL.createObjectURL(trimmedFile) };
+      return next;
+    });
+    setTrimIndex(null);
   }
 
   const {
@@ -284,6 +307,20 @@ export function NewProductSheet({ onSuccess }: NewProductSheetProps) {
                         ) : (
                           <img src={img.preview} alt="" className="h-full w-full object-cover" />
                         )}
+                        {img.file.type.startsWith("video/") && (
+                          <button
+                            type="button"
+                            onClick={() => setTrimIndex(i)}
+                            className="absolute left-1 top-1 rounded-full bg-black/50 p-0.5 text-white transition-colors hover:bg-black/70"
+                          >
+                            <Scissors className="size-3" />
+                          </button>
+                        )}
+                        {img.file.type.startsWith("video/") && img.file.size > MAX_VIDEO_SIZE_BYTES && (
+                          <span className="absolute bottom-1 left-1 rounded bg-destructive/90 px-1 text-[10px] text-white">
+                            {formatFileSize(img.file.size)}
+                          </span>
+                        )}
                         <button
                           type="button"
                           onClick={() => removeImage(i)}
@@ -353,6 +390,13 @@ export function NewProductSheet({ onSuccess }: NewProductSheetProps) {
           </form>
         </TooltipProvider>
       </SheetContent>
+
+      <VideoTrimDialog
+        open={trimIndex !== null}
+        file={trimIndex !== null ? images[trimIndex].file : null}
+        onOpenChange={(next) => !next && setTrimIndex(null)}
+        onConfirm={handleTrimConfirm}
+      />
     </Sheet>
   );
 }
