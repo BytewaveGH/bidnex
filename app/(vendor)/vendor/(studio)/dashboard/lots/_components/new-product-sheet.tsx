@@ -194,19 +194,11 @@ export function NewProductSheet({ onSuccess }: NewProductSheetProps) {
                 </Select>
               </Field>
 
-              <Field
-                label="Reserve Price (GHS)"
-                description="Optional. The lowest price you're willing to accept for this item. If bidding doesn't reach this amount, the item won't sell. "
-                error={errors.reservePrice?.message}
-              >
+              <Field label="Reserve Price (GHS)" hint="The minimum price you're willing to accept. The item won't sell unless bidding reaches this amount." error={errors.reservePrice?.message}>
                 <Input className="h-11" type="number" min={0} step="0.01" placeholder="200" {...register("reservePrice")} />
               </Field>
 
-              <Field
-                label="Buy Now Price (GHS)"
-                description="Optional. Lets a buyer skip the bidding and purchase the item immediately at this price, ending the auction right away. Should be set higher than your Reserve Price."
-                error={errors.buyNowPrice?.message}
-              >
+              <Field label="Buy Now Price (GHS)" hint="Buyers can instantly purchase the item at this price, ending the auction immediately." error={errors.buyNowPrice?.message}>
                 <Input className="h-11" type="number" min={0} step="0.01" placeholder="500" {...register("buyNowPrice")} />
               </Field>
 
@@ -371,13 +363,11 @@ export function FieldTooltip({ hint }: { hint: string }) {
 export function Field({
   label,
   hint,
-  description,
   error,
   children,
 }: {
   label: string;
   hint?: string;
-  description?: string;
   error?: string;
   children: React.ReactNode;
 }) {
@@ -387,7 +377,6 @@ export function Field({
         <Label>{label}</Label>
         {hint && <FieldTooltip hint={hint} />}
       </div>
-      {description && <p className="text-xs text-muted-foreground">{description}</p>}
       {children}
       {error && <p className="text-destructive text-xs">{error}</p>}
     </div>
