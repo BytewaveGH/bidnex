@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ChevronLeft, ChevronRight, ChevronUp, ImagePlus, Plus, Sparkles, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronUp, ImagePlus, Pause, Play, Plus, Sparkles, X } from "lucide-react";
 import { Controller, useFieldArray, useForm, type Resolver } from "react-hook-form";
 import { showToast } from "@/components/templates/toast-template";
 import { Button } from "@/components/ui/button";
@@ -22,22 +22,28 @@ import { useUploadVendorLotImages } from "../_logics/useUploadVendorLotImages";
 import { getCreatedLotId, type CreateVendorLotPayload } from "../_logics/vendor-lots";
 import { lotFormSchema, type LotFormValues } from "./lot-form-schema";
 import { Field, FieldTooltip } from "./new-product-sheet";
+import { MAX_VIDEO_SIZE_BYTES, estimateTrimmedSize, formatFileSize, formatTime } from "./video-trim/constants";
+import { useVideoTrim } from "./video-trim/use-video-trim";
+import { VideoFilmstripTrimmer } from "./video-trim/video-filmstrip-trimmer";
 
 type StatusCreateLotProps = {
   onSuccess?: () => void;
 };
 
-type MediaItem = { file: File; preview: string };
+type MediaItem = { file: File; preview: string; trimRange?: [number, number]; duration?: number };
 
 export function StatusCreateLot({ onSuccess }: StatusCreateLotProps) {
   const [open, setOpen] = useState(false);
   const [images, setImages] = useState<MediaItem[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
   const [detailsOpen, setDetailsOpen] = useState(false);
-  const [submitPhase, setSubmitPhase] = useState<"idle" | "creating" | "uploading">("idle");
+  const [submitPhase, setSubmitPhase] = useState<"idle" | "creating" | "trimming" | "uploading">("idle");
+  const [isPlaying, setIsPlaying] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const activeVideoRef = useRef<HTMLVideoElement>(null);
   const { createLot } = useCreateVendorLot();
   const { uploadLotImages } = useUploadVendorLotImages();
+  const { trim, progress: trimProgress } = useVideoTrim();
   const { categories, isLoading: isCategoriesLoading, error: categoriesError } = usePublicCategories(open);
   const isSubmitting = submitPhase !== "idle";
 
@@ -104,6 +110,15 @@ export function StatusCreateLot({ onSuccess }: StatusCreateLotProps) {
     const next = files.map((file) => ({ file, preview: URL.createObjectURL(file) }));
     setImages((prev) => [...prev, ...next]);
     e.target.value = "";
+
+    for (const file of files) {
+      if (file.type.startsWith("video/") && file.size > MAX_VIDEO_SIZE_BYTES) {
+        showToast(
+          "failure",
+          `"${file.name}" is ${formatFileSize(file.size)}, over the 25MB limit. Trim it before posting.`,
+        );
+      }
+    }
   }
 
   function removeImage(index: number) {
@@ -111,6 +126,58 @@ export function StatusCreateLot({ onSuccess }: StatusCreateLotProps) {
       URL.revokeObjectURL(prev[index].preview);
       return prev.filter((_, i) => i !== index);
     });
+  }
+
+  function handleActiveVideoLoadedMetadata() {
+    const video = activeVideoRef.current;
+    if (!video) return;
+    setImages((prev) => {
+      const item = prev[activeIndex];
+      if (!item || item.trimRange) return prev;
+      const next = [...prev];
+      next[activeIndex] = { ...item, trimRange: [0, video.duration], duration: video.duration };
+      return next;
+    });
+  }
+
+  function handleActiveTimeUpdate() {
+    const video = activeVideoRef.current;
+    const trimRange = images[activeIndex]?.trimRange;
+    if (!video || !trimRange) return;
+    if (video.currentTime >= trimRange[1]) {
+      video.pause();
+      video.currentTime = trimRange[0];
+      setIsPlaying(false);
+    }
+  }
+
+  function toggleActivePlayback() {
+    const video = activeVideoRef.current;
+    const trimRange = images[activeIndex]?.trimRange;
+    if (!video) return;
+    if (isPlaying) {
+      video.pause();
+      setIsPlaying(false);
+      return;
+    }
+    const [start, end] = trimRange ?? [0, video.duration || 0];
+    if (video.currentTime < start || video.currentTime >= end) {
+      video.currentTime = start;
+    }
+    video.play();
+    setIsPlaying(true);
+  }
+
+  function handleTrimRangeChange(next: [number, number]) {
+    setImages((prev) => {
+      const item = prev[activeIndex];
+      if (!item) return prev;
+      const updated = [...prev];
+      updated[activeIndex] = { ...item, trimRange: next };
+      return updated;
+    });
+    const video = activeVideoRef.current;
+    if (video) video.currentTime = next[0];
   }
 
   function resetAll() {
@@ -152,11 +219,31 @@ export function StatusCreateLot({ onSuccess }: StatusCreateLotProps) {
       }
 
       if (images.length > 0) {
+        setSubmitPhase("trimming");
+        const finalFiles: File[] = [];
+        for (const img of images) {
+          const needsTrim =
+            img.file.type.startsWith("video/") &&
+            img.trimRange &&
+            img.duration &&
+            (img.trimRange[0] > 0.05 || img.trimRange[1] < img.duration - 0.05);
+
+          if (!needsTrim) {
+            finalFiles.push(img.file);
+            continue;
+          }
+
+          try {
+            const trimmed = await trim(img.file, img.trimRange![0], img.trimRange![1]);
+            finalFiles.push(trimmed);
+          } catch {
+            showToast("failure", `Couldn't trim "${img.file.name}", uploading the original clip instead.`);
+            finalFiles.push(img.file);
+          }
+        }
+
         setSubmitPhase("uploading");
-        await uploadLotImages(
-          lotId,
-          images.map((img) => img.file),
-        );
+        await uploadLotImages(lotId, finalFiles);
       }
 
       showToast("success", "Lot created successfully.");
@@ -183,7 +270,7 @@ export function StatusCreateLot({ onSuccess }: StatusCreateLotProps) {
       {open &&
         typeof document !== "undefined" &&
         createPortal(
-          <div className="fixed inset-0 z-40 flex flex-col bg-black">
+          <div className="fixed inset-0 z-50 flex flex-col bg-black">
             <input
               ref={fileInputRef}
               type="file"
@@ -194,7 +281,10 @@ export function StatusCreateLot({ onSuccess }: StatusCreateLotProps) {
             />
 
             {/* Top bar */}
-            <div className="absolute inset-x-0 top-0 z-20 flex items-center justify-between p-4">
+            <div
+              className="absolute inset-x-0 top-0 z-20 flex items-center justify-between px-4 pb-4"
+              style={{ paddingTop: "max(1rem, env(safe-area-inset-top))" }}
+            >
               <button
                 type="button"
                 onClick={handleClose}
@@ -237,7 +327,27 @@ export function StatusCreateLot({ onSuccess }: StatusCreateLotProps) {
               ) : (
                 <>
                   {current.file.type.startsWith("video/") ? (
-                    <video src={current.preview} className="max-h-full max-w-full object-contain" muted controls />
+                    <div className="relative flex h-full w-full items-center justify-center">
+                      <video
+                        ref={activeVideoRef}
+                        src={current.preview}
+                        className="max-h-full max-w-full object-contain"
+                        muted
+                        playsInline
+                        onLoadedMetadata={handleActiveVideoLoadedMetadata}
+                        onTimeUpdate={handleActiveTimeUpdate}
+                        onPause={() => setIsPlaying(false)}
+                      />
+                      <button
+                        type="button"
+                        onClick={toggleActivePlayback}
+                        className="absolute inset-0 flex items-center justify-center text-white"
+                      >
+                        <span className="rounded-full bg-black/50 p-3">
+                          {isPlaying ? <Pause className="size-6" /> : <Play className="size-6" />}
+                        </span>
+                      </button>
+                    </div>
                   ) : (
                     <img src={current.preview} alt="" className="max-h-full max-w-full object-contain" />
                   )}
@@ -264,10 +374,40 @@ export function StatusCreateLot({ onSuccess }: StatusCreateLotProps) {
                   <button
                     type="button"
                     onClick={() => removeImage(activeIndex)}
-                    className="absolute right-3 top-16 rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-destructive/80"
+                    style={{ top: "calc(4.5rem + env(safe-area-inset-top))" }}
+                    className="absolute right-3 rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-destructive/80"
                   >
                     <X className="size-4" />
                   </button>
+
+                  {current.file.type.startsWith("video/") && (() => {
+                    const totalDuration = current.duration ?? 0;
+                    const trimRange = current.trimRange ?? [0, totalDuration];
+                    const selectedDuration = trimRange[1] - trimRange[0];
+                    const estimatedSize = estimateTrimmedSize(current.file.size, totalDuration, trimRange);
+                    const isFullClip = totalDuration === 0 || (trimRange[0] <= 0.05 && trimRange[1] >= totalDuration - 0.05);
+
+                    return (
+                      <div className="absolute inset-x-3 bottom-3 z-10 flex flex-col gap-1.5">
+                        <div className="flex items-center justify-between text-xs text-white/80">
+                          <span>
+                            {formatTime(selectedDuration)} · {formatFileSize(estimatedSize)}
+                            {!isFullClip && " (estimated)"}
+                          </span>
+                          {estimatedSize > MAX_VIDEO_SIZE_BYTES && (
+                            <span className="rounded-full bg-destructive/90 px-2 py-0.5 text-white">Over 25MB — trim it down</span>
+                          )}
+                        </div>
+                        <VideoFilmstripTrimmer
+                          videoRef={activeVideoRef}
+                          duration={totalDuration}
+                          range={trimRange}
+                          onRangeChange={handleTrimRangeChange}
+                          disabled={isSubmitting}
+                        />
+                      </div>
+                    );
+                  })()}
                 </>
               )}
             </div>
@@ -370,19 +510,11 @@ export function StatusCreateLot({ onSuccess }: StatusCreateLotProps) {
                   </Select>
                 </Field>
 
-                <Field
-                  label="Reserve Price (GHS)"
-                  description="Optional. The lowest price you're willing to accept for this item. If bidding doesn't reach this amount, the item won't sell. "
-                  error={errors.reservePrice?.message}
-                >
+                <Field label="Reserve Price (GHS)" hint="The minimum price you're willing to accept. The item won't sell unless bidding reaches this amount." error={errors.reservePrice?.message}>
                   <Input className="h-11" type="number" min={0} step="0.01" placeholder="200" {...register("reservePrice")} />
                 </Field>
 
-                <Field
-                  label="Buy Now Price (GHS)"
-                  description="Optional. Lets a buyer skip the bidding and purchase the item immediately at this price, ending the auction right away. Should be set higher than your Reserve Price."
-                  error={errors.buyNowPrice?.message}
-                >
+                <Field label="Buy Now Price (GHS)" hint="Buyers can instantly purchase the item at this price, ending the auction immediately." error={errors.buyNowPrice?.message}>
                   <Input className="h-11" type="number" min={0} step="0.01" placeholder="500" {...register("buyNowPrice")} />
                 </Field>
 
@@ -467,9 +599,11 @@ export function StatusCreateLot({ onSuccess }: StatusCreateLotProps) {
                 <Button type="submit" className="h-11 flex-1" disabled={isSubmitting}>
                   {submitPhase === "creating"
                     ? "Creating..."
-                    : submitPhase === "uploading"
-                      ? "Uploading images..."
-                      : "Post Product"}
+                    : submitPhase === "trimming"
+                      ? `Trimming video... ${Math.round(trimProgress * 100)}%`
+                      : submitPhase === "uploading"
+                        ? "Uploading images..."
+                        : "Post Product"}
                 </Button>
               </div>
             </form>
