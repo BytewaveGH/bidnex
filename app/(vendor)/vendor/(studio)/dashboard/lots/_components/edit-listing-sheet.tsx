@@ -238,7 +238,6 @@ export function EditListingSheet({ lot, open, onOpenChange, onSuccess }: EditLis
               >
                 <Input className="h-11" type="number" min={0} step="0.01" {...register("buyNowPrice")} />
               </Field>
-
               <div className="flex flex-col gap-3">
                 <div className="flex items-center gap-1.5">
                   <Label>Specifications</Label>
