@@ -102,10 +102,9 @@ export function minNextBid(lot: StreamLot): number {
   return lot.currentBid + increment
 }
 
-/** Renders a duration escalating through seconds → minutes → hours → days →
- * weeks → months, rather than letting the largest unit run away unbounded
- * (e.g. "312h 14m" for a two-week auction) — each tier shows only its unit
- * plus the next one down. */
+/** Renders a duration from its largest nonzero unit down through seconds,
+ * so the countdown always ticks visibly regardless of how far out the end
+ * time is (e.g. "2w 3d 05h 12m 08s", not a truncated "2w 3d"). */
 function formatDurationLabel(ms: number): string {
   const pad = (n: number) => String(n).padStart(2, '0')
   const totalSeconds = Math.floor(ms / 1000)
@@ -118,12 +117,9 @@ function formatDurationLabel(ms: number): string {
   const totalDays = Math.floor(totalHours / 24)
   const days = totalDays % 7
   const totalWeeks = Math.floor(totalDays / 7)
-  const weeks = totalWeeks % 4
-  const months = Math.floor(totalWeeks / 4)
 
-  if (months > 0) return `${months}mo ${weeks}w`
-  if (totalWeeks > 0) return `${totalWeeks}w ${days}d`
-  if (totalDays > 0) return `${totalDays}d ${hours}h ${minutes}m`
+  if (totalWeeks > 0) return `${totalWeeks}w ${days}d ${pad(hours)}h ${pad(minutes)}m ${pad(seconds)}s`
+  if (totalDays > 0) return `${totalDays}d ${pad(hours)}h ${pad(minutes)}m ${pad(seconds)}s`
   if (totalHours > 0) return `${totalHours}h ${pad(minutes)}m ${pad(seconds)}s`
   if (totalMinutes > 0) return `${totalMinutes}m ${pad(seconds)}s`
   return `${seconds}s`
