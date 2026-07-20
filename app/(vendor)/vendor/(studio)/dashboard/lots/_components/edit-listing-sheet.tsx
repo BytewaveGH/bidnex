@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ImageIcon, Info, Plus, X } from "lucide-react";
+import { ImageIcon, Info, Plus, Trash2, X } from "lucide-react";
 import { Controller, useFieldArray, useForm, type Resolver } from "react-hook-form";
 
 import { showToast } from "@/components/templates/toast-template";
@@ -308,7 +308,7 @@ export function EditListingSheet({ lot, open, onOpenChange, onSuccess }: EditLis
                     {existingImages.map((img) => (
                       <div key={img.id} className="relative aspect-square overflow-hidden rounded-md border">
                         {img.mediaType === "video" ? (
-                          <video src={img.url} className="h-full w-full object-cover" muted />
+                          <video src={img.url} className="h-full w-full object-cover" muted playsInline preload="metadata" />
                         ) : (
                           <img src={img.url} alt="" className="h-full w-full object-cover" />
                         )}
@@ -322,7 +322,7 @@ export function EditListingSheet({ lot, open, onOpenChange, onSuccess }: EditLis
                           onClick={() => removeImage(i)}
                           className="absolute right-1 top-1 rounded-full bg-black/50 p-0.5 text-white transition-colors hover:bg-black/70"
                         >
-                          <X className="size-3" />
+                          <Trash2 className="size-3" />
                         </button>
                       </div>
                     ))}
