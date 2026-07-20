@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ChevronLeft, ChevronRight, ChevronUp, ImagePlus, Pause, Play, Plus, Sparkles, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronUp, ImagePlus, Pause, Play, Plus, Sparkles, Trash2, X } from "lucide-react";
 import { Controller, useFieldArray, useForm, type Resolver } from "react-hook-form";
 import { showToast } from "@/components/templates/toast-template";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,7 @@ import { useUploadVendorLotImages } from "../_logics/useUploadVendorLotImages";
 import { getCreatedLotId, type CreateVendorLotPayload } from "../_logics/vendor-lots";
 import { lotFormSchema, type LotFormValues } from "./lot-form-schema";
 import { Field, FieldTooltip } from "./new-product-sheet";
+import { captureVideoPosterFrame } from "./video-trim/capture-poster";
 import { MAX_VIDEO_SIZE_BYTES, estimateTrimmedSize, formatFileSize, formatTime } from "./video-trim/constants";
 import { useVideoTrim } from "./video-trim/use-video-trim";
 import { VideoFilmstripTrimmer } from "./video-trim/video-filmstrip-trimmer";
@@ -30,7 +31,7 @@ type StatusCreateLotProps = {
   onSuccess?: () => void;
 };
 
-type MediaItem = { file: File; preview: string; trimRange?: [number, number]; duration?: number };
+type MediaItem = { file: File; preview: string; trimRange?: [number, number]; duration?: number; posterUrl?: string };
 
 export function StatusCreateLot({ onSuccess }: StatusCreateLotProps) {
   const [open, setOpen] = useState(false);
@@ -104,6 +105,16 @@ export function StatusCreateLot({ onSuccess }: StatusCreateLotProps) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [open, detailsOpen]);
 
+  function updatePosterForFile(file: File, posterUrl: string) {
+    setImages((prev) => {
+      const index = prev.findIndex((item) => item.file === file);
+      if (index === -1) return prev;
+      const next = [...prev];
+      next[index] = { ...next[index], posterUrl };
+      return next;
+    });
+  }
+
   function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []);
     if (files.length === 0) return;
@@ -112,11 +123,16 @@ export function StatusCreateLot({ onSuccess }: StatusCreateLotProps) {
     e.target.value = "";
 
     for (const file of files) {
-      if (file.type.startsWith("video/") && file.size > MAX_VIDEO_SIZE_BYTES) {
-        showToast(
-          "failure",
-          `"${file.name}" is ${formatFileSize(file.size)}, over the 25MB limit. Trim it before posting.`,
-        );
+      if (file.type.startsWith("video/")) {
+        if (file.size > MAX_VIDEO_SIZE_BYTES) {
+          showToast(
+            "failure",
+            `"${file.name}" is ${formatFileSize(file.size)}, over the 25MB limit. Trim it before posting.`,
+          );
+        }
+        captureVideoPosterFrame(file).then((posterUrl) => {
+          if (posterUrl) updatePosterForFile(file, posterUrl);
+        });
       }
     }
   }
@@ -332,7 +348,6 @@ export function StatusCreateLot({ onSuccess }: StatusCreateLotProps) {
                         ref={activeVideoRef}
                         src={current.preview}
                         className="max-h-full max-w-full object-contain"
-                        muted
                         playsInline
                         onLoadedMetadata={handleActiveVideoLoadedMetadata}
                         onTimeUpdate={handleActiveTimeUpdate}
@@ -377,7 +392,7 @@ export function StatusCreateLot({ onSuccess }: StatusCreateLotProps) {
                     style={{ top: "calc(4.5rem + env(safe-area-inset-top))" }}
                     className="absolute right-3 rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-destructive/80"
                   >
-                    <X className="size-4" />
+                    <Trash2 className="size-4" />
                   </button>
 
                   {current.file.type.startsWith("video/") && (() => {
@@ -423,7 +438,13 @@ export function StatusCreateLot({ onSuccess }: StatusCreateLotProps) {
                     className={`relative size-14 shrink-0 overflow-hidden rounded-md border-2 transition-colors ${i === activeIndex ? "border-white" : "border-transparent"}`}
                   >
                     {img.file.type.startsWith("video/") ? (
-                      <video src={img.preview} className="h-full w-full object-cover" muted />
+                      img.posterUrl ? (
+                        <img src={img.posterUrl} alt="" className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center bg-neutral-800">
+                          <Play className="size-4 text-white/40" />
+                        </div>
+                      )
                     ) : (
                       <img src={img.preview} alt="" className="h-full w-full object-cover" />
                     )}
