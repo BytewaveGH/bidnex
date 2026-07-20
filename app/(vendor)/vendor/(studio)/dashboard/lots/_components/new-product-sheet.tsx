@@ -3,9 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ImageIcon, Info, Plus, Scissors, ShoppingBag, X } from "lucide-react";
+import { ImageIcon, Info, Play, Plus, Scissors, ShoppingBag, Trash2, X } from "lucide-react";
 import { Controller, useFieldArray, useForm, type Resolver } from "react-hook-form";
 import { showToast } from "@/components/templates/toast-template";
+import { captureVideoPosterFrame } from "./video-trim/capture-poster";
 import { MAX_VIDEO_SIZE_BYTES, formatFileSize } from "./video-trim/constants";
 import { VideoTrimDialog } from "./video-trim/video-trim-dialog";
 import { Button } from "@/components/ui/button";
@@ -37,7 +38,7 @@ type NewProductSheetProps = {
 
 export function NewProductSheet({ onSuccess }: NewProductSheetProps) {
   const [open, setOpen] = useState(false);
-  const [images, setImages] = useState<Array<{ file: File; preview: string }>>([]);
+  const [images, setImages] = useState<Array<{ file: File; preview: string; posterUrl?: string }>>([]);
   const [submitPhase, setSubmitPhase] = useState<"idle" | "creating" | "uploading">("idle");
   const [trimIndex, setTrimIndex] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -52,6 +53,16 @@ export function NewProductSheet({ onSuccess }: NewProductSheetProps) {
     return () => imagesRef.current.forEach((img) => URL.revokeObjectURL(img.preview));
   }, []);
 
+  function updatePosterForFile(file: File, posterUrl: string) {
+    setImages((prev) => {
+      const index = prev.findIndex((item) => item.file === file);
+      if (index === -1) return prev;
+      const next = [...prev];
+      next[index] = { ...next[index], posterUrl };
+      return next;
+    });
+  }
+
   function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []);
     const next = files.map((file) => ({ file, preview: URL.createObjectURL(file) }));
@@ -59,11 +70,16 @@ export function NewProductSheet({ onSuccess }: NewProductSheetProps) {
     e.target.value = "";
 
     for (const file of files) {
-      if (file.type.startsWith("video/") && file.size > MAX_VIDEO_SIZE_BYTES) {
-        showToast(
-          "failure",
-          `"${file.name}" is ${formatFileSize(file.size)}, over the 25MB limit. Trim it before saving.`,
-        );
+      if (file.type.startsWith("video/")) {
+        if (file.size > MAX_VIDEO_SIZE_BYTES) {
+          showToast(
+            "failure",
+            `"${file.name}" is ${formatFileSize(file.size)}, over the 25MB limit. Trim it before saving.`,
+          );
+        }
+        captureVideoPosterFrame(file).then((posterUrl) => {
+          if (posterUrl) updatePosterForFile(file, posterUrl);
+        });
       }
     }
   }
@@ -84,6 +100,9 @@ export function NewProductSheet({ onSuccess }: NewProductSheetProps) {
       return next;
     });
     setTrimIndex(null);
+    captureVideoPosterFrame(trimmedFile).then((posterUrl) => {
+      if (posterUrl) updatePosterForFile(trimmedFile, posterUrl);
+    });
   }
 
   const {
@@ -295,7 +314,13 @@ export function NewProductSheet({ onSuccess }: NewProductSheetProps) {
                     {images.map((img, i) => (
                       <div key={i} className="relative aspect-square overflow-hidden rounded-md border">
                         {img.file.type.startsWith("video/") ? (
-                          <video src={img.preview} className="h-full w-full object-cover" muted />
+                          img.posterUrl ? (
+                            <img src={img.posterUrl} alt="" className="h-full w-full object-cover" />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center bg-neutral-800">
+                              <Play className="size-4 text-white/40" />
+                            </div>
+                          )
                         ) : (
                           <img src={img.preview} alt="" className="h-full w-full object-cover" />
                         )}
@@ -318,7 +343,7 @@ export function NewProductSheet({ onSuccess }: NewProductSheetProps) {
                           onClick={() => removeImage(i)}
                           className="absolute right-1 top-1 rounded-full bg-black/50 p-0.5 text-white transition-colors hover:bg-black/70"
                         >
-                          <X className="size-3" />
+                          <Trash2 className="size-3" />
                         </button>
                       </div>
                     ))}
