@@ -34,21 +34,40 @@ export function VideoFilmstripTrimmer({ videoRef, duration, range, onRangeChange
       if (!ctx) return;
 
       const originalTime = video!.currentTime;
-      if (!video!.paused) video!.pause();
+      const wasMuted = video!.muted;
+
+      // iOS Safari won't reliably decode seeked frames for a video that has
+      // never actually played, so nudge the decoder awake with a muted play/pause.
+      video!.muted = true;
+      try {
+        await video!.play();
+        video!.pause();
+      } catch {
+        // Ignore — some browsers reject programmatic play(); seeking still works without it.
+      } finally {
+        video!.muted = wasMuted;
+      }
+      if (cancelled) return;
 
       const frames: string[] = [];
       for (let i = 0; i < THUMBNAIL_COUNT; i++) {
         if (cancelled) return;
         const t = Math.min(duration - 0.05, Math.max(0, (duration * i) / THUMBNAIL_COUNT));
-        await seekTo(video!, t);
+        const seeked = await seekTo(video!, t);
         if (cancelled) return;
-        ctx.drawImage(video!, 0, 0, canvas.width, canvas.height);
-        frames.push(canvas.toDataURL("image/jpeg", 0.6));
+        if (seeked) await waitForNextFrame();
+        if (cancelled) return;
+        try {
+          ctx.drawImage(video!, 0, 0, canvas.width, canvas.height);
+          frames.push(canvas.toDataURL("image/jpeg", 0.6));
+        } catch {
+          // Frame wasn't decodable at this timestamp — skip it rather than stalling the whole strip.
+        }
       }
 
       if (!cancelled) {
         video!.currentTime = originalTime;
-        setThumbnails(frames);
+        if (frames.length > 0) setThumbnails(frames);
       }
     }
 
@@ -152,13 +171,32 @@ export function VideoFilmstripTrimmer({ videoRef, duration, range, onRangeChange
   );
 }
 
-function seekTo(video: HTMLVideoElement, time: number): Promise<void> {
+const SEEK_TIMEOUT_MS = 1500;
+
+// Resolves true if the browser confirmed the seek, false if it timed out
+// (some mobile browsers can silently drop a `seeked` event mid-loop).
+function seekTo(video: HTMLVideoElement, time: number): Promise<boolean> {
   return new Promise((resolve) => {
-    function onSeeked() {
+    let settled = false;
+
+    function finish(result: boolean) {
+      if (settled) return;
+      settled = true;
       video.removeEventListener("seeked", onSeeked);
-      resolve();
+      clearTimeout(timer);
+      resolve(result);
     }
+
+    function onSeeked() {
+      finish(true);
+    }
+
+    const timer = setTimeout(() => finish(false), SEEK_TIMEOUT_MS);
     video.addEventListener("seeked", onSeeked);
     video.currentTime = time;
   });
+}
+
+function waitForNextFrame(): Promise<void> {
+  return new Promise((resolve) => requestAnimationFrame(() => resolve()));
 }
