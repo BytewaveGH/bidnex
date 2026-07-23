@@ -1,5 +1,5 @@
 'use client'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import ButtonTemplate from '../templates/button-template'
 import InputTemplate from '../templates/input-template'
 import Logo from '../templates/logo'
@@ -21,10 +21,11 @@ import { useSession, signOut } from 'next-auth/react'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { BadgeCheck, Bell, Check, CreditCard, LogOut } from 'lucide-react'
+import { BadgeCheck, Bell, Check, CreditCard, LogOut, Store } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useWatchlistIds } from '@/app/(bidder)/bidder/(all-items)/_logics/useWatchlistIds'
 import { useNavCounts } from '@/components/generals/providers/nav-counts-provider'
+import { SwitchAccountDialog } from '@/components/generals/switch-account/switch-account-dialog'
 
 
 const categoriesHoverItems = [
@@ -51,6 +52,8 @@ export default function TopNav({ onSearch, initialSearchValue }: { onSearch?: (q
   const [hoveredCategoryIndex, setHoveredCategoryIndex] = useState(0)
   const [searchQuery, setSearchQuery] = useState(initialSearchValue ?? '')
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [switchDialogOpen, setSwitchDialogOpen] = useState(false)
+  const [showSellBadge, setShowSellBadge] = useState(false)
   const { count: watchlistCount } = useWatchlistIds()
   const { myBidsCount, wonItemsCount } = useNavCounts()
   const navIcons = [
@@ -78,6 +81,19 @@ export default function TopNav({ onSearch, initialSearchValue }: { onSearch?: (q
   function handleNavAndClose(path: string) {
     router.push(path)
     setIsMobileMenuOpen(false)
+  }
+
+  const sellBadgeKey = session?.user?.userId ? `sell-badge-seen:${session.user.userId}` : null
+
+  useEffect(() => {
+    if (!sellBadgeKey) return
+    setShowSellBadge(!localStorage.getItem(sellBadgeKey))
+  }, [sellBadgeKey])
+
+  function openSwitchToVendor() {
+    if (sellBadgeKey) localStorage.setItem(sellBadgeKey, '1')
+    setShowSellBadge(false)
+    setSwitchDialogOpen(true)
   }
 
   return (
@@ -146,6 +162,16 @@ export default function TopNav({ onSearch, initialSearchValue }: { onSearch?: (q
                             <Check aria-hidden="true" />
                           </span>
                         </div>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={openSwitchToVendor}>
+                        <Store />
+                        Sell your items
+                        {showSellBadge && (
+                          <span className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#FBCA08] text-black">
+                            New
+                          </span>
+                        )}
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuGroup>
@@ -310,6 +336,21 @@ export default function TopNav({ onSearch, initialSearchValue }: { onSearch?: (q
               <span className="text-sm text-[#344054]">Orders & Returns</span>
             </button>
             <button
+              onClick={() => {
+                setIsMobileMenuOpen(false)
+                openSwitchToVendor()
+              }}
+              className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-[#F9FAFB] transition-colors text-left"
+            >
+              <Store className="size-4 text-[#657688]" />
+              <span className="text-sm text-[#344054]">Sell your items</span>
+              {showSellBadge && (
+                <span className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#FBCA08] text-black">
+                  New
+                </span>
+              )}
+            </button>
+            <button
               onClick={() => signOut({ callbackUrl: '/auth/login' })}
               className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-[#FFF1F0] transition-colors text-left"
             >
@@ -391,6 +432,13 @@ export default function TopNav({ onSearch, initialSearchValue }: { onSearch?: (q
           <span className="text-xs font-bold tracking-wide">LIVE</span>
         </button>
       </div>
+
+      <SwitchAccountDialog
+        open={switchDialogOpen}
+        onOpenChange={setSwitchDialogOpen}
+        username={session?.user?.username ?? ''}
+        targetRole="vendor"
+      />
     </div>
   )
 }

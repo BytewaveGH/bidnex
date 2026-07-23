@@ -43,9 +43,9 @@ export default function Signup({ initialType = 'bidder' }: { initialType?: Accou
     }
 
     return (
-        <main className="min-h-screen">
-            <section className="flex min-h-screen md:gap-40">
-                <div className="hidden md:block md:w-1/2 relative">
+        <main className="h-screen overflow-hidden">
+            <section className="flex h-full md:gap-40">
+                <div className="hidden md:block md:w-1/2 relative h-full">
                     <div className="h-svh py-4 mr-8 relative">
                         <div className="h-full w-full relative mx-4 rounded-xl overflow-hidden">
                             <Image src={authImg} layout="fill" objectFit="cover" alt="Sign up" className="rounded-xl" />
@@ -98,18 +98,20 @@ export default function Signup({ initialType = 'bidder' }: { initialType?: Accou
                     </div>
                 </div>
 
-                <div className="w-full md:w-1/2 flex items-center justify-start min-h-screen">
-                    {page === 'signup' ? (
-                        <SignupForm
-                            onChangePage={handleSignupSuccess}
-                        />
-                    ) : (
-                        <OtpForm
-                            phone={registeredPhone}
-                            accountType={accountType}
-                            onChangePage={() => router.push('/auth/login')}
-                        />
-                    )}
+                <div className="w-full md:w-1/2 min-h-0 h-full flex flex-col overflow-y-auto">
+                    <div className="w-full my-auto">
+                        {page === 'signup' ? (
+                            <SignupForm
+                                onChangePage={handleSignupSuccess}
+                            />
+                        ) : (
+                            <OtpForm
+                                phone={registeredPhone}
+                                accountType={accountType}
+                                onChangePage={() => router.push('/auth/login')}
+                            />
+                        )}
+                    </div>
                 </div>
             </section>
         </main>

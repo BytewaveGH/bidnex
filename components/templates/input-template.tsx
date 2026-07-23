@@ -227,7 +227,7 @@ export default function InputTemplate(
            <button
              type="button"
              onClick={onIconClick}
-             className="cursor-pointer"
+             className="cursor-pointer mr-2"
            >
              {icon}
            </button>
