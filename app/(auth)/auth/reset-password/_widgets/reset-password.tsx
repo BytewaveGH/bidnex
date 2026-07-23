@@ -49,7 +49,7 @@ export default function ResetPassword(
                     label='New Password'
                     placeholder='Enter your new password'
                     className='h-11'
-                    icon={showNewPassword ? <Eye className='w-4 h-4 text-[#667185] mr-2' /> : <EyeOff className='w-4 h-4 text-[#667185] mr-2' />}
+                    icon={showNewPassword ? <Eye className='w-4 h-4 text-[#667185]' /> : <EyeOff className='w-4 h-4 text-[#667185]' />}
                     align='inline-end'
                     description='Must be at least 8 characters.'
                     type={showNewPassword ? 'text' : 'password'}
@@ -62,7 +62,7 @@ export default function ResetPassword(
                     label='Confirm Password'
                     placeholder='Enter your password again'
                     className='h-11 mb-4'
-                    icon={showConfirmPassword ? <Eye className='w-4 h-4 text-[#667185] mr-2' /> : <EyeOff className='w-4 h-4 text-[#667185] mr-2' />}
+                    icon={showConfirmPassword ? <Eye className='w-4 h-4 text-[#667185]' /> : <EyeOff className='w-4 h-4 text-[#667185]' />}
                     align='inline-end'
                     type={showConfirmPassword ? 'text' : 'password'}
                     value={confirmPassword}

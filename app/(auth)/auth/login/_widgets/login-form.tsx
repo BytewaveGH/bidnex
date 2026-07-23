@@ -1,14 +1,20 @@
 "use client";
 
 import React, { useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
+import { ChevronLeft, Eye, EyeOff, Gavel, Store } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import InputTemplate from "@/components/templates/input-template";
 import ButtonTemplate from "@/components/templates/button-template";
 import Link from "next/link";
 import { CheckboxTemplate } from "@/components/templates/checkbox-template";
+import { cn } from "@/lib/utils";
 import { useLogin } from "../_logics/useLogin";
+
+const ROLE_OPTIONS = [
+  { value: "bidder" as const, title: "Bidder", description: "Bid & buy items", icon: Gavel },
+  { value: "vendor" as const, title: "Vendor", description: "Sell your items", icon: Store },
+];
 
 function GoogleIcon() {
   return (
@@ -40,6 +46,12 @@ export default function LoginForm() {
 
   const [showPassword, setShowPassword] = useState(false);
   const [isSocialLoading, setIsSocialLoading] = useState(false);
+  const [step, setStep] = useState<"role" | "credentials">("role");
+
+  function selectRole(role: "bidder" | "vendor") {
+    setLoginAs(role);
+    setStep("credentials");
+  }
 
   const handleGoogleSignIn = async () => {
     setIsSocialLoading(true);
@@ -65,91 +77,112 @@ export default function LoginForm() {
         </p>
       </div>
 
-      {/* Form */}
-      <form className="w-full max-w-[550px]" onSubmit={(e) => { e.preventDefault(); handleLogin(); }}>
-        {/* Login as radio */}
-        <div className="flex gap-6 mb-6">
-          {(["bidder", "vendor"] as const).map((role) => (
-            <label key={role} className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                name="loginAs"
-                value={role}
-                checked={loginAs === role}
-                onChange={() => setLoginAs(role)}
-                className="accent-[#13161A]"
-              />
-              <span className="text-sm font-medium text-[#13161A] capitalize">{role}</span>
-            </label>
-          ))}
-        </div>
-
-        <div className=" flex flex-col gap-6 mb-2">
-          <InputTemplate
-            label="Email Address / Phone Number"
-            placeholder={"Enter your email address or phone number"}
-            className="h-11"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            name="username"
-            autoComplete="username"
-          />
-          <InputTemplate
-            label="Password"
-            placeholder={"Enter your password"}
-            className="h-11"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            icon={
-              showPassword ? (
-                <Eye className="w-4 h-4 text-[#667185] hover:cursor-pointer" />
-              ) : (
-                <EyeOff className="w-4 h-4 text-[#667185] hover:cursor-pointer" />
-              )
-            }
-            onIconClick={() => setShowPassword((prev) => !prev)}
-            align="inline-end"
-            type={showPassword ? "text" : "password"}
-            name="password"
-            autoComplete="current-password"
-          />
-        </div>
-        <div className="flex justify-between items-center mb-10">
-          <CheckboxTemplate
-            label="Remember me"
-            checked={rememberMe}
-            onCheckedChange={setRememberMe}
-          />
-          <div
-            onClick={() => router.push("/auth/forgot-password")}
-            className="text-sm text-[#475367] font-normal underline hover:cursor-pointer"
-          >
-            Forgot Password?
+      {step === "role" ? (
+        <div key="role" className="w-full max-w-[550px] animate-in fade-in slide-in-from-left-4 duration-300">
+          <p className="text-lg font-semibold text-[#13161A] mb-3">Log in as</p>
+          <div className="flex gap-4">
+            {ROLE_OPTIONS.map(({ value, title, description, icon: Icon }) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => selectRole(value)}
+                className="flex-1 h-32 rounded-xl border-2 border-[#E4E7EC] hover:border-[#13161A] transition-colors p-4 flex flex-col items-start justify-between text-left cursor-pointer"
+              >
+                <Icon className="size-6 text-[#13161A]" />
+                <div>
+                  <p className="font-semibold text-[#13161A]">{title}</p>
+                  <p className="text-xs text-[#667185]">{description}</p>
+                </div>
+              </button>
+            ))}
           </div>
         </div>
-        <ButtonTemplate
-          title={isLoading ? "Signing In..." : "Sign In"}
-          className="w-full h-11"
-          type="submit"
-          disabled={isLoading || isSocialLoading}
-        />
-
-        <div className="flex items-center gap-3 my-6">
-          <div className="flex-1 h-px bg-[#E4E7EC]" />
-          <span className="text-sm text-[#98A2B3]">or</span>
-          <div className="flex-1 h-px bg-[#E4E7EC]" />
-        </div>
-
-        <button
-          type="button"
-          onClick={handleGoogleSignIn}
-          disabled={isLoading || isSocialLoading}
-          className="w-full h-11 flex items-center justify-center gap-3 rounded-lg border border-[#D0D5DD] bg-white text-sm font-medium text-[#344054] hover:bg-gray-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+      ) : (
+        <form
+          key="credentials"
+          className="w-full max-w-[550px] animate-in fade-in slide-in-from-right-4 duration-300"
+          onSubmit={(e) => { e.preventDefault(); handleLogin(); }}
         >
-          <GoogleIcon />
-          {isSocialLoading ? "Redirecting..." : "Continue with Google"}
-        </button>
-      </form>
+          <button
+            type="button"
+            onClick={() => setStep("role")}
+            className="group inline-flex items-center gap-1.5 mb-6 pl-2 pr-3 py-1.5 rounded-full border border-[#E4E7EC] hover:border-[#13161A] transition-colors cursor-pointer"
+          >
+            <ChevronLeft className="size-3.5 text-[#667185] group-hover:text-[#13161A] transition-colors" />
+            {(() => {
+              const Icon = ROLE_OPTIONS.find((r) => r.value === loginAs)?.icon ?? Gavel;
+              return <Icon className="size-3.5 text-[#13161A]" />;
+            })()}
+            <span className="text-xs font-semibold capitalize text-[#13161A]">{loginAs}</span>
+          </button>
+
+          <div className=" flex flex-col gap-6 mb-2">
+            <InputTemplate
+              label="Email Address / Phone Number"
+              placeholder={"Enter your email address or phone number"}
+              className="h-11"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              name="username"
+              autoComplete="username"
+            />
+            <InputTemplate
+              label="Password"
+              placeholder={"Enter your password"}
+              className="h-11"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              icon={
+                showPassword ? (
+                  <Eye className="w-4 h-4 text-[#667185] hover:cursor-pointer" />
+                ) : (
+                  <EyeOff className="w-4 h-4 text-[#667185] hover:cursor-pointer" />
+                )
+              }
+              onIconClick={() => setShowPassword((prev) => !prev)}
+              align="inline-end"
+              type={showPassword ? "text" : "password"}
+              name="password"
+              autoComplete="current-password"
+            />
+          </div>
+          <div className="flex justify-between items-center mb-10">
+            <CheckboxTemplate
+              label="Remember me"
+              checked={rememberMe}
+              onCheckedChange={setRememberMe}
+            />
+            <div
+              onClick={() => router.push("/auth/forgot-password")}
+              className="text-sm text-[#475367] font-normal underline hover:cursor-pointer"
+            >
+              Forgot Password?
+            </div>
+          </div>
+          <ButtonTemplate
+            title={isLoading ? "Signing In..." : "Sign In"}
+            className="w-full h-11"
+            type="submit"
+            disabled={isLoading || isSocialLoading}
+          />
+
+          <div className="flex items-center gap-3 my-6">
+            <div className="flex-1 h-px bg-[#E4E7EC]" />
+            <span className="text-sm text-[#98A2B3]">or</span>
+            <div className="flex-1 h-px bg-[#E4E7EC]" />
+          </div>
+
+          <button
+            type="button"
+            onClick={handleGoogleSignIn}
+            disabled={isLoading || isSocialLoading}
+            className="w-full h-11 flex items-center justify-center gap-3 rounded-lg border border-[#D0D5DD] bg-white text-sm font-medium text-[#344054] hover:bg-gray-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            <GoogleIcon />
+            {isSocialLoading ? "Redirecting..." : "Continue with Google"}
+          </button>
+        </form>
+      )}
     </div>
   );
 }

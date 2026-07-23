@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { Eye, EyeOff } from 'lucide-react'
+import { Eye, EyeOff, Info } from 'lucide-react'
 import { signIn } from 'next-auth/react'
 import InputTemplate from '@/components/templates/input-template'
 import ButtonTemplate from '@/components/templates/button-template'
@@ -87,7 +87,7 @@ export default function SignupForm({
                         label='Password'
                         placeholder='Enter your password'
                         className='h-11'
-                        icon={showPassword ? <Eye className='w-4 h-4 text-[#667185] mr-2' /> : <EyeOff className='w-4 h-4 text-[#667185] mr-2' />}
+                        icon={showPassword ? <Eye className='w-4 h-4 text-[#667185]' /> : <EyeOff className='w-4 h-4 text-[#667185]' />}
                         align='inline-end'
                         description='Must be at least 8 characters.'
                         type={showPassword ? 'text' : 'password'}
@@ -100,7 +100,7 @@ export default function SignupForm({
                         label='Confirm Password'
                         placeholder='Re-enter your password'
                         className='h-11'
-                        icon={showConfirmPassword ? <Eye className='w-4 h-4 text-[#667185] mr-2' /> : <EyeOff className='w-4 h-4 text-[#667185] mr-2' />}
+                        icon={showConfirmPassword ? <Eye className='w-4 h-4 text-[#667185]' /> : <EyeOff className='w-4 h-4 text-[#667185]' />}
                         align='inline-end'
                         type={showConfirmPassword ? 'text' : 'password'}
                         value={formData.confirmPassword}
@@ -115,6 +115,10 @@ export default function SignupForm({
                     type="submit"
                     disabled={isLoading || isSocialLoading}
                 />
+                <p className="text-xs text-[#98A2B3] font-normal mt-2 flex items-center justify-center gap-1.5">
+                    <Info className="size-3.5 shrink-0" />
+                    One account, buy or sell — switch to Vendor mode anytime after signing up.
+                </p>
 
                 <div className="flex items-center gap-3 my-6">
                     <div className="flex-1 h-px bg-[#E4E7EC]" />
